@@ -1,0 +1,35 @@
+{
+  "name": "ai-app-developer-hub",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build",
+    "lint": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.1.0",
+    "@google/genai": "^1.40.0",
+    "@types/node-fetch": "^2.6.11",
+    "@types/react-datepicker": "^6.2.0",
+    "antd": "^6.3.1",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.19",
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.5",
+    "lucide-react": "^0.563.0",
+    "node-fetch": "^2.7.0",
+    "react": "^19.2.4",
+    "react-datepicker": "^9.1.0",
+    "react-dom": "^19.2.4",
+    "tsx": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
