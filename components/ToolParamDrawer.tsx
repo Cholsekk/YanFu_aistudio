@@ -1,12 +1,12 @@
 import React from 'react';
 import { X, Puzzle } from 'lucide-react';
-import { ToolDetail, ToolItem } from '../types';
+import { ToolExtension, Collection } from '../types';
 
 interface ToolParamDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  toolDetail: ToolDetail | null;
-  parentTool: ToolItem | null;
+  toolDetail: ToolExtension | null;
+  parentTool: Collection | null;
 }
 
 const ToolParamDrawer: React.FC<ToolParamDrawerProps> = ({ 

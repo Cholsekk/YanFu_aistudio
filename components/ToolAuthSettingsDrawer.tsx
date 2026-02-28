@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X, HelpCircle, Eye, EyeOff } from 'lucide-react';
-import { CredentialSchemaItem, CredentialData } from '../types';
+import { ToolCredential, CredentialData } from '../types';
 
 interface ToolAuthSettingsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  schema: CredentialSchemaItem[];
+  schema: ToolCredential[];
   initialValues: CredentialData;
   onSave: (values: CredentialData) => void;
 }
@@ -84,13 +84,6 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                       <HelpCircle className="w-3.5 h-3.5 text-gray-400" />
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                         {field.help.zh_Hans}
-                        {field.url && (
-                          <div className="mt-1 pt-1 border-t border-gray-700">
-                            <a href={field.url} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:text-blue-200 underline">
-                              获取 API Key
-                            </a>
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}

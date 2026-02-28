@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import { ToolItem, ToolDetail } from '../types';
+import { Collection, ToolExtension } from '../types';
 import { X, ExternalLink, ShieldCheck, Info } from 'lucide-react';
 import ToolParamDrawer from './ToolParamDrawer';
 
 interface ToolAuthDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  tool: ToolItem | null;
-  toolDetail: ToolDetail[] | null;
+  tool: Collection | null;
+  toolDetail: ToolExtension[] | null;
   onAuthorize: () => void;
   onEdit: () => void;
 }
 
 const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize, onEdit }) => {
-  const [selectedSubTool, setSelectedSubTool] = useState<ToolDetail | null>(null);
+  const [selectedSubTool, setSelectedSubTool] = useState<ToolExtension | null>(null);
 
   if (!isOpen || !tool) return null;
 

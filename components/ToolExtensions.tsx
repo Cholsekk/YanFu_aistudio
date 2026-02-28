@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData } from '../types';
+import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential } from '../types';
 import ToolAuthDrawer from './ToolAuthDrawer';
 import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
 import EditCustomToolModal from './EditCustomToolModal';
@@ -614,7 +614,7 @@ const getTagStyle = (label: string) => {
 };
 
 const ToolExtensions: React.FC = () => {
-  const [tools, setTools] = useState<ToolItem[]>([]);
+  const [tools, setTools] = useState<Collection[]>([]);
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -626,12 +626,12 @@ const ToolExtensions: React.FC = () => {
   
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedTool, setSelectedTool] = useState<ToolItem | null>(null);
-  const [toolDetail, setToolDetail] = useState<ToolDetail[] | null>(null);
+  const [selectedTool, setSelectedTool] = useState<Collection | null>(null);
+  const [toolDetail, setToolDetail] = useState<ToolExtension[] | null>(null);
 
   // Auth Settings Drawer state
   const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
-  const [authSchema, setAuthSchema] = useState<CredentialSchemaItem[]>([]);
+  const [authSchema, setAuthSchema] = useState<ToolCredential[]>([]);
   const [authValues, setAuthValues] = useState<CredentialData>({});
 
   // Edit Modal state
@@ -651,12 +651,11 @@ const ToolExtensions: React.FC = () => {
         apiService.fetchLabelList()
       ]);
       
-      // Handle both direct array and { data: [] } formats for tools
-      const providers = Array.isArray(toolsResponse) ? toolsResponse : (toolsResponse?.data || []);
-      setTools(providers);
+      // Handle direct array response
+      setTools(toolsResponse);
 
       // Handle labels
-      const labels = Array.isArray(labelsResponse) ? labelsResponse : (labelsResponse?.data || []);
+      const labels = labelsResponse;
       // If labels are objects, extract name/label. If strings, use directly.
       const processedLabels = labels.map((l: any) => typeof l === 'string' ? l : (l.name || l.label || l));
       setAllLabels(processedLabels.sort());
@@ -669,13 +668,13 @@ const ToolExtensions: React.FC = () => {
     }
   };
 
-  const handleToolClick = async (tool: ToolItem) => {
+  const handleToolClick = async (tool: Collection) => {
     setSelectedTool(tool);
     setIsDrawerOpen(true);
     setToolDetail(null);
     
     try {
-      let response: any;
+      let response: ToolExtension[] = [];
       if (tool.type === 'builtin') {
         response = await apiService.fetchBuiltInToolList(tool.name);
       } else if (tool.type === 'api') {
@@ -684,9 +683,7 @@ const ToolExtensions: React.FC = () => {
         response = await apiService.fetchWorkflowToolList(tool.id);
       }
       
-      // Handle both direct array and { data: [] } formats
-      const details = Array.isArray(response) ? response : (response?.data || []);
-      setToolDetail(details);
+      setToolDetail(response);
     } catch (error) {
       console.error('Failed to fetch tool details:', error);
       setToolDetail([]);
@@ -709,11 +706,17 @@ const ToolExtensions: React.FC = () => {
       const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(selectedTool.name);
       const credentialsResponse = await apiService.fetchBuiltInToolCredential(selectedTool.name);
       
-      // Handle both direct array and { data: [] } formats for schema
-      const schema = Array.isArray(schemaResponse) ? schemaResponse : (schemaResponse?.data || []);
+      setAuthSchema(schemaResponse);
       
-      setAuthSchema(schema);
-      setAuthValues(credentialsResponse || {});
+      // Map ToolCredential[] to CredentialData
+      const initialValues: CredentialData = {};
+      if (Array.isArray(credentialsResponse)) {
+        credentialsResponse.forEach(cred => {
+          initialValues[cred.name] = cred.default || '';
+        });
+      }
+      
+      setAuthValues(initialValues);
       setIsAuthSettingsOpen(true);
     } catch (error) {
       console.error('Failed to fetch credentials info:', error);
@@ -744,7 +747,7 @@ const ToolExtensions: React.FC = () => {
     try {
       // Fetch labels as requested
       const labelsResponse = await apiService.fetchLabelList();
-      const labels = Array.isArray(labelsResponse) ? labelsResponse : (labelsResponse?.data || []);
+      const labels = labelsResponse;
       const processedLabels = labels.map((l: any) => typeof l === 'string' ? l : (l.name || l.label || l));
       setAllLabels(processedLabels.sort());
       

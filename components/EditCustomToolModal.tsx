@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ToolItem, ToolDetail, ToolParameter } from '../types';
+import { Collection, ToolExtension, ToolExtensionParameter } from '../types';
 import { Search, ChevronDown, Info, Trash2, X, Check, Edit2 } from 'lucide-react';
 import IconPickerModal from './IconPickerModal';
 
 interface EditCustomToolModalProps {
   isOpen: boolean;
   onClose: () => void;
-  tool: ToolItem | null;
-  toolDetail: ToolDetail[] | null;
+  tool: Collection | null;
+  toolDetail: ToolExtension[] | null;
   allLabels: string[];
   onSave: (data: any) => Promise<void>;
   onDelete: (id: string) => Promise<void>;

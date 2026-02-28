@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label } from '../types';
 
 const getBaseUrl = () => {
   return localStorage.getItem('console_api_base_url') || 'http://192.168.1.201:5005';
@@ -499,36 +499,36 @@ class ApiService {
   // --- Tool Extension APIs ---
 
   // 1. 工具集合管理
-  async fetchCollectionList(): Promise<any> {
+  async fetchCollectionList(): Promise<Collection[]> {
     return this.request('/console/api/workspaces/current/tool-providers');
   }
 
-  async fetchBuiltInToolList(collectionName: string): Promise<any> {
+  async fetchBuiltInToolList(collectionName: string): Promise<ToolExtension[]> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/tools`);
   }
 
-  async fetchCustomToolList(collectionName: string): Promise<any> {
+  async fetchCustomToolList(collectionName: string): Promise<ToolExtension[]> {
     return this.request(`/console/api/workspaces/current/tool-provider/api/tools?provider=${collectionName}`);
   }
 
-  async fetchModelToolList(collectionName: string): Promise<any> {
+  async fetchModelToolList(collectionName: string): Promise<ToolExtension[]> {
     return this.request(`/console/api/workspaces/current/tool-provider/model/tools?provider=${collectionName}`);
   }
 
-  async fetchWorkflowToolList(appID: string): Promise<any> {
+  async fetchWorkflowToolList(appID: string): Promise<ToolExtension[]> {
     return this.request(`/console/api/workspaces/current/tool-provider/workflow/tools?workflow_tool_id=${appID}`);
   }
 
   // 2. 内置工具认证管理
-  async fetchBuiltInToolCredentialSchema(collectionName: string): Promise<any> {
+  async fetchBuiltInToolCredentialSchema(collectionName: string): Promise<ToolCredential[]> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/credentials_schema`);
   }
 
-  async fetchBuiltInToolCredential(collectionName: string): Promise<any> {
+  async fetchBuiltInToolCredential(collectionName: string): Promise<ToolCredential[]> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/credentials`);
   }
 
-  async updateBuiltInToolCredential(collectionName: string, credentials: any): Promise<void> {
+  async updateBuiltInToolCredential(collectionName: string, credentials: Record<string, any>): Promise<void> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/update`, {
       method: 'POST',
       body: JSON.stringify({ credentials }),
@@ -538,6 +538,7 @@ class ApiService {
   async removeBuiltInToolCredential(collectionName: string): Promise<void> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/delete`, {
       method: 'POST',
+      body: JSON.stringify({}),
     });
   }
 
@@ -586,20 +587,20 @@ class ApiService {
   }
 
   // 4. 工具列表获取
-  async fetchAllBuiltInTools(): Promise<any> {
+  async fetchAllBuiltInTools(): Promise<ToolExtension[]> {
     return this.request('/console/api/workspaces/current/tools/builtin');
   }
 
-  async fetchAllCustomTools(): Promise<any> {
+  async fetchAllCustomTools(): Promise<ToolExtension[]> {
     return this.request('/console/api/workspaces/current/tools/api');
   }
 
-  async fetchAllWorkflowTools(): Promise<any> {
+  async fetchAllWorkflowTools(): Promise<ToolExtension[]> {
     return this.request('/console/api/workspaces/current/tools/workflow');
   }
 
   // 5. 标签管理
-  async fetchLabelList(): Promise<any> {
+  async fetchLabelList(): Promise<Label[]> {
     return this.request('/console/api/workspaces/current/tool-labels');
   }
 

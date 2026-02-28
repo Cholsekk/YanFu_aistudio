@@ -66,6 +66,12 @@ export interface TaskLog {
   error_message?: string;
 }
 
+export type Label = {
+  name: string
+  icon: string
+  label: TypeWithI18N
+}
+
 export interface ToolItem {
   id: string;
   author: string;
