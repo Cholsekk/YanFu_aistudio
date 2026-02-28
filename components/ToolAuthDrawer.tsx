@@ -9,9 +9,10 @@ interface ToolAuthDrawerProps {
   tool: ToolItem | null;
   toolDetail: ToolDetail[] | null;
   onAuthorize: () => void;
+  onEdit: () => void;
 }
 
-const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize }) => {
+const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize, onEdit }) => {
   const [selectedSubTool, setSelectedSubTool] = useState<ToolDetail | null>(null);
 
   if (!isOpen || !tool) return null;
@@ -164,6 +165,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                 </button>
                 <button 
                   className="flex-1 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
+                  onClick={onEdit}
                 >
                   编辑
                 </button>

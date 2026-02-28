@@ -71,7 +71,7 @@ const AppCard: React.FC<AppCardProps> = ({
 
   const renderIcon = (className: string) => {
     if (app.iconType === 'image') {
-      return <img src={app.icon} alt={app.name} className={`${className} object-cover rounded-lg`} />;
+      return <img src={app.icon || undefined} alt={app.name} className={`${className} object-cover rounded-lg`} />;
     }
     return (
       <div className={`${app.iconBgColor} p-2.5 rounded-lg text-white`}>
@@ -115,7 +115,7 @@ const AppCard: React.FC<AppCardProps> = ({
       >
         <div className="flex-shrink-0">
           {app.iconType === 'image' ? (
-            <img src={app.icon} alt={app.name} className="w-8 h-8 rounded-lg object-cover" />
+            <img src={app.icon || undefined} alt={app.name} className="w-8 h-8 rounded-lg object-cover" />
           ) : (
             <div className={`${app.iconBgColor} p-1.5 rounded-lg text-white`}>
               {getIcon(app.icon, "w-5 h-5")}
@@ -164,7 +164,7 @@ const AppCard: React.FC<AppCardProps> = ({
       <div className="flex justify-between items-start mb-4 relative">
         <div className="flex items-start gap-4">
           {app.iconType === 'image' ? (
-            <img src={app.icon} alt={app.name} className="w-11 h-11 rounded-lg object-cover" />
+            <img src={app.icon || undefined} alt={app.name} className="w-11 h-11 rounded-lg object-cover" />
           ) : (
             <div className={`${app.iconBgColor} p-2.5 rounded-lg text-white`}>
               {getIcon(app.icon, "w-6 h-6")}

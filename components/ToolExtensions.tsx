@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData } from '../types';
 import ToolAuthDrawer from './ToolAuthDrawer';
 import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
+import EditCustomToolModal from './EditCustomToolModal';
 import { apiService } from '../services/apiService';
 import { 
   Search, 
@@ -151,6 +152,49 @@ const MOCK_CUSTOM_TOOL_DETAIL: ToolDetail[] = [
                 "options": null
             }
         ]
+    },
+    {
+        "author": "szyl",
+        "name": "network_information_retrieval",
+        "label": {
+            "en_US": "网络搜索工具",
+            "zh_Hans": "网络搜索工具",
+            "pt_BR": "网络搜索工具",
+            "ja_JP": "网络搜索工具"
+        },
+        "description": {
+            "en_US": "用于进行网络信息检索",
+            "zh_Hans": "用于进行网络信息检索",
+            "pt_BR": "用于进行网络信息检索",
+            "ja_JP": "用于进行网络信息检索"
+        },
+        "parameters": [
+            {
+                "name": "querys",
+                "label": {
+                    "en_US": "querys",
+                    "zh_Hans": "querys",
+                    "pt_BR": "querys",
+                    "ja_JP": "querys"
+                },
+                "human_description": {
+                    "en_US": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+                    "zh_Hans": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+                    "pt_BR": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+                    "ja_JP": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]"
+                },
+                "placeholder": null,
+                "type": "string",
+                "form": "llm",
+                "llm_description": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+                "required": true,
+                "default": null,
+                "min": null,
+                "max": null,
+                "options": null
+            }
+          ],
+          "labels": []
     }
 ];
 
@@ -571,6 +615,7 @@ const getTagStyle = (label: string) => {
 
 const ToolExtensions: React.FC = () => {
   const [tools, setTools] = useState<ToolItem[]>([]);
+  const [allLabels, setAllLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'builtin' | 'custom'>('builtin');
@@ -589,6 +634,9 @@ const ToolExtensions: React.FC = () => {
   const [authSchema, setAuthSchema] = useState<CredentialSchemaItem[]>([]);
   const [authValues, setAuthValues] = useState<CredentialData>({});
 
+  // Edit Modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // Fetch tools on mount
   useEffect(() => {
     fetchTools();
@@ -598,12 +646,22 @@ const ToolExtensions: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiService.fetchCollectionList();
-      // Handle both direct array and { data: [] } formats
-      const providers = Array.isArray(response) ? response : (response?.data || []);
+      const [toolsResponse, labelsResponse] = await Promise.all([
+        apiService.fetchCollectionList(),
+        apiService.fetchLabelList()
+      ]);
+      
+      // Handle both direct array and { data: [] } formats for tools
+      const providers = Array.isArray(toolsResponse) ? toolsResponse : (toolsResponse?.data || []);
       setTools(providers);
+
+      // Handle labels
+      const labels = Array.isArray(labelsResponse) ? labelsResponse : (labelsResponse?.data || []);
+      // If labels are objects, extract name/label. If strings, use directly.
+      const processedLabels = labels.map((l: any) => typeof l === 'string' ? l : (l.name || l.label || l));
+      setAllLabels(processedLabels.sort());
     } catch (err: any) {
-      console.error('Failed to fetch tool providers:', err);
+      console.error('Failed to fetch tool providers or labels:', err);
       setError(err.message || '获取工具列表失败');
       setTools([]);
     } finally {
@@ -619,11 +677,11 @@ const ToolExtensions: React.FC = () => {
     try {
       let response: any;
       if (tool.type === 'builtin') {
-        response = await apiService.getBuiltinTools(tool.name);
+        response = await apiService.fetchBuiltInToolList(tool.name);
       } else if (tool.type === 'api') {
-        response = await apiService.getCustomTools(tool.name);
+        response = await apiService.fetchCustomToolList(tool.name);
       } else if (tool.type === 'workflow') {
-        response = await apiService.getWorkflowTools(tool.id);
+        response = await apiService.fetchWorkflowToolList(tool.id);
       }
       
       // Handle both direct array and { data: [] } formats
@@ -648,8 +706,8 @@ const ToolExtensions: React.FC = () => {
     
     try {
       // Fetch schema and existing credentials
-      const schemaResponse = await apiService.getBuiltinCredentialsSchema(selectedTool.name);
-      const credentialsResponse = await apiService.getBuiltinCredentials(selectedTool.name);
+      const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(selectedTool.name);
+      const credentialsResponse = await apiService.fetchBuiltInToolCredential(selectedTool.name);
       
       // Handle both direct array and { data: [] } formats for schema
       const schema = Array.isArray(schemaResponse) ? schemaResponse : (schemaResponse?.data || []);
@@ -666,7 +724,7 @@ const ToolExtensions: React.FC = () => {
     if (!selectedTool) return;
     
     try {
-      await apiService.updateBuiltinCredentials(selectedTool.name, values);
+      await apiService.updateBuiltInToolCredential(selectedTool.name, values);
       
       // Refresh tool list to show updated auth status
       await fetchTools();
@@ -680,18 +738,69 @@ const ToolExtensions: React.FC = () => {
     }
   };
 
-  // Extract all unique labels from tools
-  const allLabels = useMemo(() => {
-    const labels = new Set<string>();
-    if (Array.isArray(tools)) {
-      tools.forEach(tool => {
-        if (tool.labels && Array.isArray(tool.labels)) {
-          tool.labels.forEach(label => labels.add(label));
-        }
-      });
+  const handleEditTool = async () => {
+    if (!selectedTool) return;
+    
+    try {
+      // Fetch labels as requested
+      const labelsResponse = await apiService.fetchLabelList();
+      const labels = Array.isArray(labelsResponse) ? labelsResponse : (labelsResponse?.data || []);
+      const processedLabels = labels.map((l: any) => typeof l === 'string' ? l : (l.name || l.label || l));
+      setAllLabels(processedLabels.sort());
+      
+      setIsEditModalOpen(true);
+    } catch (error) {
+      console.error('Failed to fetch labels for editing:', error);
+      // Still open the modal even if labels fetch fails, using existing labels
+      setIsEditModalOpen(true);
     }
-    return Array.from(labels).sort();
-  }, [tools]);
+  };
+
+  const handleSaveTool = async (updatedTool: any) => {
+    try {
+      // Determine which API to call based on tool type
+      if (updatedTool.type === 'api') {
+        await apiService.updateCustomCollection(updatedTool);
+      } else if (updatedTool.type === 'workflow') {
+        await apiService.saveWorkflowToolProvider(updatedTool);
+      }
+      
+      // Refresh tool list
+      await fetchTools();
+      
+      // Update selected tool in drawer if it's the same one
+      if (selectedTool && selectedTool.id === updatedTool.id) {
+        setSelectedTool(updatedTool);
+      }
+      
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Failed to save tool:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteTool = async (toolId: string) => {
+    try {
+      if (!selectedTool) return;
+      
+      if (selectedTool.type === 'api') {
+        await apiService.removeCustomCollection(selectedTool.name);
+      } else if (selectedTool.type === 'workflow') {
+        await apiService.deleteWorkflowTool(toolId);
+      }
+      
+      // Refresh tool list
+      await fetchTools();
+      
+      setIsEditModalOpen(false);
+      setIsDrawerOpen(false);
+      setSelectedTool(null);
+    } catch (error) {
+      console.error('Failed to delete tool:', error);
+      throw error;
+    }
+  };
 
   const filteredLabels = useMemo(() => {
     if (!labelSearchQuery) return allLabels;
@@ -930,6 +1039,7 @@ const ToolExtensions: React.FC = () => {
         tool={selectedTool}
         toolDetail={toolDetail}
         onAuthorize={handleAuthorize}
+        onEdit={handleEditTool}
       />
 
       <ToolAuthSettingsDrawer
@@ -938,6 +1048,16 @@ const ToolExtensions: React.FC = () => {
         schema={authSchema}
         initialValues={authValues}
         onSave={handleSaveAuth}
+      />
+
+      <EditCustomToolModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        tool={selectedTool}
+        toolDetail={toolDetail}
+        allLabels={allLabels}
+        onSave={handleSaveTool}
+        onDelete={handleDeleteTool}
       />
     </div>
   );

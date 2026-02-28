@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail } from '../types';
 
 const getBaseUrl = () => {
   return localStorage.getItem('console_api_base_url') || 'http://192.168.1.201:5005';
@@ -358,7 +358,92 @@ class ApiService {
           allow_delete: false,
           tools: [],
           labels: ['search', 'productivity']
+        },
+        {
+          id: "567dd8af-fd80-4a7e-82ef-f9c8a511fefd",
+          author: "szyl",
+          name: "测试",
+          description: {
+            "zh_Hans": "Retrieves current weather data for a location.",
+            "en_US": "Retrieves current weather data for a location.",
+            "pt_BR": "Retrieves current weather data for a location.",
+            "ja_JP": "Retrieves current weather data for a location."
+          },
+          icon: {
+            "content": "🕵️",
+            "background": "#FEF7C3"
+          },
+          label: {
+            "zh_Hans": "测试",
+            "en_US": "测试",
+            "pt_BR": "测试",
+            "ja_JP": "测试"
+          },
+          type: "api",
+          team_credentials: {},
+          is_team_authorization: true,
+          allow_delete: true,
+          tools: [],
+          labels: []
         }
+      ];
+    }
+
+    // Mock for custom tool details
+    if (endpoint.includes('/tool-provider/api/tools')) {
+      return [
+        {
+          "author": "szyl",
+          "name": "network_information_retrieval",
+          "label": {
+            "en_US": "网络搜索工具",
+            "zh_Hans": "网络搜索工具",
+            "pt_BR": "网络搜索工具",
+            "ja_JP": "网络搜索工具"
+          },
+          "description": {
+            "en_US": "用于进行网络信息检索",
+            "zh_Hans": "用于进行网络信息检索",
+            "pt_BR": "用于进行网络信息检索",
+            "ja_JP": "用于进行网络信息检索"
+          },
+          "parameters": [
+            {
+              "name": "querys",
+              "label": {
+                "en_US": "querys",
+                "zh_Hans": "querys",
+                "pt_BR": "querys",
+                "ja_JP": "querys"
+              },
+              "human_description": {
+                "en_US": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+                "zh_Hans": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+                "pt_BR": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+                "ja_JP": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]"
+              },
+              "placeholder": null,
+              "type": "string",
+              "form": "llm",
+              "llm_description": "搜索文本列表，如[“法国的首都”, “巴黎的人口”]",
+              "required": true,
+              "default": null,
+              "min": null,
+              "max": null,
+              "options": null
+            }
+          ],
+          "labels": []
+        }
+      ];
+    }
+
+    // Mock for tool labels
+    if (endpoint.includes('/tool-labels')) {
+      return [
+        'search', 'image', 'video', 'weather', 'finance', 'design', 
+        'travel', 'social', 'news', 'medical', 'productivity', 
+        'education', 'business', 'entertainment', 'utilities', 'other'
       ];
     }
 
@@ -418,133 +503,133 @@ class ApiService {
     return this.request('/console/api/workspaces/current/tool-providers');
   }
 
-  async getBuiltinTools(collectionName: string): Promise<any[]> {
+  async fetchBuiltInToolList(collectionName: string): Promise<any> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/tools`);
   }
 
-  async getCustomTools(provider: string): Promise<any[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/api/tools?provider=${provider}`);
+  async fetchCustomToolList(collectionName: string): Promise<any> {
+    return this.request(`/console/api/workspaces/current/tool-provider/api/tools?provider=${collectionName}`);
   }
 
-  async getModelTools(provider: string): Promise<any[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/model/tools?provider=${provider}`);
+  async fetchModelToolList(collectionName: string): Promise<any> {
+    return this.request(`/console/api/workspaces/current/tool-provider/model/tools?provider=${collectionName}`);
   }
 
-  async getWorkflowTools(workflowToolId: string): Promise<any[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/workflow/tools?workflow_tool_id=${workflowToolId}`);
+  async fetchWorkflowToolList(appID: string): Promise<any> {
+    return this.request(`/console/api/workspaces/current/tool-provider/workflow/tools?workflow_tool_id=${appID}`);
   }
 
   // 2. 内置工具认证管理
-  async getBuiltinCredentialsSchema(collectionName: string): Promise<any> {
+  async fetchBuiltInToolCredentialSchema(collectionName: string): Promise<any> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/credentials_schema`);
   }
 
-  async getBuiltinCredentials(collectionName: string): Promise<any> {
+  async fetchBuiltInToolCredential(collectionName: string): Promise<any> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/credentials`);
   }
 
-  async updateBuiltinCredentials(collectionName: string, credentials: any): Promise<void> {
+  async updateBuiltInToolCredential(collectionName: string, credentials: any): Promise<void> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/update`, {
       method: 'POST',
       body: JSON.stringify({ credentials }),
     });
   }
 
-  async deleteBuiltinCredentials(collectionName: string): Promise<void> {
+  async removeBuiltInToolCredential(collectionName: string): Promise<void> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/delete`, {
       method: 'POST',
     });
   }
 
   // 3. 自定义工具管理
-  async parseSchema(schema: string): Promise<any> {
+  async parseParamsSchema(schema: string): Promise<{ parameters_schema: CustomParamSchema[], schema_type: string }> {
     return this.request('/console/api/workspaces/current/tool-provider/api/schema', {
       method: 'POST',
       body: JSON.stringify({ schema }),
     });
   }
 
-  async getCustomCollection(provider: string): Promise<any> {
-    return this.request(`/console/api/workspaces/current/tool-provider/api/get?provider=${provider}`);
+  async fetchCustomCollection(collectionName: string): Promise<CustomCollectionBackend> {
+    return this.request(`/console/api/workspaces/current/tool-provider/api/get?provider=${collectionName}`);
   }
 
-  async addCustomCollection(data: any): Promise<void> {
+  async createCustomCollection(collection: CustomCollectionBackend): Promise<void> {
     return this.request('/console/api/workspaces/current/tool-provider/api/add', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(collection),
     });
   }
 
-  async updateCustomCollection(data: any): Promise<void> {
+  async updateCustomCollection(collection: CustomCollectionBackend): Promise<void> {
     return this.request('/console/api/workspaces/current/tool-provider/api/update', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(collection),
     });
   }
 
-  async deleteCustomCollection(provider: string): Promise<void> {
+  async removeCustomCollection(collectionName: string): Promise<void> {
     return this.request('/console/api/workspaces/current/tool-provider/api/delete', {
       method: 'POST',
-      body: JSON.stringify({ provider }),
+      body: JSON.stringify({ provider: collectionName }),
     });
   }
 
-  async importSchemaFromUrl(url: string): Promise<void> {
+  async importSchemaFromURL(url: string): Promise<void> {
     return this.request(`/console/api/workspaces/current/tool-provider/api/remote?url=${encodeURIComponent(url)}`);
   }
 
-  async testApiAvailability(data: any): Promise<void> {
+  async testAPIAvailable(payload: any): Promise<void> {
     return this.request('/console/api/workspaces/current/tool-provider/api/test/pre', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   }
 
   // 4. 工具列表获取
-  async getAllBuiltinTools(): Promise<any[]> {
+  async fetchAllBuiltInTools(): Promise<any> {
     return this.request('/console/api/workspaces/current/tools/builtin');
   }
 
-  async getAllCustomTools(): Promise<any[]> {
+  async fetchAllCustomTools(): Promise<any> {
     return this.request('/console/api/workspaces/current/tools/api');
   }
 
-  async getAllWorkflowTools(): Promise<any[]> {
+  async fetchAllWorkflowTools(): Promise<any> {
     return this.request('/console/api/workspaces/current/tools/workflow');
   }
 
   // 5. 标签管理
-  async getToolLabels(): Promise<any[]> {
+  async fetchLabelList(): Promise<any> {
     return this.request('/console/api/workspaces/current/tool-labels');
   }
 
   // 6. 工作流工具提供商管理
-  async createWorkflowToolProvider(data: any): Promise<void> {
+  async createWorkflowToolProvider(data: WorkflowToolProviderRequest & { workflow_app_id: string }): Promise<void> {
     return this.request('/console/api/workspaces/current/tool-provider/workflow/create', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async updateWorkflowToolProvider(data: any): Promise<void> {
+  async saveWorkflowToolProvider(data: WorkflowToolProviderRequest & Partial<{ workflow_app_id: string, workflow_tool_id: string }>): Promise<void> {
     return this.request('/console/api/workspaces/current/tool-provider/workflow/update', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async getWorkflowToolProviderByAppId(appId: string): Promise<any> {
-    return this.request(`/console/api/workspaces/current/tool-provider/workflow/get?workflow_app_id=${appId}`);
+  async fetchWorkflowToolDetailByAppID(appID: string): Promise<WorkflowToolProviderResponse> {
+    return this.request(`/console/api/workspaces/current/tool-provider/workflow/get?workflow_app_id=${appID}`);
   }
 
-  async getWorkflowToolProviderByToolId(toolId: string): Promise<any> {
-    return this.request(`/console/api/workspaces/current/tool-provider/workflow/get?workflow_tool_id=${toolId}`);
+  async fetchWorkflowToolDetail(toolID: string): Promise<WorkflowToolProviderResponse> {
+    return this.request(`/console/api/workspaces/current/tool-provider/workflow/get?workflow_tool_id=${toolID}`);
   }
 
-  async deleteWorkflowTool(toolId: string): Promise<void> {
+  async deleteWorkflowTool(toolID: string): Promise<void> {
     return this.request('/console/api/workspaces/current/tool-provider/workflow/delete', {
       method: 'POST',
-      body: JSON.stringify({ workflow_tool_id: toolId }),
+      body: JSON.stringify({ workflow_tool_id: toolID }),
     });
   }
 }

@@ -104,7 +104,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                 className="w-12 h-12 rounded-xl border border-gray-100 flex items-center justify-center flex-shrink-0 hover:border-blue-300 transition-colors overflow-hidden group relative"
               >
                 {formData.iconType === 'image' ? (
-                  <img src={formData.icon} alt="icon" className="w-full h-full object-cover" />
+                  <img src={formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
                 ) : (
                   <div className={`w-full h-full ${formData.iconBgColor} flex items-center justify-center text-white`}>
                     {getIcon(formData.icon, "w-6 h-6")}

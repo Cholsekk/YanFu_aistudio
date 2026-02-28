@@ -43,7 +43,7 @@ const ToolParamDrawer: React.FC<ToolParamDrawerProps> = ({
             <div className="flex items-center gap-2 text-sm text-gray-500">
               {parentTool?.icon ? (
                  typeof parentTool.icon === 'string' ? (
-                  <img src={parentTool.icon} alt="" className="w-4 h-4 object-contain" referrerPolicy="no-referrer" />
+                  <img src={parentTool.icon || undefined} alt="" className="w-4 h-4 object-contain" referrerPolicy="no-referrer" />
                 ) : (
                   <div className="w-4 h-4 flex items-center justify-center">
                     {parentTool.icon.content}
