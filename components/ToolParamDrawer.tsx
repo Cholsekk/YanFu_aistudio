@@ -72,7 +72,7 @@ const ToolParamDrawer: React.FC<ToolParamDrawerProps> = ({
             <h3 className="text-base font-bold text-gray-900 mb-6">参数</h3>
             
             <div className="space-y-6">
-              {toolDetail.parameters && toolDetail.parameters.length > 0 ? (
+              {toolDetail.parameters && Array.isArray(toolDetail.parameters) && toolDetail.parameters.length > 0 ? (
                 toolDetail.parameters.map((param) => (
                   <div key={param.name} className="space-y-1">
                     <div className="flex items-baseline gap-3 flex-wrap">

@@ -72,7 +72,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
           </div>
 
           <div className="space-y-6">
-            {schema.map((field) => (
+            {Array.isArray(schema) && schema.map((field) => (
               <div key={field.name} className="space-y-2">
                 <div className="flex items-center gap-1">
                   <label className="block text-sm font-medium text-gray-700">

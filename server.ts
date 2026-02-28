@@ -40,8 +40,22 @@ async function startServer() {
         },
         error: (err, req, res) => {
           console.error('Proxy Error:', err);
-          if (res && 'status' in res) {
-            (res as any).status(500).send('Proxy Error');
+          const errorMessage = err.message || 'Unknown Proxy Error';
+          const isTimeout = errorMessage.includes('ETIMEDOUT');
+          
+          const responseBody = JSON.stringify({ 
+            error: 'Proxy Error',
+            message: isTimeout 
+              ? `连接后端超时 (${req.headers['x-target-base-url']})。请检查后端服务是否启动，或尝试使用公网地址/内网穿透。`
+              : errorMessage,
+            code: (err as any).code
+          });
+
+          if ('writeHead' in res) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(responseBody);
+          } else {
+            res.end();
           }
         },
       },

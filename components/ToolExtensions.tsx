@@ -572,6 +572,7 @@ const getTagStyle = (label: string) => {
 const ToolExtensions: React.FC = () => {
   const [tools, setTools] = useState<ToolItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'builtin' | 'custom'>('builtin');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string>('全部');
@@ -595,13 +596,16 @@ const ToolExtensions: React.FC = () => {
 
   const fetchTools = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const providers = await apiService.getToolProviders();
-      // Map providers to ToolItem format if needed, or assume they match
-      // Based on API doc, providers is an array of tool collections
+      const response = await apiService.fetchCollectionList();
+      // Handle both direct array and { data: [] } formats
+      const providers = Array.isArray(response) ? response : (response?.data || []);
       setTools(providers);
-    } catch (error) {
-      console.error('Failed to fetch tool providers:', error);
+    } catch (err: any) {
+      console.error('Failed to fetch tool providers:', err);
+      setError(err.message || '获取工具列表失败');
+      setTools([]);
     } finally {
       setLoading(false);
     }
@@ -613,17 +617,21 @@ const ToolExtensions: React.FC = () => {
     setToolDetail(null);
     
     try {
-      let details: any[] = [];
+      let response: any;
       if (tool.type === 'builtin') {
-        details = await apiService.getBuiltinTools(tool.name);
+        response = await apiService.getBuiltinTools(tool.name);
       } else if (tool.type === 'api') {
-        details = await apiService.getCustomTools(tool.name);
+        response = await apiService.getCustomTools(tool.name);
       } else if (tool.type === 'workflow') {
-        details = await apiService.getWorkflowTools(tool.id);
+        response = await apiService.getWorkflowTools(tool.id);
       }
+      
+      // Handle both direct array and { data: [] } formats
+      const details = Array.isArray(response) ? response : (response?.data || []);
       setToolDetail(details);
     } catch (error) {
       console.error('Failed to fetch tool details:', error);
+      setToolDetail([]);
     }
   };
 
@@ -640,11 +648,14 @@ const ToolExtensions: React.FC = () => {
     
     try {
       // Fetch schema and existing credentials
-      const schema = await apiService.getBuiltinCredentialsSchema(selectedTool.name);
-      const credentials = await apiService.getBuiltinCredentials(selectedTool.name);
+      const schemaResponse = await apiService.getBuiltinCredentialsSchema(selectedTool.name);
+      const credentialsResponse = await apiService.getBuiltinCredentials(selectedTool.name);
+      
+      // Handle both direct array and { data: [] } formats for schema
+      const schema = Array.isArray(schemaResponse) ? schemaResponse : (schemaResponse?.data || []);
       
       setAuthSchema(schema);
-      setAuthValues(credentials || {});
+      setAuthValues(credentialsResponse || {});
       setIsAuthSettingsOpen(true);
     } catch (error) {
       console.error('Failed to fetch credentials info:', error);
@@ -672,9 +683,13 @@ const ToolExtensions: React.FC = () => {
   // Extract all unique labels from tools
   const allLabels = useMemo(() => {
     const labels = new Set<string>();
-    tools.forEach(tool => {
-      tool.labels.forEach(label => labels.add(label));
-    });
+    if (Array.isArray(tools)) {
+      tools.forEach(tool => {
+        if (tool.labels && Array.isArray(tool.labels)) {
+          tool.labels.forEach(label => labels.add(label));
+        }
+      });
+    }
     return Array.from(labels).sort();
   }, [tools]);
 
@@ -689,11 +704,13 @@ const ToolExtensions: React.FC = () => {
   }, [allLabels, labelSearchQuery]);
 
   const filteredTools = useMemo(() => {
+    if (!Array.isArray(tools)) return [];
+    
     return tools.filter(tool => {
       const matchesTab = activeTab === 'builtin' ? tool.type === 'builtin' : tool.type !== 'builtin';
       const matchesSearch = tool.label.zh_Hans.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            tool.description.zh_Hans.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesLabel = selectedLabel === '全部' || tool.labels.includes(selectedLabel);
+      const matchesLabel = selectedLabel === '全部' || (tool.labels && tool.labels.includes(selectedLabel));
       
       return matchesTab && matchesSearch && matchesLabel;
     });
@@ -811,6 +828,33 @@ const ToolExtensions: React.FC = () => {
         <div className="flex flex-col items-center justify-center py-32 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
           <div className="w-10 h-10 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4" />
           <p className="text-sm font-medium">加载工具列表中...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-red-50/30 rounded-2xl border border-dashed border-red-200">
+          <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+            <Info className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-semibold text-red-900 mb-2">网络连接异常</h3>
+          <p className="text-sm text-red-600 max-w-md mb-6 leading-relaxed">
+            {error}
+          </p>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={fetchTools}
+              className="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors shadow-sm"
+            >
+              重试连接
+            </button>
+            <button 
+              onClick={() => {
+                localStorage.setItem('console_mock_mode', 'true');
+                window.location.reload();
+              }}
+              className="px-6 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              使用模拟数据
+            </button>
+          </div>
         </div>
       ) : filteredTools.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

@@ -80,7 +80,8 @@ class ApiService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `请求失败，状态码: ${response.status}`);
+        const message = errorData.message || `请求失败，状态码: ${response.status}`;
+        throw new Error(message);
       }
 
       return await response.json();
@@ -317,6 +318,50 @@ class ApiService {
       return { data: mockApps, total: 3, page: 1, limit: 20, has_more: false };
     }
 
+    // Mock for tool providers
+    if (endpoint.includes('/tool-providers')) {
+      return [
+        {
+          id: 'serpapi',
+          author: 'SerpApi',
+          name: 'serpapi',
+          description: {
+            zh_Hans: 'Google 搜索、Bing 搜索、百度搜索等。',
+            en_US: 'Google Search, Bing Search, Baidu Search, etc.'
+          },
+          icon: 'https://ais-pre-46u3df4et4zukjelu4matx-246257553977.europe-west2.run.app/console/api/workspaces/current/tool-provider/builtin/serpapi/icon',
+          label: {
+            zh_Hans: 'SerpApi',
+            en_US: 'SerpApi'
+          },
+          type: 'builtin',
+          is_team_authorization: true,
+          allow_delete: false,
+          tools: [],
+          labels: ['search']
+        },
+        {
+          id: 'google',
+          author: 'Google',
+          name: 'google',
+          description: {
+            zh_Hans: 'Google 搜索、Gmail、Google 日历等。',
+            en_US: 'Google Search, Gmail, Google Calendar, etc.'
+          },
+          icon: 'https://ais-pre-46u3df4et4zukjelu4matx-246257553977.europe-west2.run.app/console/api/workspaces/current/tool-provider/builtin/google/icon',
+          label: {
+            zh_Hans: 'Google',
+            en_US: 'Google'
+          },
+          type: 'builtin',
+          is_team_authorization: false,
+          allow_delete: false,
+          tools: [],
+          labels: ['search', 'productivity']
+        }
+      ];
+    }
+
     return {};
   }
 
@@ -369,7 +414,7 @@ class ApiService {
   // --- Tool Extension APIs ---
 
   // 1. 工具集合管理
-  async getToolProviders(): Promise<any[]> {
+  async fetchCollectionList(): Promise<any> {
     return this.request('/console/api/workspaces/current/tool-providers');
   }
 
@@ -390,7 +435,7 @@ class ApiService {
   }
 
   // 2. 内置工具认证管理
-  async getBuiltinCredentialsSchema(collectionName: string): Promise<any[]> {
+  async getBuiltinCredentialsSchema(collectionName: string): Promise<any> {
     return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/credentials_schema`);
   }
 

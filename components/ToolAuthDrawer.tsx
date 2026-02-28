@@ -80,7 +80,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
               </div>
 
               {/* Tool Details */}
-              {toolDetail ? (
+              {Array.isArray(toolDetail) ? (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <h4 className="font-semibold text-gray-900">包含工具</h4>
@@ -170,11 +170,11 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
               </div>
 
               {/* Tool Parameters */}
-              {toolDetail ? (
+              {Array.isArray(toolDetail) ? (
                 <div>
                   <h4 className="font-medium text-gray-500 text-sm mb-3">工具入参</h4>
                   <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4">
-                    {toolDetail[0]?.parameters && toolDetail[0].parameters.length > 0 ? (
+                    {toolDetail[0]?.parameters && Array.isArray(toolDetail[0].parameters) && toolDetail[0].parameters.length > 0 ? (
                       <div className="space-y-3">
                         {toolDetail[0].parameters.map((param) => (
                           <div key={param.name} className="flex items-center gap-2 text-sm">
