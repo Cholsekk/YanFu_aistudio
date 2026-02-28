@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential } from '../types';
+import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential, WorkflowToolProviderRequest } from '../types';
 import ToolAuthDrawer from './ToolAuthDrawer';
 import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
 import EditCustomToolModal from './EditCustomToolModal';
@@ -765,7 +765,22 @@ const ToolExtensions: React.FC = () => {
       if (updatedTool.type === 'api') {
         await apiService.updateCustomCollection(updatedTool);
       } else if (updatedTool.type === 'workflow') {
-        await apiService.saveWorkflowToolProvider(updatedTool);
+        const payload: WorkflowToolProviderRequest & { workflow_tool_id: string } = {
+          name: updatedTool.name,
+          icon: updatedTool.icon,
+          description: updatedTool.description?.zh_Hans || updatedTool.description?.en_US || '',
+          parameters: (updatedTool.parameters || []).map((p: any) => ({
+            name: p.name,
+            form: p.form,
+            description: p.human_description?.zh_Hans || p.human_description?.en_US || p.description || '',
+            required: p.required,
+            type: p.type
+          })),
+          labels: updatedTool.labels,
+          privacy_policy: updatedTool.team_credentials?.privacy_policy || '',
+          workflow_tool_id: updatedTool.id
+        };
+        await apiService.saveWorkflowToolProvider(payload);
       }
       
       // Refresh tool list

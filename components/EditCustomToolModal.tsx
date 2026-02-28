@@ -131,8 +131,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
           ...tool.team_credentials,
           privacy_policy: privacyPolicy
         },
-        // If the API supports updating parameters here, we'd include them
-        // For now we follow the existing structure
+        parameters: updatedParameters
       };
       await onSave(data);
       onClose();
