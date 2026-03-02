@@ -26,7 +26,8 @@ import {
   SortAsc,
   SortDesc,
   RotateCcw,
-  ListOrdered
+  ListOrdered,
+  ArrowUp
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -41,6 +42,7 @@ const App: React.FC = () => {
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   
   // Modal states
   const [isNewAppModalOpen, setIsNewAppModalOpen] = useState(false);
@@ -179,13 +181,21 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [activeNavTab, activeFilterTab, searchQuery]);
 
-  // Infinite scroll listener
+  // Infinite scroll and Back to Top listener
   useEffect(() => {
     const handleScroll = () => {
+      // Infinite scroll
       if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100) {
         if (hasMore && !isLoading && !isLoadingMore) {
           fetchApps(true);
         }
+      }
+
+      // Back to Top visibility (show after 2 screens)
+      if (window.scrollY > window.innerHeight * 2) {
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
       }
     };
 
@@ -510,7 +520,7 @@ const App: React.FC = () => {
 
     return (
       <>
-        <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between mb-8">
+        <div className="sticky top-0 z-30 backdrop-blur-sm py-4 -mt-4 mb-6 border-b border-gray-100 transition-all flex flex-col md:flex-row gap-6 md:items-center justify-between">
           <div className="flex flex-wrap items-center gap-1 p-1 bg-gray-100/80 rounded-lg w-fit">
             {APP_TYPES.map(type => (
               <button
@@ -720,6 +730,17 @@ const App: React.FC = () => {
         onConfirm={executeConvertToWorkflow}
         app={appToConvert}
       />
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-blue-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };

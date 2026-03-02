@@ -92,62 +92,62 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
             <p>暂无标签</p>
           </div>
         ) : (
-          <div className="grid gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {tags.map(tag => (
               <div 
                 key={tag.id} 
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group hover:border-blue-200 transition-all"
+                className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-100 group hover:border-blue-200 transition-all h-12"
               >
                 {editingTagId === tag.id ? (
-                  <div className="flex-grow flex items-center gap-2">
+                  <div className="flex-grow flex items-center gap-1 min-w-0">
                     <input 
                       autoFocus
                       type="text" 
-                      className="flex-grow px-3 py-1.5 bg-white border border-blue-500 rounded-lg text-sm outline-none shadow-sm"
+                      className="flex-grow min-w-0 px-2 py-1 bg-white border border-blue-500 rounded text-sm outline-none shadow-sm"
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSaveEdit(tag.id)}
                     />
                     <button 
                       onClick={() => handleSaveEdit(tag.id)}
-                      className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors shrink-0"
                     >
-                      <Check className="w-4 h-4" />
+                      <Check className="w-3.5 h-3.5" />
                     </button>
                     <button 
                       onClick={() => setEditingTagId(null)}
-                      className="p-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors"
+                      className="p-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 transition-colors shrink-0"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-lg text-gray-400">
-                        <TagIcon className="w-4 h-4" />
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className="p-1.5 bg-white rounded-lg text-gray-400 shrink-0">
+                        <TagIcon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-sm font-medium text-gray-700">{tag.name}</span>
+                      <span className="text-sm font-medium text-gray-700 truncate" title={tag.name}>{tag.name}</span>
                       {tag.binding_count > 0 && (
-                        <span className="px-2 py-0.5 bg-gray-200 text-gray-500 text-xs rounded-full">
+                        <span className="px-1.5 py-0.5 bg-gray-200 text-gray-500 text-[10px] rounded-full shrink-0">
                           {tag.binding_count}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button 
                         onClick={() => handleStartEdit(tag)}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                         title="重命名"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button 
                         onClick={() => { if(confirm(`确定要删除标签 "${tag.name}" 吗？这会从所有应用中移除该标签。`)) onDeleteTag(tag.id); }}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         title="删除"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </>
