@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { AppItem } from '../types';
+import { AppItem, Tag } from '../types';
 import { getIcon } from '../constants';
 import { MoreHorizontal, ExternalLink, X, Plus } from 'lucide-react';
 import TagDropdown from './TagDropdown';
@@ -8,13 +8,16 @@ import TagDropdown from './TagDropdown';
 interface AppCardProps {
   app: AppItem;
   viewMode: 'grid' | 'list';
-  allTags: string[];
-  onUpdateTags: (id: string, newTags: string[]) => void;
+  allTags: Tag[];
+  onBindTag: (appId: string, tagId: string) => void;
+  onUnbindTag: (appId: string, tagId: string) => void;
+  onCreateTag: (tagName: string) => void;
   onEdit: (app: AppItem) => void;
   onDelete: (id: string) => void;
   onCopy: (app: AppItem) => void;
   onManageTags: () => void;
   onExport: (app: AppItem) => void;
+  onConvertToWorkflow: (app: AppItem) => void;
   onClick?: () => void;
 }
 
@@ -22,12 +25,15 @@ const AppCard: React.FC<AppCardProps> = ({
   app, 
   viewMode, 
   allTags,
-  onUpdateTags, 
+  onBindTag,
+  onUnbindTag,
+  onCreateTag,
   onEdit, 
   onDelete, 
   onCopy, 
   onManageTags,
   onExport,
+  onConvertToWorkflow,
   onClick 
 }) => {
   const [isAddingTag, setIsAddingTag] = useState(false);
@@ -44,22 +50,32 @@ const AppCard: React.FC<AppCardProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const removeTag = (e: React.MouseEvent, tagToRemove: string) => {
+  const removeTag = (e: React.MouseEvent, tagId: string) => {
     e.stopPropagation();
-    onUpdateTags(app.id, app.tags.filter(t => t !== tagToRemove));
+    onUnbindTag(app.id, tagId);
   };
 
-  const toggleTag = (tagName: string) => {
-    if (app.tags.includes(tagName)) {
-      onUpdateTags(app.id, app.tags.filter(t => t !== tagName));
+  const toggleTag = (tagId: string) => {
+    const isBound = app.tags.some(t => t.id === tagId);
+    if (isBound) {
+      onUnbindTag(app.id, tagId);
     } else {
-      onUpdateTags(app.id, [...app.tags, tagName]);
+      onBindTag(app.id, tagId);
     }
   };
 
   const createTag = (tagName: string) => {
-    if (!app.tags.includes(tagName)) {
-      onUpdateTags(app.id, [...app.tags, tagName]);
+    // Check if tag already exists in allTags
+    const existingTag = allTags.find(t => t.name === tagName);
+    if (existingTag) {
+      if (!app.tags.some(t => t.id === existingTag.id)) {
+        onBindTag(app.id, existingTag.id);
+      }
+    } else {
+      onCreateTag(tagName);
+      // Note: We can't immediately bind the new tag because we don't have its ID yet.
+      // The parent component handles creating the tag and refreshing the list.
+      // Ideally, onCreateTag should return the new tag or Promise<Tag>, but for now we rely on refresh.
     }
   };
 
@@ -80,6 +96,14 @@ const AppCard: React.FC<AppCardProps> = ({
     );
   };
 
+  const getTypeColor = (type: string) => {
+    if (type.includes('对话')) return 'bg-blue-500';
+    if (type.includes('智能体')) return 'bg-purple-500';
+    if (type.includes('工作流')) return 'bg-orange-500';
+    if (type.includes('文本')) return 'bg-green-500';
+    return 'bg-gray-400';
+  };
+
   const renderMenu = () => (
     <div 
       ref={menuRef}
@@ -96,10 +120,14 @@ const AppCard: React.FC<AppCardProps> = ({
       <button onClick={(e) => handleAction(e, () => onExport(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
         导出应用
       </button>
-      <div className="h-px bg-gray-50 mx-2 my-1" />
-      <button className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
-        迁移为workflow编排
-      </button>
+      {app.type === '对话应用' && (
+        <>
+          <div className="h-px bg-gray-50 mx-2 my-1" />
+          <button onClick={(e) => handleAction(e, () => onConvertToWorkflow(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
+            迁移为workflow编排
+          </button>
+        </>
+      )}
       <div className="h-px bg-gray-50 mx-2 my-1" />
       <button onClick={(e) => handleAction(e, () => onDelete(app.id))} className="w-full flex items-center px-4 py-2.5 text-red-500 hover:bg-red-50 transition-colors">
         删除
@@ -133,8 +161,8 @@ const AppCard: React.FC<AppCardProps> = ({
           <p className="text-xs text-gray-500 flex-grow line-clamp-1">{app.description}</p>
           <div className="flex gap-2 min-w-[200px] justify-end overflow-hidden">
             {app.tags.map(tag => (
-              <span key={tag} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium whitespace-nowrap">
-                {tag}
+              <span key={tag.id} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                {tag.name}
               </span>
             ))}
           </div>
@@ -175,7 +203,7 @@ const AppCard: React.FC<AppCardProps> = ({
               {app.name}
             </h3>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span className={`w-1.5 h-1.5 rounded-full ${getTypeColor(app.typeLabel)}`}></span>
               <span className="text-xs text-gray-500 font-medium">{app.typeLabel} {app.category && `· ${app.category}`}</span>
             </div>
           </div>
@@ -198,9 +226,9 @@ const AppCard: React.FC<AppCardProps> = ({
       <div className="flex items-center justify-between mt-auto">
         <div className="flex flex-wrap gap-1.5 max-w-[70%]">
           {app.tags.map(tag => (
-            <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
-              {tag}
-              <X className="w-2.5 h-2.5 cursor-pointer opacity-0 group-hover/tag:opacity-100" onClick={(e) => removeTag(e, tag)} />
+            <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
+              {tag.name}
+              <X className="w-2.5 h-2.5 cursor-pointer opacity-0 group-hover/tag:opacity-100" onClick={(e) => removeTag(e, tag.id)} />
             </span>
           ))}
           {isAddingTag ? (

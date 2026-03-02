@@ -21,7 +21,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     subType: '对话助手',
     icon: 'MessageSquare',
     iconType: 'icon' as 'icon' | 'image',
-    iconBgColor: 'bg-blue-600'
+    iconBgColor: 'bg-blue-600',
+    builtIn: false
   });
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
@@ -34,7 +35,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         subType: '对话助手',
         icon: initialData.icon,
         iconType: initialData.iconType,
-        iconBgColor: initialData.iconBgColor || 'bg-blue-600'
+        iconBgColor: initialData.iconBgColor || 'bg-blue-600',
+        builtIn: false // Default to false or fetch from initialData if available
       });
     } else {
       setFormData({ 
@@ -44,7 +46,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         subType: '对话助手',
         icon: 'MessageSquare',
         iconType: 'icon',
-        iconBgColor: 'bg-blue-600'
+        iconBgColor: 'bg-blue-600',
+        builtIn: false
       });
     }
   }, [initialData, isOpen]);
@@ -53,7 +56,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     { id: '对话助手', title: '对话助手', desc: '使用大型语言模型构建基于聊天的助手', icon: <MessageSquare className="w-5 h-5" /> },
     { id: '文本生成应用', title: '文本生成应用', desc: '根据提示生成高质量文本的应用程序，例如生成文章、摘要、翻译等。', icon: <FileText className="w-5 h-5" /> },
     { id: '智能体应用', title: '智能体应用', desc: '构建一个智能Agent，可以自主选择工具来完成任务', icon: <Bot className="w-5 h-5" /> },
-    { id: '工作流', title: '工作流', desc: '提供更多的自定义能力，适合有经验的用户。', icon: <GitBranch className="w-5 h-5" /> },
+    { id: '工作流应用', title: '工作流', desc: '提供更多的自定义能力，适合有经验的用户。', icon: <GitBranch className="w-5 h-5" /> },
   ];
 
   const subTypes = ['对话助手', '对话助手工作流'];
@@ -68,7 +71,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       icon: formData.icon,
       iconType: formData.iconType,
       iconBgColor: formData.iconBgColor,
-      tags: initialData?.tags || []
+      tags: initialData?.tags || [],
+      builtIn: formData.builtIn
     });
     onClose();
   };
@@ -134,48 +138,67 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">类型</label>
-            <div className="grid grid-cols-2 gap-4">
-              {types.map(t => (
-                <div 
-                  key={t.id}
-                  onClick={() => setFormData({...formData, type: t.id})}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col gap-2 ${
-                    formData.type === t.id ? 'border-blue-500 bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.type === t.id ? 'border-blue-500' : 'border-gray-300'}`}>
-                      {formData.type === t.id && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-                    </div>
-                    <span className="font-semibold text-gray-900 text-sm">{t.title}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed pl-7">{t.desc}</p>
-                </div>
-              ))}
+          {initialData && (
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div>
+                <div className="font-medium text-gray-900 text-sm">设置为内置应用</div>
+                <div className="text-xs text-gray-500 mt-1">内置应用将对所有工作区成员可见</div>
+              </div>
+              <button 
+                onClick={() => setFormData(prev => ({ ...prev, builtIn: !prev.builtIn }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.builtIn ? 'bg-blue-600' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.builtIn ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
             </div>
-          </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">对话助手开发与调试</label>
-            <div className="grid grid-cols-2 gap-4">
-              {subTypes.map(st => (
-                <div 
-                  key={st}
-                  onClick={() => setFormData({...formData, subType: st})}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
-                    formData.subType === st ? 'border-blue-500 bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.subType === st ? 'border-blue-500' : 'border-gray-300'}`}>
-                    {formData.subType === st && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-                  </div>
-                  <span className="font-medium text-gray-900 text-sm">{st}</span>
+          {!initialData && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">类型</label>
+                <div className="grid grid-cols-2 gap-4">
+                  {types.map(t => (
+                    <div 
+                      key={t.id}
+                      onClick={() => setFormData({...formData, type: t.id})}
+                      className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col gap-2 ${
+                        formData.type === t.id ? 'border-blue-50 bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.type === t.id ? 'border-blue-500' : 'border-gray-300'}`}>
+                          {formData.type === t.id && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                        </div>
+                        <span className="font-semibold text-gray-900 text-sm">{t.title}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed pl-7">{t.desc}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">对话助手开发与调试</label>
+                <div className="grid grid-cols-2 gap-4">
+                  {subTypes.map(st => (
+                    <div 
+                      key={st}
+                      onClick={() => setFormData({...formData, subType: st})}
+                      className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
+                        formData.subType === st ? 'border-blue-500 bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.subType === st ? 'border-blue-500' : 'border-gray-300'}`}>
+                        {formData.subType === st && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                      </div>
+                      <span className="font-medium text-gray-900 text-sm">{st}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
 

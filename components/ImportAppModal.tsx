@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Modal from './Modal';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, Loader2 } from 'lucide-react';
+import { apiService } from '../services/apiService';
 
 interface ImportAppModalProps {
   isOpen: boolean;
@@ -12,19 +13,48 @@ interface ImportAppModalProps {
 const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImport }) => {
   const [activeTab, setActiveTab] = useState<'file' | 'url'>('file');
   const [url, setUrl] = useState('');
+  const [fileContent, setFileContent] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImport = () => {
-    // Mock import logic
-    onImport({
-      name: activeTab === 'file' ? '导入的应用 (文件)' : '导入的应用 (URL)',
-      description: '通过 DSL 导入的应用',
-      type: '对话应用',
-      typeLabel: '对话助手',
-      icon: 'Cloud',
-      iconBgColor: 'bg-green-600',
-      tags: ['导入']
-    });
-    onClose();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFileContent(e.target?.result as string);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleImport = async () => {
+    setIsLoading(true);
+    try {
+      let app;
+      if (activeTab === 'file') {
+        if (!fileContent) return;
+        app = await apiService.importApp({
+          data: fileContent,
+          name: fileName.replace(/\.(yml|yaml)$/, '')
+        });
+      } else {
+        if (!url) return;
+        app = await apiService.importAppFromUrl({
+          url: url
+        });
+      }
+      
+      onImport(app);
+      onClose();
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('导入失败，请检查文件格式或网络连接');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,14 +68,15 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
           <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200">取消</button>
           <button 
             onClick={handleImport}
-            disabled={activeTab === 'url' && !url}
-            className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm ${
-              (activeTab === 'url' && !url) 
+            disabled={isLoading || (activeTab === 'url' && !url) || (activeTab === 'file' && !fileContent)}
+            className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2 ${
+              (isLoading || (activeTab === 'url' && !url) || (activeTab === 'file' && !fileContent))
                 ? 'bg-blue-100 text-white cursor-not-allowed' 
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
-            创建
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isLoading ? '导入中...' : '导入'}
           </button>
         </>
       }
@@ -69,13 +100,30 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
         </div>
 
         {activeTab === 'file' ? (
-          <div className="border-2 border-dashed border-gray-100 rounded-xl py-12 flex flex-col items-center justify-center bg-gray-50/30 group hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer">
+          <div 
+            className="border-2 border-dashed border-gray-100 rounded-xl py-12 flex flex-col items-center justify-center bg-gray-50/30 group hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer relative"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept=".yml,.yaml"
+              onChange={handleFileChange}
+            />
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
               <UploadCloud className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
             </div>
             <p className="text-sm text-gray-500">
-              拖拽文件至此，或者 <span className="text-blue-600 font-medium">选择文件</span>
+              {fileName ? (
+                <span className="text-gray-900 font-medium">{fileName}</span>
+              ) : (
+                <>拖拽文件至此，或者 <span className="text-blue-600 font-medium">选择文件</span></>
+              )}
             </p>
+            {fileName && (
+              <p className="text-xs text-green-600 mt-2">文件已选择</p>
+            )}
           </div>
         ) : (
           <div className="space-y-2">

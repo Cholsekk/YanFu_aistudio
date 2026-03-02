@@ -48,7 +48,7 @@ export const NAV_TABS: NavTab[] = [
   { id: 'tasks', label: '定时任务' },
 ];
 
-export const APP_TYPES: string[] = ['全部', '对话应用', '智能体应用', '工作流应用', '定制应用', '内置应用'];
+export const APP_TYPES: string[] = ['全部', '对话应用', '智能体应用', '工作流应用', '文本生成应用', '定制应用', '内置应用'];
 
 export const SYSTEM_ICONS = [
   { name: 'MessageSquare', bgColor: 'bg-blue-600' },

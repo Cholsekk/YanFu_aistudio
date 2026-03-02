@@ -1,4 +1,11 @@
 
+export type Tag = {
+  id: string
+  name: string
+  type: string
+  binding_count: number
+}
+
 export type AppType = '全部' | '对话应用' | '智能体应用' | '工作流应用' | '定制应用' | '内置应用';
 
 export interface MenuItem {
@@ -11,6 +18,8 @@ export interface AppCategory {
   category: string;
 }
 
+export type AppIconType = 'icon' | 'image';
+
 export interface AppItem {
   id: string;
   name: string;
@@ -18,8 +27,8 @@ export interface AppItem {
   typeLabel: string;
   description: string;
   icon: string; // Lucide icon name OR base64/URL image string
-  iconType: 'icon' | 'image';
-  tags: string[];
+  iconType: AppIconType;
+  tags: Tag[];
   iconBgColor?: string; // Tailwind class for background color
   category?: string;
   appUrl?: string;
@@ -30,6 +39,44 @@ export interface AppItem {
   password?: string;
   customMenu?: boolean;
   menuItems?: MenuItem[];
+  mode?: 'chat' | 'agent-chat' | 'workflow' | 'completion';
+}
+
+export type AppBasicInfo = {
+  id: string
+  mode: AppMode
+  icon_type: string| null
+  icon: string
+  icon_background: string
+  icon_url: string
+  name: string
+  description: string
+  use_icon_as_answer_icon: boolean
+}
+
+export type ExploreApp = {
+  app: AppBasicInfo
+  app_id: string
+  description: string
+  copyright: string
+  privacy_policy: string | null
+  custom_disclaimer: string | null
+  category: string  //AppCategory的id
+  position: number
+  is_listed: boolean
+  install_count: number
+  installed: boolean
+  editable: boolean
+  is_agent: boolean,
+  label_type?:string,
+  label_name?:string,
+}
+
+export type InstalledApp = {
+  app: AppBasicInfo
+  id: string
+  uninstallable: boolean
+  is_pinned: boolean
 }
 
 export interface NavTab {
@@ -182,7 +229,7 @@ export type CredentialData = Record<string, string>;
 
 // --- New App Development Types ---
 
-export type AppMode = 'chat' | 'agent' | 'workflow' | 'completion';
+export type AppMode = 'chat' | 'agent-chat' | 'workflow' | 'completion';
 
 export type App = {
   id: string

@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag } from '../types';
 
 const getBaseUrl = () => {
   return localStorage.getItem('console_api_base_url') || 'http://192.168.1.201:5005';
@@ -294,7 +294,7 @@ class ApiService {
           id: 'app-2',
           name: '运维监控',
           description: '监控系统状态',
-          mode: 'agent',
+          mode: 'agent-chat',
           enable_site: false,
           enable_api: true,
           api_rpm: 100,
@@ -450,12 +450,130 @@ class ApiService {
     return {};
   }
 
-  async exportApp(appId: string): Promise<{ data: string }> {
-    return this.request(`/console/api/apps/${appId}/export?include_secret=false`);
+  async exportApp(appId: string, includeSecret: boolean = false): Promise<{ data: string }> {
+    return this.request(`/console/api/apps/${appId}/export?include_secret=${includeSecret}`);
   }
 
-  async getApps(page: number = 1, limit: number = 20): Promise<any> {
-    return this.request(`/console/api/apps?page=${page}&limit=${limit}`);
+  async importApp(data: { 
+    data: string; 
+    name?: string; 
+    description?: string; 
+    icon_type?: 'icon' | 'image'; 
+    icon?: string; 
+    icon_background?: string 
+  }): Promise<any> {
+    return this.request('/console/api/apps/import', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async importAppFromUrl(data: { 
+    url: string; 
+    name?: string; 
+    description?: string; 
+    icon?: string; 
+    icon_background?: string 
+  }): Promise<any> {
+    return this.request('/console/api/apps/import/url', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async importDSL(data: { 
+    mode: string; 
+    yaml_content?: string; 
+    yaml_url?: string; 
+    app_id?: string; 
+    name?: string; 
+    description?: string; 
+    icon_type?: 'icon' | 'image'; 
+    icon?: string; 
+    icon_background?: string 
+  }): Promise<any> {
+    return this.request('/console/api/apps/imports', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async confirmDSLImport(import_id: string): Promise<any> {
+    return this.request(`/console/api/apps/imports/${import_id}/confirm`, {
+      method: 'POST',
+      body: JSON.stringify({ import_id })
+    });
+  }
+
+  async convertAppToWorkflow(appID: string, data: { 
+    name: string; 
+    icon_type: 'icon' | 'image'; 
+    icon: string; 
+    icon_background?: string | null 
+  }): Promise<{ new_app_id: string }> {
+    return this.request(`/console/api/apps/${appID}/convert-to-workflow`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getApps(params: Record<string, any> = { page: 1, limit: 20 }): Promise<any> {
+    const queryString = new URLSearchParams(params as any).toString();
+    return this.request(`/console/api/apps?${queryString}`);
+  }
+
+  async getAppDetail(id: string): Promise<any> {
+    return this.request(`/console/api/apps/${id}`);
+  }
+
+  async createApp(data: { 
+    name: string; 
+    icon_type?: 'icon' | 'image'; 
+    icon?: string; 
+    icon_background?: string; 
+    mode: string; 
+    description?: string; 
+    config?: any 
+  }): Promise<any> {
+    return this.request('/console/api/apps', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateApp(appID: string, data: { 
+    name: string; 
+    icon_type: 'icon' | 'image'; 
+    icon: string; 
+    icon_background?: string; 
+    description: string; 
+    use_icon_as_answer_icon?: boolean; 
+    built_in?: boolean 
+  }): Promise<any> {
+    return this.request(`/console/api/apps/${appID}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async copyApp(appID: string, data: { 
+    name: string; 
+    icon_type: 'icon' | 'image'; 
+    icon: string; 
+    icon_background?: string | null; 
+    mode: string; 
+    description?: string 
+  }): Promise<any> {
+    return this.request(`/console/api/apps/${appID}/copy`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteApp(appID: string): Promise<void> {
+    return this.request(`/console/api/apps/${appID}`, {
+      method: 'DELETE'
+    });
   }
 
   async getTasks(page: number, perPage: number, taskName?: string): Promise<ApiResponse<ScheduledTask>> {
@@ -631,6 +749,53 @@ class ApiService {
     return this.request('/console/api/workspaces/current/tool-provider/workflow/delete', {
       method: 'POST',
       body: JSON.stringify({ workflow_tool_id: toolID }),
+    });
+  }
+
+  // 7. 标签管理 (App Tags)
+  async fetchTagList(type: string): Promise<Tag[]> {
+    return this.request(`/console/api/tags?type=${type}`);
+  }
+
+  async createTag(name: string, type: string): Promise<Tag> {
+    return this.request('/console/api/tags', {
+      method: 'POST',
+      body: JSON.stringify({ name, type }),
+    });
+  }
+
+  async updateTag(tagID: string, name: string): Promise<Tag> {
+    return this.request(`/console/api/tags/${tagID}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async deleteTag(tagID: string): Promise<void> {
+    return this.request(`/console/api/tags/${tagID}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async bindTag(tagIDList: string[], targetID: string, type: string): Promise<void> {
+    return this.request('/console/api/tag-bindings/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        tag_ids: tagIDList,
+        target_id: targetID,
+        type,
+      }),
+    });
+  }
+
+  async unBindTag(tagID: string, targetID: string, type: string): Promise<void> {
+    return this.request('/console/api/tag-bindings/remove', {
+      method: 'POST',
+      body: JSON.stringify({
+        tag_id: tagID,
+        target_id: targetID,
+        type,
+      }),
     });
   }
 }

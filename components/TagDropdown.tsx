@@ -1,11 +1,12 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, Plus, Tag as TagIcon, Settings, CheckSquare, Square } from 'lucide-react';
+import { Tag } from '../types';
 
 interface TagDropdownProps {
-  allTags: string[];
-  selectedTags: string[];
-  onToggleTag: (tagName: string) => void;
+  allTags: Tag[];
+  selectedTags: Tag[];
+  onToggleTag: (tagId: string) => void;
   onCreateTag: (tagName: string) => void;
   onManageTags: () => void;
   onClose: () => void;
@@ -33,12 +34,13 @@ const TagDropdown: React.FC<TagDropdownProps> = ({
   }, [onClose]);
 
   const filteredTags = useMemo(() => {
-    return allTags.filter(tag => tag.toLowerCase().includes(search.toLowerCase()));
+    return allTags.filter(tag => tag.name.toLowerCase().includes(search.toLowerCase()));
   }, [allTags, search]);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (search.trim() && !allTags.includes(search.trim())) {
+    const existingTag = allTags.find(t => t.name === search.trim());
+    if (search.trim() && !existingTag) {
       onCreateTag(search.trim());
       setSearch('');
     }
@@ -69,18 +71,18 @@ const TagDropdown: React.FC<TagDropdownProps> = ({
       <div className="max-h-60 overflow-y-auto py-1 custom-scrollbar">
         {filteredTags.length > 0 ? (
           filteredTags.map(tag => {
-            const isSelected = selectedTags.includes(tag);
+            const isSelected = selectedTags.some(t => t.id === tag.id);
             return (
               <button
-                key={tag}
-                onClick={() => onToggleTag(tag)}
+                key={tag.id}
+                onClick={() => onToggleTag(tag.id)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors group"
               >
                 <div className={`transition-colors ${isSelected ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`}>
                   {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                 </div>
                 <span className={`flex-grow text-left truncate ${isSelected ? 'font-medium text-gray-900' : ''}`}>
-                  {tag}
+                  {tag.name}
                 </span>
               </button>
             );

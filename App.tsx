@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header';
 import AppCard from './components/AppCard';
 import NewAppModal from './components/NewAppModal';
@@ -9,8 +9,9 @@ import ManageTagsModal from './components/ManageTagsModal';
 import ScheduledTasks from './components/ScheduledTasks';
 import ToolExtensions from './components/ToolExtensions';
 import TokenConfigModal from './components/TokenConfigModal';
-import { MOCK_APPS, APP_TYPES } from './constants';
-import { AppItem } from './types';
+import ConvertToWorkflowModal from './components/ConvertToWorkflowModal';
+import { APP_TYPES } from './constants';
+import { AppItem, AppMode, Tag } from './types';
 import { apiService } from './services/apiService';
 import { 
   Plus, 
@@ -32,9 +33,11 @@ const App: React.FC = () => {
   const [activeNavTab, setActiveNavTab] = useState('app-dev');
   const [activeFilterTab, setActiveFilterTab] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
-  const [apps, setApps] = useState<AppItem[]>(MOCK_APPS);
+  const [apps, setApps] = useState<AppItem[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'default' | 'name' | 'time-desc' | 'time-asc'>('default');
+  const [isLoading, setIsLoading] = useState(false);
   
   // Modal states
   const [isNewAppModalOpen, setIsNewAppModalOpen] = useState(false);
@@ -43,6 +46,8 @@ const App: React.FC = () => {
   const [isManageTagsModalOpen, setIsManageTagsModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+  const [isConvertToWorkflowModalOpen, setIsConvertToWorkflowModalOpen] = useState(false);
+  const [appToConvert, setAppToConvert] = useState<AppItem | null>(null);
   
   const [editingApp, setEditingApp] = useState<AppItem | null>(null);
 
@@ -55,10 +60,105 @@ const App: React.FC = () => {
     return () => window.removeEventListener('api-unauthorized', handleUnauthorized);
   }, []);
 
+  const mapAppModeToType = (mode: AppMode): string => {
+    switch (mode) {
+      case 'chat': return '对话应用';
+      case 'agent-chat': return '智能体应用';
+      case 'workflow': return '工作流应用';
+      case 'completion': return '文本生成应用';
+      default: return '对话应用';
+    }
+  };
+
+  const mapTypeToAppMode = (type: string): AppMode => {
+    if (type.includes('对话')) return 'chat';
+    if (type.includes('智能体')) return 'agent-chat';
+    if (type.includes('工作流')) return 'workflow';
+    if (type.includes('文本')) return 'completion';
+    return 'chat';
+  };
+
+  const fetchTags = async () => {
+    try {
+      const response = await apiService.fetchTagList('app');
+      if (response && Array.isArray(response)) {
+        setTags(response);
+      } else {
+        setTags([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+    }
+  };
+
+  const fetchApps = async () => {
+    if (activeNavTab !== 'app-dev') return;
+    
+    // Skip fetching for '定制应用' as per requirements
+    if (activeFilterTab === '定制应用') {
+      setApps([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const params: Record<string, any> = {
+        page: 1,
+        limit: 30,
+        name: searchQuery
+      };
+
+      if (activeFilterTab === '全部') {
+        params.built_in = false;
+      } else if (activeFilterTab === '内置应用') {
+        params.built_in = true;
+      } else {
+        params.built_in = false;
+        params.mode = mapTypeToAppMode(activeFilterTab);
+      }
+
+      const response = await apiService.getApps(params);
+      if (response && response.data) {
+        const mappedApps: AppItem[] = response.data.map((app: any) => ({
+          id: app.id,
+          name: app.name,
+          type: mapAppModeToType(app.mode),
+          typeLabel: mapAppModeToType(app.mode),
+          description: app.description || '',
+          icon: app.icon || 'MessageSquare',
+          iconType: app.icon_type || 'icon',
+          tags: app.tags || [], // Use tags from API response
+          iconBgColor: app.icon_background || 'bg-blue-600',
+          mode: app.mode
+        }));
+        setApps(mappedApps);
+      } else {
+        setApps([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch apps:', error);
+      setApps([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
+  useEffect(() => {
+    // Debounce search to avoid too many requests
+    const timer = setTimeout(() => {
+      fetchApps();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [activeNavTab, activeFilterTab, searchQuery]);
+
   // Check if any filter or non-default sort is active
   const isFiltered = useMemo(() => {
-    return activeFilterTab !== '全部' || sortBy !== 'default';
-  }, [activeFilterTab, sortBy]);
+    return activeFilterTab !== '全部' || sortBy !== 'default' || searchQuery !== '';
+  }, [activeFilterTab, sortBy, searchQuery]);
 
   const handleResetFilters = () => {
     setActiveFilterTab('全部');
@@ -68,77 +168,136 @@ const App: React.FC = () => {
   };
 
   const filteredApps = useMemo(() => {
-    let result = apps.filter(app => {
-      const matchesType = activeFilterTab === '全部' || app.type === activeFilterTab || app.typeLabel === activeFilterTab;
-      const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           app.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesType && matchesSearch;
-    });
+    // Client-side sorting only, filtering is now server-side
+    let result = [...apps];
 
     if (sortBy === 'name') {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+      result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'time-desc') {
-      result = [...result].sort((a, b) => b.id.localeCompare(a.id));
+      result.sort((a, b) => b.id.localeCompare(a.id));
     } else if (sortBy === 'time-asc') {
-      result = [...result].sort((a, b) => a.id.localeCompare(b.id));
+      result.sort((a, b) => a.id.localeCompare(b.id));
     }
-    // If sortBy is 'default', we just keep the filtered order as-is (data source order)
-
+    
     return result;
-  }, [apps, activeFilterTab, searchQuery, sortBy]);
+  }, [apps, sortBy]);
 
-  const handleUpdateTags = (id: string, newTags: string[]) => {
-    setApps(apps.map(app => app.id === id ? { ...app, tags: newTags } : app));
-  };
-
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    apps.forEach(app => app.tags.forEach(tag => tags.add(tag)));
-    return Array.from(tags).sort();
-  }, [apps]);
-
-  const handleRenameTag = (oldName: string, newName: string) => {
-    setApps(apps.map(app => ({
-      ...app,
-      tags: app.tags.map(tag => tag === oldName ? newName : tag)
-    })));
-  };
-
-  const handleDeleteTagGlobal = (tagName: string) => {
-    setApps(apps.map(app => ({
-      ...app,
-      tags: app.tags.filter(tag => tag !== tagName)
-    })));
-  };
-
-  const handleCreateOrUpdateApp = (appData: any) => {
-    if (appData.id) {
-      setApps(apps.map(a => a.id === appData.id ? { ...a, ...appData } : a));
-    } else {
-      const newApp: AppItem = {
-        id: Date.now().toString(),
-        ...appData,
-        tags: appData.tags || []
-      };
-      setApps([newApp, ...apps]);
+  const handleCreateTag = async (name: string) => {
+    try {
+      await apiService.createTag(name, 'app');
+      fetchTags();
+    } catch (error) {
+      console.error('Failed to create tag:', error);
+      alert('创建标签失败');
     }
-    setEditingApp(null);
   };
 
-  const handleDeleteApp = (id: string) => {
+  const handleRenameTag = async (tagId: string, newName: string) => {
+    try {
+      await apiService.updateTag(tagId, newName);
+      fetchTags();
+      fetchApps(); // Refresh apps to update tag names in UI
+    } catch (error) {
+      console.error('Failed to rename tag:', error);
+      alert('重命名标签失败');
+    }
+  };
+
+  const handleDeleteTag = async (tagId: string) => {
+    try {
+      await apiService.deleteTag(tagId);
+      fetchTags();
+      fetchApps(); // Refresh apps to remove deleted tag
+    } catch (error) {
+      console.error('Failed to delete tag:', error);
+      alert('删除标签失败');
+    }
+  };
+
+  const handleBindTag = async (appId: string, tagId: string) => {
+    try {
+      await apiService.bindTag([tagId], appId, 'app');
+      fetchApps();
+      fetchTags(); // Update binding counts
+    } catch (error) {
+      console.error('Failed to bind tag:', error);
+      alert('添加标签失败');
+    }
+  };
+
+  const handleUnbindTag = async (appId: string, tagId: string) => {
+    try {
+      await apiService.unBindTag(tagId, appId, 'app');
+      fetchApps();
+      fetchTags(); // Update binding counts
+    } catch (error) {
+      console.error('Failed to unbind tag:', error);
+      alert('移除标签失败');
+    }
+  };
+
+  const handleCreateOrUpdateApp = async (appData: any) => {
+    try {
+      if (appData.id) {
+        // Update
+        await apiService.updateApp(appData.id, {
+          appID: appData.id,
+          name: appData.name,
+          icon_type: appData.iconType || 'icon',
+          icon: appData.icon,
+          icon_background: appData.iconBgColor,
+          description: appData.description,
+          use_icon_as_answer_icon: false, // Default
+          built_in: false // Default
+        });
+      } else {
+        // Create
+        await apiService.createApp({
+          name: appData.name,
+          icon_type: appData.iconType || 'icon',
+          icon: appData.icon,
+          icon_background: appData.iconBgColor,
+          mode: mapTypeToAppMode(appData.typeLabel || appData.type),
+          description: appData.description,
+          config: {} // Default empty config
+        });
+      }
+      fetchApps();
+      setEditingApp(null);
+    } catch (error) {
+      console.error('Failed to save app:', error);
+      alert('保存失败，请重试');
+    }
+  };
+
+  const handleDeleteApp = async (id: string) => {
     if (confirm('确认删除该应用吗？')) {
-      setApps(apps.filter(a => a.id !== id));
+      try {
+        await apiService.deleteApp(id);
+        fetchApps();
+      } catch (error) {
+        console.error('Failed to delete app:', error);
+        alert('删除失败，请重试');
+      }
     }
   };
 
-  const handleCopyApp = (app: AppItem) => {
-    const copy: AppItem = {
-      ...app,
-      id: `${Date.now()}`,
-      name: `${app.name} (副本)`
-    };
-    setApps([copy, ...apps]);
+  const handleCopyApp = async (app: AppItem) => {
+    try {
+      await apiService.copyApp(app.id, {
+        appID: app.id,
+        name: `${app.name} (副本)`,
+        icon_type: app.iconType,
+        icon: app.icon,
+        icon_background: app.iconBgColor,
+        mode: mapTypeToAppMode(app.type),
+        description: app.description
+      });
+      fetchApps();
+    } catch (error) {
+      console.error('Failed to copy app:', error);
+      alert('复制失败，请重试');
+    }
   };
 
   const handleExportApp = async (app: AppItem) => {
@@ -160,6 +319,39 @@ const App: React.FC = () => {
     } catch (error) {
       console.error('Export failed:', error);
       alert('导出失败，请重试');
+    }
+  };
+
+  const handleConvertToWorkflow = (app: AppItem) => {
+    setAppToConvert(app);
+    setIsConvertToWorkflowModalOpen(true);
+  };
+
+  const executeConvertToWorkflow = async (data: { name: string; deleteOriginal: boolean; icon: string; iconType: 'icon' | 'image'; iconBgColor: string }) => {
+    if (!appToConvert) return;
+    
+    try {
+      await apiService.convertAppToWorkflow(appToConvert.id, {
+        name: data.name,
+        icon_type: data.iconType,
+        icon: data.icon,
+        icon_background: data.iconBgColor
+      });
+
+      if (data.deleteOriginal) {
+        await apiService.deleteApp(appToConvert.id);
+      }
+
+      // Close modal first
+      setIsConvertToWorkflowModalOpen(false);
+      setAppToConvert(null);
+      
+      // Then refresh list
+      await fetchApps();
+      alert('迁移成功');
+    } catch (error: any) {
+      console.error('Failed to convert app:', error);
+      alert(`迁移失败: ${error.message || '未知错误'}`);
     }
   };
 
@@ -408,12 +600,15 @@ const App: React.FC = () => {
               key={app.id} 
               app={app} 
               viewMode={viewMode}
-              allTags={allTags}
-              onUpdateTags={handleUpdateTags}
+              allTags={tags} // Pass Tag[]
+              onBindTag={handleBindTag}
+              onUnbindTag={handleUnbindTag}
+              onCreateTag={handleCreateTag}
               onEdit={openEditModal}
               onDelete={handleDeleteApp}
               onCopy={handleCopyApp}
               onExport={handleExportApp}
+              onConvertToWorkflow={handleConvertToWorkflow}
               onManageTags={() => setIsManageTagsModalOpen(true)}
             />
           ))}
@@ -467,13 +662,20 @@ const App: React.FC = () => {
       <ManageTagsModal 
         isOpen={isManageTagsModalOpen}
         onClose={() => setIsManageTagsModalOpen(false)}
-        allTags={allTags}
+        tags={tags}
         onRenameTag={handleRenameTag}
-        onDeleteTag={handleDeleteTagGlobal}
+        onDeleteTag={handleDeleteTag}
+        onCreateTag={handleCreateTag}
       />
       <TokenConfigModal 
         isOpen={isTokenModalOpen}
         onClose={() => setIsTokenModalOpen(false)}
+      />
+      <ConvertToWorkflowModal
+        isOpen={isConvertToWorkflowModalOpen}
+        onClose={() => setIsConvertToWorkflowModalOpen(false)}
+        onConfirm={executeConvertToWorkflow}
+        app={appToConvert}
       />
     </div>
   );

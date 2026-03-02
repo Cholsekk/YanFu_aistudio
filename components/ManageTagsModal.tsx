@@ -1,71 +1,121 @@
 
 import React, { useState } from 'react';
 import Modal from './Modal';
-import { Tag as TagIcon, Edit2, Trash2, Check, X } from 'lucide-react';
+import { Tag as TagIcon, Edit2, Trash2, Check, X, Plus } from 'lucide-react';
+import { Tag } from '../types';
 
 interface ManageTagsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  allTags: string[];
-  onRenameTag: (oldName: string, newName: string) => void;
-  onDeleteTag: (tagName: string) => void;
+  tags: Tag[];
+  onRenameTag: (tagId: string, newName: string) => void;
+  onDeleteTag: (tagId: string) => void;
+  onCreateTag: (name: string) => void;
 }
 
 const ManageTagsModal: React.FC<ManageTagsModalProps> = ({ 
   isOpen, 
   onClose, 
-  allTags, 
+  tags, 
   onRenameTag, 
-  onDeleteTag 
+  onDeleteTag,
+  onCreateTag
 }) => {
-  const [editingTag, setEditingTag] = useState<string | null>(null);
-  const [newName, setNewName] = useState('');
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [newTagName, setNewTagName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
-  const handleStartEdit = (tag: string) => {
-    setEditingTag(tag);
-    setNewName(tag);
+  const handleStartEdit = (tag: Tag) => {
+    setEditingTagId(tag.id);
+    setEditName(tag.name);
   };
 
-  const handleSaveEdit = (oldName: string) => {
-    if (newName.trim() && newName !== oldName) {
-      onRenameTag(oldName, newName.trim());
+  const handleSaveEdit = (tagId: string) => {
+    if (editName.trim()) {
+      onRenameTag(tagId, editName.trim());
     }
-    setEditingTag(null);
+    setEditingTagId(null);
+  };
+
+  const handleCreateTag = () => {
+    if (newTagName.trim()) {
+      onCreateTag(newTagName.trim());
+      setNewTagName('');
+      setIsCreating(false);
+    }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="管理标签">
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-        {allTags.length === 0 ? (
-          <div className="py-12 text-center text-gray-400">
+        {/* Create New Tag Section */}
+        <div className="mb-4">
+          {isCreating ? (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+              <input 
+                autoFocus
+                type="text" 
+                className="flex-grow px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm outline-none shadow-sm focus:ring-2 focus:ring-blue-500/20"
+                placeholder="输入标签名称..."
+                value={newTagName}
+                onChange={e => setNewTagName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreateTag()}
+              />
+              <button 
+                onClick={handleCreateTag}
+                className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setIsCreating(false)}
+                className="p-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setIsCreating(true)}
+              className="w-full flex items-center justify-center gap-2 p-3 border border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-sm font-medium">新建标签</span>
+            </button>
+          )}
+        </div>
+
+        {tags.length === 0 && !isCreating ? (
+          <div className="py-8 text-center text-gray-400">
             <TagIcon className="w-12 h-12 mx-auto mb-3 opacity-20" />
             <p>暂无标签</p>
           </div>
         ) : (
           <div className="grid gap-2">
-            {allTags.map(tag => (
+            {tags.map(tag => (
               <div 
-                key={tag} 
+                key={tag.id} 
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group hover:border-blue-200 transition-all"
               >
-                {editingTag === tag ? (
+                {editingTagId === tag.id ? (
                   <div className="flex-grow flex items-center gap-2">
                     <input 
                       autoFocus
                       type="text" 
                       className="flex-grow px-3 py-1.5 bg-white border border-blue-500 rounded-lg text-sm outline-none shadow-sm"
-                      value={newName}
-                      onChange={e => setNewName(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleSaveEdit(tag)}
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSaveEdit(tag.id)}
                     />
                     <button 
-                      onClick={() => handleSaveEdit(tag)}
+                      onClick={() => handleSaveEdit(tag.id)}
                       className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <Check className="w-4 h-4" />
                     </button>
                     <button 
-                      onClick={() => setEditingTag(null)}
+                      onClick={() => setEditingTagId(null)}
                       className="p-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors"
                     >
                       <X className="w-4 h-4" />
@@ -77,7 +127,12 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
                       <div className="p-2 bg-white rounded-lg text-gray-400">
                         <TagIcon className="w-4 h-4" />
                       </div>
-                      <span className="text-sm font-medium text-gray-700">{tag}</span>
+                      <span className="text-sm font-medium text-gray-700">{tag.name}</span>
+                      {tag.binding_count > 0 && (
+                        <span className="px-2 py-0.5 bg-gray-200 text-gray-500 text-xs rounded-full">
+                          {tag.binding_count}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
@@ -88,7 +143,7 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => { if(confirm(`确定要删除标签 "${tag}" 吗？这会从所有应用中移除该标签。`)) onDeleteTag(tag); }}
+                        onClick={() => { if(confirm(`确定要删除标签 "${tag.name}" 吗？这会从所有应用中移除该标签。`)) onDeleteTag(tag.id); }}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         title="删除"
                       >
