@@ -205,7 +205,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
             >
               <img 
                 ref={imgRef}
-                src={tempImage} 
+                src={tempImage || undefined} 
                 alt="Crop preview" 
                 className="max-w-full max-h-full transition-transform duration-75"
                 style={{ transform: `scale(${zoom})` }}
@@ -259,7 +259,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
         ) : activeTab === 'system' ? (
           <div className="space-y-4">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">系统图标</label>
-            <div className="grid grid-cols-8 gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="grid grid-cols-8 gap-3 max-h-[300px] overflow-y-auto p-2 custom-scrollbar">
               {SYSTEM_ICONS.map((item, idx) => (
                 <button
                   key={idx}

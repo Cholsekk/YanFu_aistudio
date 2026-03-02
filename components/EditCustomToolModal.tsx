@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Collection, ToolExtension, ToolExtensionParameter } from '../types';
 import { Search, ChevronDown, Info, Trash2, X, Check, Edit2 } from 'lucide-react';
 import IconPickerModal from './IconPickerModal';
+import { getIcon } from '../constants';
+import * as LucideIcons from 'lucide-react';
 
 interface EditCustomToolModalProps {
   isOpen: boolean;
@@ -122,7 +124,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
 
       const data = {
         ...tool,
-        label: { ...tool.label, zh_Hans: name },
+        label: name || tool.label.zh_Hans,
         name: toolCallName,
         description: { ...tool.description, zh_Hans: description },
         labels: selectedLabels,
@@ -219,10 +221,10 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
                 className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all group relative overflow-hidden"
               >
                 {typeof icon === 'string' ? (
-                  <img src={icon} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  <div style={{ backgroundColor: icon.background }} className="w-full h-full flex items-center justify-center text-xl">
-                    {icon.content}
+                  <div style={{ backgroundColor: icon.background }} className="w-full h-full flex items-center justify-center text-xl text-white">
+                    {(LucideIcons as any)[icon.content] ? React.createElement((LucideIcons as any)[icon.content], { className: "w-6 h-6" }) : icon.content}
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

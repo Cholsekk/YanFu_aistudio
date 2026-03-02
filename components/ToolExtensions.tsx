@@ -4,6 +4,8 @@ import ToolAuthDrawer from './ToolAuthDrawer';
 import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
 import EditCustomToolModal from './EditCustomToolModal';
 import { apiService } from '../services/apiService';
+import { getIcon, SYSTEM_ICONS } from '../constants';
+import * as LucideIcons from 'lucide-react';
 import { 
   Search, 
   Globe, 
@@ -766,6 +768,7 @@ const ToolExtensions: React.FC = () => {
         await apiService.updateCustomCollection(updatedTool);
       } else if (updatedTool.type === 'workflow') {
         const payload: WorkflowToolProviderRequest & { workflow_tool_id: string } = {
+          label: updatedTool.label,
           name: updatedTool.name,
           icon: updatedTool.icon,
           description: updatedTool.description?.zh_Hans || updatedTool.description?.en_US || '',
@@ -1000,13 +1003,41 @@ const ToolExtensions: React.FC = () => {
                 
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:scale-105 transition-transform duration-300">
-                    {typeof tool.icon === 'string' ? (
-                      <img src={tool.icon} alt={tool.label.zh_Hans} className="w-7 h-7 object-contain" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div style={{ backgroundColor: tool.icon.background }} className="w-full h-full flex items-center justify-center text-lg">
-                        {tool.icon.content}
-                      </div>
-                    )}
+                    {(() => {
+                      let iconObj = tool.icon;
+                      if (typeof tool.icon === 'string') {
+                        try {
+                          const trimmed = tool.icon.trim();
+                          if (trimmed.startsWith('{')) {
+                            iconObj = JSON.parse(trimmed);
+                          } else if (!trimmed.includes('/') && !trimmed.startsWith('http') && !trimmed.startsWith('data:')) {
+                            const systemIcon = SYSTEM_ICONS.find(i => i.name === trimmed);
+                            iconObj = { 
+                              content: trimmed, 
+                              background: systemIcon ? systemIcon.bgColor : '#f0f9ff' 
+                            };
+                          }
+                        } catch (e) {
+                          // ignore error, treat as string
+                        }
+                      }
+
+                      if (typeof iconObj === 'string') {
+                        return <img src={iconObj || undefined} alt={tool.label.zh_Hans} className="w-7 h-7 object-contain" referrerPolicy="no-referrer" />;
+                      } else if (iconObj && typeof iconObj === 'object') {
+                        const IconComponent = (LucideIcons as any)[iconObj.content];
+                        const isTailwindBg = iconObj.background?.startsWith('bg-');
+                        return (
+                          <div 
+                            style={!isTailwindBg ? { backgroundColor: iconObj.background } : undefined} 
+                            className={`w-full h-full flex items-center justify-center text-lg text-white ${isTailwindBg ? iconObj.background : ''}`}
+                          >
+                            {IconComponent ? <IconComponent className="w-7 h-7" /> : iconObj.content}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                   <div className={`w-2 h-2 rounded-full ${tool.is_team_authorization ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-gray-300'}`} title={tool.is_team_authorization ? '已授权' : '未授权'} />
                 </div>

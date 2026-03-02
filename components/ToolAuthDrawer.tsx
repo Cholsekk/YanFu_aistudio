@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Collection, ToolExtension } from '../types';
 import { X, ExternalLink, ShieldCheck, Info } from 'lucide-react';
 import ToolParamDrawer from './ToolParamDrawer';
+import { getIcon, SYSTEM_ICONS } from '../constants';
+import * as LucideIcons from 'lucide-react';
 
 interface ToolAuthDrawerProps {
   isOpen: boolean;
@@ -31,13 +33,41 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
         <div className="sticky top-0 bg-white/80 backdrop-blur-md z-10 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100">
-              {typeof tool.icon === 'string' ? (
-                <img src={tool.icon} alt={tool.label.zh_Hans} className="w-6 h-6 object-contain" referrerPolicy="no-referrer" />
-              ) : (
-                <div style={{ backgroundColor: tool.icon.background }} className="w-full h-full flex items-center justify-center text-sm">
-                  {tool.icon.content}
-                </div>
-              )}
+              {(() => {
+                let iconObj = tool.icon;
+                if (typeof tool.icon === 'string') {
+                  try {
+                    const trimmed = tool.icon.trim();
+                    if (trimmed.startsWith('{')) {
+                      iconObj = JSON.parse(trimmed);
+                    } else if (!trimmed.includes('/') && !trimmed.startsWith('http') && !trimmed.startsWith('data:')) {
+                      const systemIcon = SYSTEM_ICONS.find(i => i.name === trimmed);
+                      iconObj = { 
+                        content: trimmed, 
+                        background: systemIcon ? systemIcon.bgColor : '#f0f9ff' 
+                      };
+                    }
+                  } catch (e) {
+                    // ignore error, treat as string
+                  }
+                }
+
+                if (typeof iconObj === 'string') {
+                  return <img src={iconObj || undefined} alt={tool.label.zh_Hans} className="w-6 h-6 object-contain" referrerPolicy="no-referrer" />;
+                } else if (iconObj && typeof iconObj === 'object') {
+                  const IconComponent = (LucideIcons as any)[iconObj.content];
+                  const isTailwindBg = iconObj.background?.startsWith('bg-');
+                  return (
+                    <div 
+                      style={!isTailwindBg ? { backgroundColor: iconObj.background } : undefined} 
+                      className={`w-full h-full flex items-center justify-center text-sm text-white ${isTailwindBg ? iconObj.background : ''}`}
+                    >
+                      {IconComponent ? <IconComponent className="w-6 h-6" /> : iconObj.content}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 text-lg leading-tight">{tool.label.zh_Hans}</h3>
