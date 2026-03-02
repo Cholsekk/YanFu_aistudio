@@ -85,6 +85,8 @@ export const SYSTEM_ICONS = [
   { name: 'Users', bgColor: 'bg-cyan-500' },
 ];
 
+export const SYS_ICON_IDS = ['122', '156'];
+
 export const MOCK_APPS: AppItem[] = [
   {
     id: '1',

@@ -37,7 +37,10 @@ const App: React.FC = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'default' | 'name' | 'time-desc' | 'time-asc'>('default');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Modal states
   const [isNewAppModalOpen, setIsNewAppModalOpen] = useState(false);
@@ -91,7 +94,7 @@ const App: React.FC = () => {
     }
   };
 
-  const fetchApps = async () => {
+  const fetchApps = async (isLoadMore = false) => {
     if (activeNavTab !== 'app-dev') return;
     
     // Skip fetching for '定制应用' as per requirements
@@ -100,10 +103,16 @@ const App: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
+    if (isLoadMore) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+    }
+
     try {
+      const currentPage = isLoadMore ? page + 1 : 1;
       const params: Record<string, any> = {
-        page: 1,
+        page: currentPage,
         limit: 30,
         name: searchQuery
       };
@@ -127,19 +136,34 @@ const App: React.FC = () => {
           description: app.description || '',
           icon: app.icon || 'MessageSquare',
           iconType: app.icon_type || 'icon',
+          icon_url: app.icon_url,
           tags: app.tags || [], // Use tags from API response
           iconBgColor: app.icon_background || 'bg-blue-600',
           mode: app.mode
         }));
-        setApps(mappedApps);
+        
+        if (isLoadMore) {
+          setApps(prev => [...prev, ...mappedApps]);
+          setPage(currentPage);
+        } else {
+          setApps(mappedApps);
+          setPage(1);
+        }
+        setHasMore(response.has_more);
       } else {
-        setApps([]);
+        if (!isLoadMore) {
+          setApps([]);
+        }
+        setHasMore(false);
       }
     } catch (error) {
       console.error('Failed to fetch apps:', error);
-      setApps([]);
+      if (!isLoadMore) {
+        setApps([]);
+      }
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -150,10 +174,24 @@ const App: React.FC = () => {
   useEffect(() => {
     // Debounce search to avoid too many requests
     const timer = setTimeout(() => {
-      fetchApps();
+      fetchApps(false);
     }, 300);
     return () => clearTimeout(timer);
   }, [activeNavTab, activeFilterTab, searchQuery]);
+
+  // Infinite scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100) {
+        if (hasMore && !isLoading && !isLoadingMore) {
+          fetchApps(true);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, isLoading, isLoadingMore, activeNavTab, activeFilterTab, searchQuery, page]);
 
   // Check if any filter or non-default sort is active
   const isFiltered = useMemo(() => {
@@ -627,6 +665,11 @@ const App: React.FC = () => {
                   清除筛选条件
                 </button>
               )}
+            </div>
+          )}
+          {isLoadingMore && (
+            <div className="col-span-full py-4 text-center text-gray-400 text-sm">
+              加载更多...
             </div>
           )}
         </div>

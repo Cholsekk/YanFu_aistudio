@@ -28,7 +28,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     menuItems: [] as MenuItem[],
     description: '',
     icon: 'LayoutGrid',
-    iconType: 'icon' as 'icon' | 'image',
+    iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
     iconBgColor: 'bg-indigo-600'
   });
 
@@ -106,7 +106,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     onClose();
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image'; iconBgColor?: string }) => {
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
     setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-indigo-600' });
   };
 
@@ -156,6 +156,17 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
               >
                 {formData.iconType === 'image' ? (
                   <img src={formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
+                ) : formData.iconType === 'sys-icon' ? (
+                  <div className="w-full h-full bg-gray-50 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={`/sys_icons/Component ${formData.icon}.svg`} 
+                      alt="icon" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg';
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className={`w-full h-full ${formData.iconBgColor} flex items-center justify-center text-white`}>
                     {getIcon(formData.icon, "w-5 h-5")}

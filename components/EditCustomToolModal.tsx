@@ -149,9 +149,11 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
     setShowSaveConfirm(true);
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image'; iconBgColor?: string }) => {
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
     if (data.iconType === 'icon') {
       setIcon({ content: data.icon, background: data.iconBgColor || '#f0f9ff' });
+    } else if (data.iconType === 'sys-icon') {
+      setIcon(`/sys_icons/Component ${data.icon}.svg`);
     } else {
       setIcon(data.icon);
     }
@@ -159,6 +161,19 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
 
   const handleFormChange = (paramName: string, form: string) => {
     setParameterForms(prev => ({ ...prev, [paramName]: form }));
+  };
+
+  const isSysIconUrl = (url: string) => url.startsWith('/sys_icons/Component ') && url.endsWith('.svg');
+  const getSysIconId = (url: string) => url.replace('/sys_icons/Component ', '').replace('.svg', '');
+
+  const getInitialIconValue = () => {
+    if (typeof icon === 'string') {
+      if (isSysIconUrl(icon)) {
+        return { icon: getSysIconId(icon), iconType: 'sys-icon' as const };
+      }
+      return { icon, iconType: 'image' as const };
+    }
+    return { icon: icon.content, iconType: 'icon' as const, iconBgColor: icon.background };
   };
 
   const performDelete = async () => {
@@ -468,7 +483,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
         isOpen={isIconPickerOpen}
         onClose={() => setIsIconPickerOpen(false)}
         onConfirm={handleIconConfirm}
-        initialValue={typeof icon === 'string' ? { icon, iconType: 'image' } : { icon: icon.content, iconType: 'icon', iconBgColor: icon.background }}
+        initialValue={getInitialIconValue()}
       />
 
       {/* Save Confirmation Modal */}

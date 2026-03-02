@@ -18,7 +18,7 @@ export interface AppCategory {
   category: string;
 }
 
-export type AppIconType = 'icon' | 'image';
+export type AppIconType = 'icon' | 'image' | 'sys-icon';
 
 export interface AppItem {
   id: string;
@@ -26,8 +26,9 @@ export interface AppItem {
   type: string;
   typeLabel: string;
   description: string;
-  icon: string; // Lucide icon name OR base64/URL image string
+  icon: string; // Lucide icon name OR base64/URL image string OR sys-icon ID
   iconType: AppIconType;
+  icon_url?: string | null; // URL for image type
   tags: Tag[];
   iconBgColor?: string; // Tailwind class for background color
   category?: string;

@@ -85,13 +85,41 @@ const AppCard: React.FC<AppCardProps> = ({
     setIsMenuOpen(false);
   };
 
-  const renderIcon = (className: string) => {
-    if (app.iconType === 'image') {
-      return <img src={app.icon || undefined} alt={app.name} className={`${className} object-cover rounded-lg`} />;
+  const renderAppIcon = (isList: boolean) => {
+    const containerClass = isList ? "w-8 h-8" : "w-11 h-11";
+    const iconClass = isList ? "w-5 h-5" : "w-6 h-6";
+    const paddingClass = isList ? "p-1.5" : "p-2.5";
+
+    if (app.iconType === 'sys-icon') {
+      return (
+        <div className={`${containerClass} bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden`}>
+          <img 
+            src={`/sys_icons/Component ${app.icon}.svg`} 
+            alt={app.name} 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg'; // Fallback
+            }}
+          />
+        </div>
+      );
     }
+
+    if (app.iconType === 'image') {
+      const src = app.icon_url || app.icon;
+      return (
+        <img 
+          src={src || undefined} 
+          alt={app.name} 
+          className={`${containerClass} rounded-lg object-cover border border-gray-100`} 
+        />
+      );
+    }
+
+    // Default 'icon' (Lucide)
     return (
-      <div className={`${app.iconBgColor} p-2.5 rounded-lg text-white`}>
-        {getIcon(app.icon, className)}
+      <div className={`${app.iconBgColor} ${paddingClass} rounded-lg text-white flex items-center justify-center`}>
+        {getIcon(app.icon, iconClass)}
       </div>
     );
   };
@@ -142,13 +170,7 @@ const AppCard: React.FC<AppCardProps> = ({
         onClick={onClick}
       >
         <div className="flex-shrink-0">
-          {app.iconType === 'image' ? (
-            <img src={app.icon || undefined} alt={app.name} className="w-8 h-8 rounded-lg object-cover" />
-          ) : (
-            <div className={`${app.iconBgColor} p-1.5 rounded-lg text-white`}>
-              {getIcon(app.icon, "w-5 h-5")}
-            </div>
-          )}
+          {renderAppIcon(true)}
         </div>
         
         <div className="flex-grow flex items-center gap-6">
@@ -191,13 +213,7 @@ const AppCard: React.FC<AppCardProps> = ({
     >
       <div className="flex justify-between items-start mb-4 relative">
         <div className="flex items-start gap-4">
-          {app.iconType === 'image' ? (
-            <img src={app.icon || undefined} alt={app.name} className="w-11 h-11 rounded-lg object-cover" />
-          ) : (
-            <div className={`${app.iconBgColor} p-2.5 rounded-lg text-white`}>
-              {getIcon(app.icon, "w-6 h-6")}
-            </div>
-          )}
+          {renderAppIcon(false)}
           <div>
             <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">
               {app.name}

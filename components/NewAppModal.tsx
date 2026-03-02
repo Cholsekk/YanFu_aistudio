@@ -77,7 +77,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     onClose();
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image'; iconBgColor?: string }) => {
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
     setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-blue-600' });
   };
 
@@ -109,6 +109,17 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
               >
                 {formData.iconType === 'image' ? (
                   <img src={formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
+                ) : formData.iconType === 'sys-icon' ? (
+                  <div className="w-full h-full bg-gray-50 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={`/sys_icons/Component ${formData.icon}.svg`} 
+                      alt="icon" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg';
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className={`w-full h-full ${formData.iconBgColor} flex items-center justify-center text-white`}>
                     {getIcon(formData.icon, "w-6 h-6")}

@@ -2,19 +2,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Modal from './Modal';
 import { Sparkles, Image as ImageIcon, Check, Upload, X, Crop, ZoomIn, ZoomOut } from 'lucide-react';
-import { SYSTEM_ICONS, getIcon } from '../constants';
+import { SYS_ICON_IDS } from '../constants';
 
 interface IconPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (data: { icon: string; iconType: 'icon' | 'image'; iconBgColor?: string }) => void;
-  initialValue?: { icon: string; iconType: 'icon' | 'image'; iconBgColor?: string };
+  onConfirm: (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => void;
+  initialValue?: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string };
 }
 
 const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onConfirm, initialValue }) => {
   const [activeTab, setActiveTab] = useState<'system' | 'image'>(initialValue?.iconType === 'image' ? 'image' : 'system');
-  const [selectedIcon, setSelectedIcon] = useState(initialValue?.icon || SYSTEM_ICONS[0].name);
-  const [selectedBg, setSelectedBg] = useState(initialValue?.iconBgColor || SYSTEM_ICONS[0].bgColor);
+  const [selectedIcon, setSelectedIcon] = useState(
+    initialValue?.iconType === 'sys-icon' ? initialValue.icon : SYS_ICON_IDS[0]
+  );
   const [uploadedImage, setUploadedImage] = useState(initialValue?.iconType === 'image' ? initialValue.icon : '');
   
   // Cropping state
@@ -26,6 +27,22 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialValue?.iconType === 'sys-icon') {
+        setSelectedIcon(initialValue.icon);
+        setActiveTab('system');
+      } else if (initialValue?.iconType === 'image') {
+        setUploadedImage(initialValue.icon);
+        setActiveTab('image');
+      } else {
+        // Default fallback
+        setSelectedIcon(SYS_ICON_IDS[0]);
+        setActiveTab('system');
+      }
+    }
+  }, [isOpen, initialValue]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,7 +60,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
 
   const handleConfirm = () => {
     if (activeTab === 'system') {
-      onConfirm({ icon: selectedIcon, iconType: 'icon', iconBgColor: selectedBg });
+      onConfirm({ icon: selectedIcon, iconType: 'sys-icon' });
     } else if (uploadedImage) {
       onConfirm({ icon: uploadedImage, iconType: 'image' });
     }
@@ -259,20 +276,24 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
         ) : activeTab === 'system' ? (
           <div className="space-y-4">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">系统图标</label>
-            <div className="grid grid-cols-8 gap-3 max-h-[300px] overflow-y-auto p-2 custom-scrollbar">
-              {SYSTEM_ICONS.map((item, idx) => (
+            <div className="grid grid-cols-6 gap-3 max-h-[300px] overflow-y-auto p-2 custom-scrollbar">
+              {SYS_ICON_IDS.map((id) => (
                 <button
-                  key={idx}
-                  onClick={() => {
-                    setSelectedIcon(item.name);
-                    setSelectedBg(item.bgColor);
-                  }}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center relative transition-transform hover:scale-110 active:scale-95 ${item.bgColor} ${selectedIcon === item.name && selectedBg === item.bgColor ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
+                  key={id}
+                  onClick={() => setSelectedIcon(id)}
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center relative transition-all hover:scale-105 active:scale-95 bg-gray-50 overflow-hidden ${selectedIcon === id ? 'ring-2 ring-offset-2 ring-blue-500' : 'hover:bg-gray-100'}`}
                 >
-                  {getIcon(item.name, "w-5 h-5 text-white")}
-                  {selectedIcon === item.name && selectedBg === item.bgColor && (
-                    <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
-                      <Check className="w-2 h-2 text-blue-600" />
+                  <img 
+                    src={`/sys_icons/Component ${id}.svg`} 
+                    alt={`Icon ${id}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg';
+                    }}
+                  />
+                  {selectedIcon === id && (
+                    <div className="absolute top-1 right-1 bg-blue-600 rounded-full p-0.5 shadow-sm">
+                      <Check className="w-2 h-2 text-white" />
                     </div>
                   )}
                 </button>
