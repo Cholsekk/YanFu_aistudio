@@ -126,10 +126,10 @@ const AppCard: React.FC<AppCardProps> = ({
 
   const getTypeColor = (type: string) => {
     if (type.includes('对话')) return 'bg-blue-500';
-    if (type.includes('智能体')) return 'bg-purple-500';
+    if (type.includes('智能体')) return 'bg-chocolate-500';
     if (type.includes('工作流')) return 'bg-orange-500';
     if (type.includes('文本')) return 'bg-green-500';
-    return 'bg-gray-400';
+    return 'bg-purple-500';
   };
 
   const renderMenu = () => (
@@ -141,13 +141,17 @@ const AppCard: React.FC<AppCardProps> = ({
       <button onClick={(e) => handleAction(e, () => onEdit(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
         编辑信息
       </button>
-      <div className="h-px bg-gray-50 mx-2 my-1" />
-      <button onClick={(e) => handleAction(e, () => onCopy(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
-        复制
-      </button>
-      <button onClick={(e) => handleAction(e, () => onExport(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
-        导出应用
-      </button>
+      {app.type !== '定制应用' && app.mode !== 'custom' && (
+        <>
+          <div className="h-px bg-gray-50 mx-2 my-1" />
+          <button onClick={(e) => handleAction(e, () => onCopy(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
+            复制
+          </button>
+          <button onClick={(e) => handleAction(e, () => onExport(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
+            导出应用
+          </button>
+        </>
+      )}
       {app.type === '对话应用' && (
         <>
           <div className="h-px bg-gray-50 mx-2 my-1" />
@@ -220,7 +224,7 @@ const AppCard: React.FC<AppCardProps> = ({
             </h3>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${getTypeColor(app.typeLabel)}`}></span>
-              <span className="text-xs text-gray-500 font-medium">{app.typeLabel} {app.category && `· ${app.category}`}</span>
+              <span className="text-xs text-gray-500 font-medium">{app.typeLabel}</span>
             </div>
           </div>
         </div>

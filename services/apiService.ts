@@ -279,6 +279,75 @@ class ApiService {
       return { items: mockTasks, total: 3, pages: 1, current_page: 1, per_page: 10 };
     }
 
+    // Mock for explore apps (custom apps)
+    if (endpoint.includes('/console/api/explore/apps')) {
+      const mockExploreApps = [
+        {
+            "id": "bee57668-def8-4b28-89c5-2c74771d669d",
+            "app": {
+                "id": "d5585488-b99f-4c9a-a071-46d613dd145f",
+                "name": "Custom App 001",
+                "mode": "custom",
+                "icon": "156",
+                "icon_type": "sys-icon",
+                "icon_url": null,
+                "icon_background": "",
+                "url": "https://ais-pre-hlwgf37flgnosfuabem26z-249758729543.europe-west2.run.app/"
+            },
+            "app_id": "72d1e7cf-c837-4d0e-8b7f-b9e761655771",
+            "description": "A custom application for testing",
+            "copyright": "Yanfu.AI",
+            "privacy_policy": "",
+            "custom_disclaimer": "",
+            "category": "e01afa29-dac2-4a29-a66f-9a5f639e9305",
+            "position": 0,
+            "is_listed": true,
+            "label_type": "free",
+            "label_name": "免费使用",
+            "is_token_verified": false,
+            "login_api": "",
+            "jwt_api": "",
+            "default_username": null,
+            "default_password": null,
+            "is_menu": false,
+            "menus": null,
+            "created_by": "c90c0746-f226-4ddf-b7cd-e04318fc018d"
+        },
+        {
+            "id": "bee57668-def8-4b28-89c5-2c74771d669e",
+            "app": {
+                "id": "d5585488-b99f-4c9a-a071-46d613dd1460",
+                "name": "Custom App 002",
+                "mode": "custom",
+                "icon": "157",
+                "icon_type": "sys-icon",
+                "icon_url": null,
+                "icon_background": "",
+                "url": "https://ais-pre-hlwgf37flgnosfuabem26z-249758729543.europe-west2.run.app/"
+            },
+            "app_id": "72d1e7cf-c837-4d0e-8b7f-b9e761655772",
+            "description": "Another custom application",
+            "copyright": "Yanfu.AI",
+            "privacy_policy": "",
+            "custom_disclaimer": "",
+            "category": "e01afa29-dac2-4a29-a66f-9a5f639e9305",
+            "position": 1,
+            "is_listed": true,
+            "label_type": "free",
+            "label_name": "免费使用",
+            "is_token_verified": false,
+            "login_api": "",
+            "jwt_api": "",
+            "default_username": null,
+            "default_password": null,
+            "is_menu": false,
+            "menus": null,
+            "created_by": "c90c0746-f226-4ddf-b7cd-e04318fc018d"
+        }
+      ];
+      return { data: mockExploreApps, total: 2, page: 1, limit: 100, has_more: false };
+    }
+
     // Mock for apps list
     if (endpoint.includes('/console/api/apps')) {
       const mockApps = [
@@ -521,13 +590,31 @@ class ApiService {
     });
   }
 
-  async getApps(params: Record<string, any> = { page: 1, limit: 20 }): Promise<any> {
-    const queryString = new URLSearchParams(params as any).toString();
+  async getApps(params: Record<string, any> = { page: 1, limit: 100 }): Promise<any> {
+    const tenantId = localStorage.getItem('console_tenant_id');
+    const queryParams = { ...params };
+    
+    // Check if we should use the explore endpoint for custom apps
+    if (queryParams.is_custom_app_list) {
+      const exploreParams = new URLSearchParams();
+      if (tenantId) {
+        exploreParams.append('tenant_id', tenantId);
+      }
+      // Only include limit if provided, default to 100 if not specified in params but usually it is
+      if (queryParams.limit) {
+        exploreParams.append('limit', queryParams.limit.toString());
+      }
+      
+      return this.request(`/console/api/explore/apps?${exploreParams.toString()}`);
+    }
+
+    // For other apps, do not include tenant_id
+    const queryString = new URLSearchParams(queryParams as any).toString();
     return this.request(`/console/api/apps?${queryString}`);
   }
 
   async getAppDetail(id: string): Promise<any> {
-    return this.request(`/console/api/apps/${id}`);
+    return this.request(`/explore/apps/${id}`);
   }
 
   async createApp(data: { 
@@ -539,9 +626,9 @@ class ApiService {
     description?: string; 
     config?: any 
   }): Promise<any> {
-    return this.request('/console/api/apps', {
+    return this.request('/explore/apps', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify({ data })
     });
   }
 
@@ -554,9 +641,13 @@ class ApiService {
     use_icon_as_answer_icon?: boolean; 
     built_in?: boolean 
   }): Promise<any> {
-    return this.request(`/console/api/apps/${appID}`, {
+    // The API expects 'data' wrapper and PUT to /explore/apps
+    // We also need to include the ID in the data or rely on the backend knowing which one to update?
+    // The doc says "PUT /explore/apps", body "data". Usually this means the ID is inside 'data'.
+    const payload = { ...data, id: appID };
+    return this.request('/explore/apps', {
       method: 'PUT',
-      body: JSON.stringify(data)
+      body: JSON.stringify({ data: payload })
     });
   }
 
@@ -566,17 +657,23 @@ class ApiService {
     icon: string; 
     icon_background?: string | null; 
     mode: string; 
-    description?: string 
+    description?: string;
+    config?: any;
   }): Promise<any> {
-    return this.request(`/console/api/apps/${appID}/copy`, {
-      method: 'POST',
-      body: JSON.stringify(data)
+    // Since the new API doesn't have a dedicated copy endpoint, we simulate it by creating a new app
+    // with the provided data.
+    return this.createApp({
+      ...data,
+      icon_type: data.icon_type,
+      icon_background: data.icon_background || undefined,
+      config: data.config
     });
   }
 
   async deleteApp(appID: string): Promise<void> {
-    return this.request(`/console/api/apps/${appID}`, {
-      method: 'DELETE'
+    return this.request('/explore/apps', {
+      method: 'DELETE',
+      body: JSON.stringify({ id: appID })
     });
   }
 

@@ -40,7 +40,7 @@ export interface AppItem {
   password?: string;
   customMenu?: boolean;
   menuItems?: MenuItem[];
-  mode?: 'chat' | 'agent-chat' | 'workflow' | 'completion';
+  mode?: AppMode;
 }
 
 export type AppBasicInfo = {
@@ -230,7 +230,7 @@ export type CredentialData = Record<string, string>;
 
 // --- New App Development Types ---
 
-export type AppMode = 'chat' | 'agent-chat' | 'workflow' | 'completion';
+export type AppMode = 'chat' | 'agent-chat' | 'workflow' | 'completion' | 'custom';
 
 export type App = {
   id: string

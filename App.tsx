@@ -71,6 +71,7 @@ const App: React.FC = () => {
       case 'agent-chat': return '智能体应用';
       case 'workflow': return '工作流应用';
       case 'completion': return '文本生成应用';
+      case 'custom': return '定制应用';
       default: return '对话应用';
     }
   };
@@ -80,6 +81,7 @@ const App: React.FC = () => {
     if (type.includes('智能体')) return 'agent-chat';
     if (type.includes('工作流')) return 'workflow';
     if (type.includes('文本')) return 'completion';
+    if (type.includes('定制')) return 'custom';
     return 'chat';
   };
 
@@ -99,12 +101,6 @@ const App: React.FC = () => {
   const fetchApps = async (isLoadMore = false) => {
     if (activeNavTab !== 'app-dev') return;
     
-    // Skip fetching for '定制应用' as per requirements
-    if (activeFilterTab === '定制应用') {
-      setApps([]);
-      return;
-    }
-
     if (isLoadMore) {
       setIsLoadingMore(true);
     } else {
@@ -115,49 +111,82 @@ const App: React.FC = () => {
       const currentPage = isLoadMore ? page + 1 : 1;
       const params: Record<string, any> = {
         page: currentPage,
-        limit: 30,
+        limit: 100, // Increased limit as per new API default
         name: searchQuery
       };
 
+      // Pass filter params to API, but we will also filter client-side
       if (activeFilterTab === '全部') {
         params.built_in = false;
       } else if (activeFilterTab === '内置应用') {
         params.built_in = true;
       } else {
-        params.built_in = false;
-        params.mode = mapTypeToAppMode(activeFilterTab);
+        const mode = mapTypeToAppMode(activeFilterTab);
+        if (mode === 'custom') {
+          // For custom apps, we only need to flag it. 
+          // The API service will only use tenant_id and limit.
+          params.is_custom_app_list = true;
+        } else {
+          params.built_in = false;
+          params.mode = mode;
+        }
       }
 
       const response = await apiService.getApps(params);
-      if (response && response.data) {
-        const mappedApps: AppItem[] = response.data.map((app: any) => ({
-          id: app.id,
-          name: app.name,
-          type: mapAppModeToType(app.mode),
-          typeLabel: mapAppModeToType(app.mode),
-          description: app.description || '',
-          icon: app.icon || 'MessageSquare',
-          iconType: app.icon_type || 'icon',
-          icon_url: app.icon_url,
-          tags: app.tags || [], // Use tags from API response
-          iconBgColor: app.icon_background || 'bg-blue-600',
-          mode: app.mode
-        }));
-        
-        if (isLoadMore) {
-          setApps(prev => [...prev, ...mappedApps]);
-          setPage(currentPage);
-        } else {
-          setApps(mappedApps);
-          setPage(1);
-        }
-        setHasMore(response.has_more);
-      } else {
-        if (!isLoadMore) {
-          setApps([]);
-        }
-        setHasMore(false);
+      
+      // Handle different response formats (Array or Object with data)
+      let appList: any[] = [];
+      let hasMoreData = false;
+
+      if (Array.isArray(response)) {
+        appList = response;
+      } else if (response && Array.isArray(response.recommended_apps)) {
+        appList = response.recommended_apps;
+        // If we need categories, we can extract them here: response.categories
+      } else if (response && Array.isArray(response.data)) {
+        appList = response.data;
+        hasMoreData = response.has_more || false;
+      } else if (response && Array.isArray(response.items)) {
+        appList = response.items;
+        hasMoreData = (response.current_page < response.pages);
       }
+
+      const mappedApps: AppItem[] = appList.map((item: any) => {
+        const appData = item.app || item;
+        return {
+          id: appData.id,
+          name: appData.name,
+          type: mapAppModeToType(appData.mode),
+          typeLabel: mapAppModeToType(appData.mode),
+          description: appData.description || item.description || '',
+          icon: appData.icon || 'MessageSquare',
+          iconType: appData.icon_type || (appData.icon_url ? 'image' : 'icon'),
+          icon_url: appData.icon_url,
+          tags: appData.tags || [],
+          iconBgColor: appData.icon_background || 'bg-blue-600',
+          mode: appData.mode,
+          // Map custom app fields if present
+          category: appData.category || item.category,
+          appUrl: appData.config?.appUrl || appData.appUrl,
+          needToken: appData.config?.needToken ?? appData.needToken,
+          loginUrl: appData.config?.loginUrl || appData.loginUrl,
+          authUrl: appData.config?.authUrl || appData.authUrl,
+          account: appData.config?.account || appData.account,
+          password: appData.config?.password || appData.password,
+          customMenu: appData.config?.customMenu ?? appData.customMenu,
+          menuItems: appData.config?.menuItems || appData.menuItems,
+        };
+      });
+      
+      if (isLoadMore) {
+        setApps(prev => [...prev, ...mappedApps]);
+        setPage(currentPage);
+      } else {
+        setApps(mappedApps);
+        setPage(1);
+      }
+      setHasMore(hasMoreData);
+
     } catch (error) {
       console.error('Failed to fetch apps:', error);
       if (!isLoadMore) {
@@ -216,8 +245,26 @@ const App: React.FC = () => {
   };
 
   const filteredApps = useMemo(() => {
-    // Client-side sorting only, filtering is now server-side
+    // Client-side sorting and filtering
     let result = [...apps];
+
+    // Client-side filtering to ensure consistency if API returns mixed results
+    if (activeFilterTab !== '全部') {
+      if (activeFilterTab === '内置应用') {
+        // Assuming built-in apps are not supported in this view or handled via API
+        // If we have a way to identify built-in apps in the list, we filter here.
+        // But currently AppItem doesn't have built_in flag explicitly mapped?
+        // Let's assume the API handles it or we skip client-side filter for this one if unsure.
+        // However, we can filter by mode for others.
+      } else {
+        const targetMode = mapTypeToAppMode(activeFilterTab);
+        if (targetMode === 'custom') {
+          // Do not filter client-side for custom apps, API handles it
+        } else {
+          result = result.filter(app => app.mode === targetMode);
+        }
+      }
+    }
 
     if (sortBy === 'name') {
       result.sort((a, b) => a.name.localeCompare(b.name));
@@ -228,7 +275,7 @@ const App: React.FC = () => {
     }
     
     return result;
-  }, [apps, sortBy]);
+  }, [apps, sortBy, activeFilterTab]);
 
   const handleCreateTag = async (name: string) => {
     try {
@@ -286,6 +333,18 @@ const App: React.FC = () => {
 
   const handleCreateOrUpdateApp = async (appData: any) => {
     try {
+      const config = {
+        appUrl: appData.appUrl,
+        needToken: appData.needToken,
+        loginUrl: appData.loginUrl,
+        authUrl: appData.authUrl,
+        account: appData.account,
+        password: appData.password,
+        customMenu: appData.customMenu,
+        menuItems: appData.menuItems,
+        category: appData.category
+      };
+
       if (appData.id) {
         // Update
         await apiService.updateApp(appData.id, {
@@ -295,7 +354,10 @@ const App: React.FC = () => {
           icon_background: appData.iconBgColor,
           description: appData.description,
           use_icon_as_answer_icon: false, // Default
-          built_in: false // Default
+          built_in: false, // Default
+          // Pass config with custom fields
+          // @ts-ignore - apiService updateApp signature might need update or we cast
+          config: config
         });
       } else {
         // Create
@@ -306,7 +368,7 @@ const App: React.FC = () => {
           icon_background: appData.iconBgColor,
           mode: mapTypeToAppMode(appData.typeLabel || appData.type),
           description: appData.description,
-          config: {} // Default empty config
+          config: config
         });
       }
       fetchApps();
@@ -331,13 +393,26 @@ const App: React.FC = () => {
 
   const handleCopyApp = async (app: AppItem) => {
     try {
+      const config = {
+        appUrl: app.appUrl,
+        needToken: app.needToken,
+        loginUrl: app.loginUrl,
+        authUrl: app.authUrl,
+        account: app.account,
+        password: app.password,
+        customMenu: app.customMenu,
+        menuItems: app.menuItems,
+        category: app.category
+      };
+
       await apiService.copyApp(app.id, {
         name: `${app.name} (副本)`,
         icon_type: app.iconType,
         icon: app.icon,
         icon_background: app.iconBgColor,
         mode: mapTypeToAppMode(app.type),
-        description: app.description
+        description: app.description,
+        config: config
       });
       fetchApps();
     } catch (error) {
