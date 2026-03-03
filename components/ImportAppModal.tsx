@@ -36,14 +36,15 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
       let app;
       if (activeTab === 'file') {
         if (!fileContent) return;
-        app = await apiService.importApp({
-          data: fileContent,
-          name: fileName.replace(/\.(yml|yaml)$/, '')
+        app = await apiService.importDSL({
+          mode: 'yaml-content',
+          yaml_content: fileContent
         });
       } else {
         if (!url) return;
-        app = await apiService.importAppFromUrl({
-          url: url
+        app = await apiService.importDSL({
+          mode: 'yaml-url',
+          yaml_url: url
         });
       }
       

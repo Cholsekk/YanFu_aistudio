@@ -8,7 +8,7 @@ import { getIcon } from '../constants';
 interface ConvertToWorkflowModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (data: { name: string; deleteOriginal: boolean; icon: string; iconType: 'icon' | 'image'; iconBgColor: string }) => void;
+  onConfirm: (data: { name: string; deleteOriginal: boolean; icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor: string }) => void;
   app: AppItem | null;
 }
 
@@ -19,7 +19,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
   
   // Icon state
   const [icon, setIcon] = useState('MessageSquare');
-  const [iconType, setIconType] = useState<'icon' | 'image'>('icon');
+  const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>('icon');
   const [iconBgColor, setIconBgColor] = useState('bg-blue-600');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
@@ -62,7 +62,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
     setShowDeleteConfirm(false);
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image'; iconBgColor?: string }) => {
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
     setIcon(data.icon);
     setIconType(data.iconType);
     if (data.iconBgColor) {

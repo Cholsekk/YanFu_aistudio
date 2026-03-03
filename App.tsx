@@ -289,7 +289,6 @@ const App: React.FC = () => {
       if (appData.id) {
         // Update
         await apiService.updateApp(appData.id, {
-          appID: appData.id,
           name: appData.name,
           icon_type: appData.iconType || 'icon',
           icon: appData.icon,
@@ -333,7 +332,6 @@ const App: React.FC = () => {
   const handleCopyApp = async (app: AppItem) => {
     try {
       await apiService.copyApp(app.id, {
-        appID: app.id,
         name: `${app.name} (副本)`,
         icon_type: app.iconType,
         icon: app.icon,
@@ -710,7 +708,7 @@ const App: React.FC = () => {
       <ImportAppModal 
         isOpen={isImportAppModalOpen} 
         onClose={() => setIsImportAppModalOpen(false)} 
-        onImport={handleCreateOrUpdateApp}
+        onImport={() => fetchApps()}
       />
       <ManageTagsModal 
         isOpen={isManageTagsModalOpen}

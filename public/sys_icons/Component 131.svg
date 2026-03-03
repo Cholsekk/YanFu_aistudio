@@ -1,0 +1,26 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-131" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F97316"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+    <linearGradient id="highlight-131" x1="0" y1="0" x2="0" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity="1"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow-131" x="-4" y="-4" width="72" height="72" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Background with Gradient -->
+  <rect width="64" height="64" rx="16" fill="url(#grad-131)"/>
+  
+  <!-- Subtle Top Highlight -->
+  <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#highlight-131)" style="mix-blend-mode: overlay; opacity: 0.2"/>
+  
+  <!-- Icon with Drop Shadow -->
+  <g transform="translate(16, 16) scale(1.333)" filter="url(#shadow-131)">
+    <path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z" fill="white"/>
+  </g>
+</svg>

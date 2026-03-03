@@ -926,6 +926,7 @@ export type WorkflowToolProviderOutputSchema = {
 
 export type WorkflowToolProviderRequest = {
   name: string
+  label: string
   icon: string | Emoji
   description: string
   parameters: WorkflowToolProviderParameter[]

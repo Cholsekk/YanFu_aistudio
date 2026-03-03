@@ -20,7 +20,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     type: '对话助手',
     subType: '对话助手',
     icon: 'MessageSquare',
-    iconType: 'icon' as 'icon' | 'image',
+    iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
     iconBgColor: 'bg-blue-600',
     builtIn: false
   });

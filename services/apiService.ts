@@ -78,6 +78,10 @@ class ApiService {
         throw new Error('鉴权失败：请检查您的 Token 配置');
       }
 
+      if (response.status === 204) {
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const message = errorData.message || `请求失败，状态码: ${response.status}`;
@@ -458,7 +462,7 @@ class ApiService {
     data: string; 
     name?: string; 
     description?: string; 
-    icon_type?: 'icon' | 'image'; 
+    icon_type?: 'icon' | 'image' | 'sys-icon'; 
     icon?: string; 
     icon_background?: string 
   }): Promise<any> {
@@ -488,7 +492,7 @@ class ApiService {
     app_id?: string; 
     name?: string; 
     description?: string; 
-    icon_type?: 'icon' | 'image'; 
+    icon_type?: 'icon' | 'image' | 'sys-icon'; 
     icon?: string; 
     icon_background?: string 
   }): Promise<any> {
@@ -507,7 +511,7 @@ class ApiService {
 
   async convertAppToWorkflow(appID: string, data: { 
     name: string; 
-    icon_type: 'icon' | 'image'; 
+    icon_type: 'icon' | 'image' | 'sys-icon'; 
     icon: string; 
     icon_background?: string | null 
   }): Promise<{ new_app_id: string }> {
@@ -528,7 +532,7 @@ class ApiService {
 
   async createApp(data: { 
     name: string; 
-    icon_type?: 'icon' | 'image'; 
+    icon_type?: 'icon' | 'image' | 'sys-icon'; 
     icon?: string; 
     icon_background?: string; 
     mode: string; 
@@ -543,7 +547,7 @@ class ApiService {
 
   async updateApp(appID: string, data: { 
     name: string; 
-    icon_type: 'icon' | 'image'; 
+    icon_type: 'icon' | 'image' | 'sys-icon'; 
     icon: string; 
     icon_background?: string; 
     description: string; 
@@ -558,7 +562,7 @@ class ApiService {
 
   async copyApp(appID: string, data: { 
     name: string; 
-    icon_type: 'icon' | 'image'; 
+    icon_type: 'icon' | 'image' | 'sys-icon'; 
     icon: string; 
     icon_background?: string | null; 
     mode: string; 

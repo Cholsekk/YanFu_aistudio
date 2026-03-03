@@ -85,7 +85,12 @@ export const SYSTEM_ICONS = [
   { name: 'Users', bgColor: 'bg-cyan-500' },
 ];
 
-export const SYS_ICON_IDS = ['122', '156'];
+export const SYS_ICON_IDS = [
+  '122', '123', '124', '125', '126', '127', '128', '129', '130', '131', 
+  '132', '133', '134', '135', '136', '137', '138', '139', '140', '141', 
+  '142', '143', '144', '145', '146', '147', '148', '149', '150', '151', 
+  '152', '153', '154', '155', '156'
+];
 
 export const MOCK_APPS: AppItem[] = [
   {
@@ -96,7 +101,7 @@ export const MOCK_APPS: AppItem[] = [
     description: '基于知识图谱的智能问答助手，支持复杂逻辑推理。',
     icon: 'MessageSquare',
     iconType: 'icon',
-    tags: ['对话助手', '知识库'],
+    tags: [{ id: '1', name: '对话助手', type: 'app', binding_count: 0 }, { id: '2', name: '知识库', type: 'app', binding_count: 0 }],
     iconBgColor: 'bg-blue-600',
   },
   {
@@ -107,7 +112,7 @@ export const MOCK_APPS: AppItem[] = [
     description: '通用的对话式AI助手，适用于日常咨询。',
     icon: 'MessageSquare',
     iconType: 'icon',
-    tags: ['通用'],
+    tags: [{ id: '3', name: '通用', type: 'app', binding_count: 0 }],
     iconBgColor: 'bg-emerald-500',
   },
   {
@@ -118,7 +123,7 @@ export const MOCK_APPS: AppItem[] = [
     description: '专注于生成高质量公众号文章的智能代理。',
     icon: 'Bot',
     iconType: 'icon',
-    tags: ['写作', '媒体'],
+    tags: [{ id: '4', name: '写作', type: 'app', binding_count: 0 }, { id: '5', name: '媒体', type: 'app', binding_count: 0 }],
     iconBgColor: 'bg-purple-600',
   },
   {
@@ -129,7 +134,7 @@ export const MOCK_APPS: AppItem[] = [
     description: '用于检索网络资源，获取实时信息。',
     icon: 'Search',
     iconType: 'icon',
-    tags: ['工具'],
+    tags: [{ id: '6', name: '工具', type: 'app', binding_count: 0 }],
     iconBgColor: 'bg-orange-500',
   },
 ];

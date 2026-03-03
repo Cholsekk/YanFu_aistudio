@@ -92,7 +92,7 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
             <p>暂无标签</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
             {tags.map(tag => (
               <div 
                 key={tag.id} 
