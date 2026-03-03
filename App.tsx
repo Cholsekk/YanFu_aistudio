@@ -11,7 +11,7 @@ import ToolExtensions from './components/ToolExtensions';
 import TokenConfigModal from './components/TokenConfigModal';
 import ConvertToWorkflowModal from './components/ConvertToWorkflowModal';
 import { APP_TYPES } from './constants';
-import { AppItem, AppMode, Tag } from './types';
+import { AppItem, AppMode, Tag, MenuItem } from './types';
 import { apiService } from './services/apiService';
 import { 
   Plus, 
@@ -29,6 +29,9 @@ import {
   ListOrdered,
   ArrowUp
 } from 'lucide-react';
+
+import { Toaster, toast } from 'sonner';
+import { ConfirmDialog } from './components/ConfirmDialog';
 
 const App: React.FC = () => {
   const [activeNavTab, setActiveNavTab] = useState('app-dev');
@@ -55,6 +58,19 @@ const App: React.FC = () => {
   const [appToConvert, setAppToConvert] = useState<AppItem | null>(null);
   
   const [editingApp, setEditingApp] = useState<AppItem | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: 'danger' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'danger'
+  });
 
   // Listen for unauthorized events
   React.useEffect(() => {
@@ -126,6 +142,7 @@ const App: React.FC = () => {
           // For custom apps, we only need to flag it. 
           // The API service will only use tenant_id and limit.
           params.is_custom_app_list = true;
+          params.limit = 30;
         } else {
           params.built_in = false;
           params.mode = mode;
@@ -153,8 +170,23 @@ const App: React.FC = () => {
 
       const mappedApps: AppItem[] = appList.map((item: any) => {
         const appData = item.app || item;
+        
+        // Parse menus if it's a string (from custom app API)
+        let parsedMenuItems: MenuItem[] = [];
+        if (typeof item.menus === 'string') {
+          try {
+            const parsed = JSON.parse(item.menus);
+            parsedMenuItems = parsed.menus || [];
+          } catch (e) {
+            console.error('Failed to parse menus', e);
+          }
+        } else {
+          parsedMenuItems = appData.config?.menuItems || appData.menuItems || [];
+        }
+
         return {
           id: appData.id,
+          itemId: item.app ? item.id : undefined, // Store outer ID if nested (for custom apps)
           name: appData.name,
           type: mapAppModeToType(appData.mode),
           typeLabel: mapAppModeToType(appData.mode),
@@ -167,14 +199,22 @@ const App: React.FC = () => {
           mode: appData.mode,
           // Map custom app fields if present
           category: appData.category || item.category,
-          appUrl: appData.config?.appUrl || appData.appUrl,
-          needToken: appData.config?.needToken ?? appData.needToken,
-          loginUrl: appData.config?.loginUrl || appData.loginUrl,
-          authUrl: appData.config?.authUrl || appData.authUrl,
-          account: appData.config?.account || appData.account,
-          password: appData.config?.password || appData.password,
-          customMenu: appData.config?.customMenu ?? appData.customMenu,
-          menuItems: appData.config?.menuItems || appData.menuItems,
+          
+          // Fix: appUrl from appData.url (nested app object)
+          appUrl: appData.url || appData.config?.appUrl || appData.appUrl,
+          
+          // Fix: needToken from item.is_token_verified
+          needToken: item.is_token_verified !== undefined ? item.is_token_verified : (appData.config?.needToken ?? appData.needToken ?? true),
+          
+          loginUrl: appData.config?.loginUrl || appData.loginUrl || item.login_api,
+          authUrl: appData.config?.authUrl || appData.authUrl || item.jwt_api,
+          account: appData.config?.account || appData.account || item.default_username,
+          password: appData.config?.password || appData.password || item.default_password,
+          
+          // Fix: customMenu from item.is_menu
+          customMenu: item.is_menu !== undefined ? item.is_menu : (appData.config?.customMenu ?? appData.customMenu ?? false),
+          
+          menuItems: parsedMenuItems,
         };
       });
       
@@ -281,9 +321,10 @@ const App: React.FC = () => {
     try {
       await apiService.createTag(name, 'app');
       fetchTags();
+      toast.success('创建标签成功');
     } catch (error) {
       console.error('Failed to create tag:', error);
-      alert('创建标签失败');
+      toast.error('创建标签失败');
     }
   };
 
@@ -292,9 +333,10 @@ const App: React.FC = () => {
       await apiService.updateTag(tagId, newName);
       fetchTags();
       fetchApps(); // Refresh apps to update tag names in UI
+      toast.success('重命名标签成功');
     } catch (error) {
       console.error('Failed to rename tag:', error);
-      alert('重命名标签失败');
+      toast.error('重命名标签失败');
     }
   };
 
@@ -303,9 +345,10 @@ const App: React.FC = () => {
       await apiService.deleteTag(tagId);
       fetchTags();
       fetchApps(); // Refresh apps to remove deleted tag
+      toast.success('删除标签成功');
     } catch (error) {
       console.error('Failed to delete tag:', error);
-      alert('删除标签失败');
+      toast.error('删除标签失败');
     }
   };
 
@@ -314,9 +357,10 @@ const App: React.FC = () => {
       await apiService.bindTag([tagId], appId, 'app');
       fetchApps();
       fetchTags(); // Update binding counts
+      toast.success('添加标签成功');
     } catch (error) {
       console.error('Failed to bind tag:', error);
-      alert('添加标签失败');
+      toast.error('添加标签失败');
     }
   };
 
@@ -325,14 +369,72 @@ const App: React.FC = () => {
       await apiService.unBindTag(tagId, appId, 'app');
       fetchApps();
       fetchTags(); // Update binding counts
+      toast.success('移除标签成功');
     } catch (error) {
       console.error('Failed to unbind tag:', error);
-      alert('移除标签失败');
+      toast.error('移除标签失败');
     }
   };
 
   const handleCreateOrUpdateApp = async (appData: any) => {
     try {
+      // Handle Custom Apps separately
+      if (appData.type === '定制应用' || appData.mode === 'custom') {
+        const customAppPayload = {
+          id: appData.itemId, // Outer ID for update
+          app: {
+            id: appData.id, // Inner ID
+            name: appData.name,
+            mode: 'custom',
+            icon: appData.icon,
+            icon_type: appData.iconType || 'icon',
+            icon_url: appData.icon_url,
+            url: appData.appUrl
+          },
+          app_id: appData.id,
+          description: appData.description,
+          copyright: 'Yanfu.AI', // Default or from input if available
+          privacy_policy: '',
+          custom_disclaimer: '',
+          category: appData.category,
+          position: 0,
+          is_listed: true,
+          label_type: 'free',
+          label_name: '免费使用',
+          is_token_verified: appData.needToken,
+          login_api: appData.loginUrl,
+          jwt_api: appData.authUrl,
+          default_username: appData.account,
+          default_password: appData.password,
+          is_menu: appData.customMenu,
+          menus: appData.customMenu ? JSON.stringify({ menus: appData.menuItems }) : null,
+          created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // Mock or from user context
+        };
+
+        if (appData.id) {
+          // Update
+          await apiService.updateCustomApp(customAppPayload);
+        } else {
+          // Create
+          // For create, we might not have IDs. The backend should generate them.
+          // But the payload structure requires 'app' object.
+          // We can omit IDs for create if backend handles it.
+          // Or generate UUIDs if required.
+          // Assuming backend handles missing IDs or we send partial payload.
+          // But user sample has IDs.
+          // Let's try sending without IDs for create, or with nulls.
+          const createPayload = { ...customAppPayload };
+          delete createPayload.id;
+          delete createPayload.app.id;
+          delete createPayload.app_id;
+          
+          await apiService.createCustomApp(createPayload);
+        }
+        fetchApps();
+        setEditingApp(null);
+        return;
+      }
+
       const config = {
         appUrl: appData.appUrl,
         needToken: appData.needToken,
@@ -346,7 +448,7 @@ const App: React.FC = () => {
       };
 
       if (appData.id) {
-        // Update
+        // Update standard app
         await apiService.updateApp(appData.id, {
           name: appData.name,
           icon_type: appData.iconType || 'icon',
@@ -360,7 +462,7 @@ const App: React.FC = () => {
           config: config
         });
       } else {
-        // Create
+        // Create standard app
         await apiService.createApp({
           name: appData.name,
           icon_type: appData.iconType || 'icon',
@@ -373,22 +475,39 @@ const App: React.FC = () => {
       }
       fetchApps();
       setEditingApp(null);
+      toast.success('应用保存成功');
     } catch (error) {
       console.error('Failed to save app:', error);
-      alert('保存失败，请重试');
+      toast.error('保存失败，请重试');
     }
   };
 
   const handleDeleteApp = async (id: string) => {
-    if (confirm('确认删除该应用吗？')) {
-      try {
-        await apiService.deleteApp(id);
-        fetchApps();
-      } catch (error) {
-        console.error('Failed to delete app:', error);
-        alert('删除失败，请重试');
+    const app = apps.find(a => a.id === id);
+    if (!app) return;
+
+    setConfirmDialog({
+      isOpen: true,
+      title: '确认删除',
+      message: '确认删除该应用吗？此操作无法撤销。',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          if (app.type === '定制应用' || app.mode === 'custom') {
+            // Use outer ID (itemId) for custom app deletion if available, otherwise fallback to id
+            await apiService.deleteCustomApp(app.itemId || id);
+          } else {
+            await apiService.deleteApp(id);
+          }
+          fetchApps();
+          toast.success('应用删除成功');
+        } catch (error) {
+          console.error('Failed to delete app:', error);
+          toast.error('删除失败，请重试');
+        }
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       }
-    }
+    });
   };
 
   const handleCopyApp = async (app: AppItem) => {
@@ -415,9 +534,10 @@ const App: React.FC = () => {
         config: config
       });
       fetchApps();
+      toast.success('应用复制成功');
     } catch (error) {
       console.error('Failed to copy app:', error);
-      alert('复制失败，请重试');
+      toast.error('复制失败，请重试');
     }
   };
 
@@ -434,12 +554,13 @@ const App: React.FC = () => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        toast.success('应用导出成功');
       } else {
-        alert('导出失败：未获取到数据');
+        toast.error('导出失败：未获取到数据');
       }
     } catch (error) {
       console.error('Export failed:', error);
-      alert('导出失败，请重试');
+      toast.error('导出失败，请重试');
     }
   };
 
@@ -469,10 +590,10 @@ const App: React.FC = () => {
       
       // Then refresh list
       await fetchApps();
-      alert('迁移成功');
+      toast.success('迁移成功');
     } catch (error: any) {
       console.error('Failed to convert app:', error);
-      alert(`迁移失败: ${error.message || '未知错误'}`);
+      toast.error(`迁移失败: ${error.message || '未知错误'}`);
     }
   };
 

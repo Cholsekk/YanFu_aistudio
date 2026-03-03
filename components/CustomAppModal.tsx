@@ -95,7 +95,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
 
   const handleSubmit = () => {
     onCreate({
-      ...(initialData ? { id: initialData.id } : {}),
+      ...(initialData ? { id: initialData.id, itemId: initialData.itemId } : {}),
       name: formData.name || '未命名定制应用',
       type: '定制应用',
       typeLabel: '定制化应用',

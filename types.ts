@@ -22,6 +22,7 @@ export type AppIconType = 'icon' | 'image' | 'sys-icon';
 
 export interface AppItem {
   id: string;
+  itemId?: string; // For custom apps, the outer item ID
   name: string;
   type: string;
   typeLabel: string;

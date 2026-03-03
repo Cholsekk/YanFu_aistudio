@@ -626,9 +626,16 @@ class ApiService {
     description?: string; 
     config?: any 
   }): Promise<any> {
-    return this.request('/explore/apps', {
+    return this.request('/console/api/apps', {
       method: 'POST',
-      body: JSON.stringify({ data })
+      body: JSON.stringify(data)
+    });
+  }
+
+  async createCustomApp(data: any): Promise<any> {
+    return this.request('/console/api/explore/apps', {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   }
 
@@ -641,13 +648,16 @@ class ApiService {
     use_icon_as_answer_icon?: boolean; 
     built_in?: boolean 
   }): Promise<any> {
-    // The API expects 'data' wrapper and PUT to /explore/apps
-    // We also need to include the ID in the data or rely on the backend knowing which one to update?
-    // The doc says "PUT /explore/apps", body "data". Usually this means the ID is inside 'data'.
-    const payload = { ...data, id: appID };
-    return this.request('/explore/apps', {
+    return this.request(`/console/api/apps/${appID}`, {
       method: 'PUT',
-      body: JSON.stringify({ data: payload })
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateCustomApp(data: any): Promise<any> {
+    return this.request('/console/api/explore/apps', {
+      method: 'PUT',
+      body: JSON.stringify(data)
     });
   }
 
@@ -660,18 +670,20 @@ class ApiService {
     description?: string;
     config?: any;
   }): Promise<any> {
-    // Since the new API doesn't have a dedicated copy endpoint, we simulate it by creating a new app
-    // with the provided data.
-    return this.createApp({
-      ...data,
-      icon_type: data.icon_type,
-      icon_background: data.icon_background || undefined,
-      config: data.config
+    return this.request(`/console/api/apps/${appID}/copy`, {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   }
 
   async deleteApp(appID: string): Promise<void> {
-    return this.request('/explore/apps', {
+    return this.request(`/console/api/apps/${appID}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async deleteCustomApp(appID: string): Promise<void> {
+    return this.request('/console/api/explore/apps', {
       method: 'DELETE',
       body: JSON.stringify({ id: appID })
     });

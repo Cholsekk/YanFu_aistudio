@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import { Tag as TagIcon, Edit2, Trash2, Check, X, Plus } from 'lucide-react';
 import { Tag } from '../types';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface ManageTagsModalProps {
   isOpen: boolean;
@@ -25,6 +26,19 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
   const [editName, setEditName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'info';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'danger',
+    onConfirm: () => {}
+  });
 
   const handleStartEdit = (tag: Tag) => {
     setEditingTagId(tag.id);
@@ -143,7 +157,18 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button 
-                        onClick={() => { if(confirm(`确定要删除标签 "${tag.name}" 吗？这会从所有应用中移除该标签。`)) onDeleteTag(tag.id); }}
+                        onClick={() => {
+                          setConfirmDialog({
+                            isOpen: true,
+                            title: '确认删除',
+                            message: `确定要删除标签 "${tag.name}" 吗？这会从所有应用中移除该标签。`,
+                            type: 'danger',
+                            onConfirm: () => {
+                              onDeleteTag(tag.id);
+                              setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                            }
+                          });
+                        }}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         title="删除"
                       >
@@ -166,6 +191,15 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
           完成
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </Modal>
   );
 };

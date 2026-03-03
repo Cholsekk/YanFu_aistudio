@@ -7,6 +7,7 @@ import { DatePicker, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
+import toast from 'react-hot-toast';
 
 dayjs.locale('zh-cn');
 
@@ -119,7 +120,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
           requestBodyObj = JSON.parse(formData.request_body);
         }
       } catch (e) {
-        alert('请求体 JSON 格式不正确');
+        toast.error('请求体 JSON 格式不正确');
         return;
       }
 

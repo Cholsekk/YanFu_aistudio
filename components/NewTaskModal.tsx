@@ -7,6 +7,7 @@ import { DatePicker, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
+import toast from 'react-hot-toast';
 
 dayjs.locale('zh-cn');
 
@@ -101,7 +102,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
   const handleSubmit = () => {
     // Basic validation
     if (!formData.name || !formData.description || !formData.api_endpoint || !formData.schedule_expression) {
-      alert('请填写必要信息 (名称、描述、API地址、定时规则)');
+      toast.error('请填写必要信息 (名称、描述、API地址、定时规则)');
       return;
     }
 
@@ -113,7 +114,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
         requestBodyObj = formData.request_body;
       }
     } catch (e) {
-      alert('请求体 JSON 格式不正确');
+      toast.error('请求体 JSON 格式不正确');
       return;
     }
 
