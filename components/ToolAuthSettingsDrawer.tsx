@@ -47,7 +47,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
       {/* Backdrop - higher z-index than the main drawer */}
       <div
         className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-[80] transition-opacity"
-        onClick={onClose}
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
       />
 
       {/* Drawer - higher z-index than the main drawer */}

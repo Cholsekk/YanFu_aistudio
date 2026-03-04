@@ -24,7 +24,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] transition-opacity"
-        onClick={onClose}
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
       />
 
       {/* Drawer */}

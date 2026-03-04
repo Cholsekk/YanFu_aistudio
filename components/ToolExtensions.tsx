@@ -908,7 +908,16 @@ const ToolExtensions: React.FC = () => {
 
             {isFilterOpen && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => { setIsFilterOpen(false); setLabelSearchQuery(''); }} />
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('.tool-auth-drawer, .tool-auth-settings-drawer, .tool-param-drawer, .edit-custom-tool-modal')) {
+                      return;
+                    }
+                    setIsFilterOpen(false);
+                    setLabelSearchQuery('');
+                  }} 
+                />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-20 overflow-hidden flex flex-col">
                   <div className="px-2 py-2 border-b border-gray-100">
                     <div className="relative">
