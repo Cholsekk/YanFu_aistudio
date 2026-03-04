@@ -886,6 +886,8 @@ const ToolExtensions: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
+              name="tool-search"
+              autoComplete="off"
               placeholder="搜索工具名称或描述..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -924,6 +926,8 @@ const ToolExtensions: React.FC = () => {
                       <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
                       <input
                         type="text"
+                        name="label-search"
+                        autoComplete="off"
                         placeholder="搜索标签..."
                         value={labelSearchQuery}
                         onChange={(e) => setLabelSearchQuery(e.target.value)}

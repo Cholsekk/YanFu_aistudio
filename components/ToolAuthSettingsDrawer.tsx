@@ -98,6 +98,8 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                     <div className="relative">
                       <input
                         type={showSecrets[field.name] ? 'text' : 'password'}
+                        name={`auth-${field.name}`}
+                        autoComplete="new-password"
                         value={values[field.name] || ''}
                         onChange={(e) => handleChange(field.name, e.target.value)}
                         placeholder={field.placeholder?.zh_Hans}
@@ -118,6 +120,8 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                   ) : (
                     <input
                       type="text"
+                      name={`auth-${field.name}`}
+                      autoComplete="off"
                       value={values[field.name] || ''}
                       onChange={(e) => handleChange(field.name, e.target.value)}
                       placeholder={field.placeholder?.zh_Hans}
