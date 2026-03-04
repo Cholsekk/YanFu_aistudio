@@ -261,6 +261,9 @@ const App: React.FC = () => {
     setPage(1);
     setHasMore(false);
     
+    // Invalidate any in-flight requests immediately to prevent race conditions
+    lastRequestId.current += 1;
+    
     // Debounce search to avoid too many requests
     const timer = setTimeout(() => {
       fetchApps(false);
@@ -296,6 +299,9 @@ const App: React.FC = () => {
   }, [activeFilterTab, sortBy, searchQuery]);
 
   const handleResetFilters = () => {
+    setApps([]); // Clear immediately to prevent stale data render
+    setPage(1);
+    setHasMore(false);
     setActiveFilterTab('全部');
     setSortBy('default');
     setSearchQuery('');
@@ -729,7 +735,12 @@ const App: React.FC = () => {
             {APP_TYPES.map(type => (
               <button
                 key={type}
-                onClick={() => setActiveFilterTab(type)}
+                onClick={() => {
+                  setApps([]); // Clear immediately to prevent stale data render
+                  setPage(1);
+                  setHasMore(false);
+                  setActiveFilterTab(type);
+                }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                   activeFilterTab === type 
                     ? 'bg-white text-blue-600 shadow-sm' 
