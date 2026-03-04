@@ -30,7 +30,7 @@ import {
   ArrowUp
 } from 'lucide-react';
 
-import { Toaster, toast } from 'sonner';
+import { message } from 'antd';
 import { ConfirmDialog } from './components/ConfirmDialog';
 
 const App: React.FC = () => {
@@ -337,10 +337,10 @@ const App: React.FC = () => {
     try {
       await apiService.createTag(name, 'app');
       fetchTags();
-      toast.success('创建标签成功');
+      message.success('创建标签成功');
     } catch (error) {
       console.error('Failed to create tag:', error);
-      toast.error('创建标签失败');
+      message.error('创建标签失败');
     }
   };
 
@@ -349,10 +349,10 @@ const App: React.FC = () => {
       await apiService.updateTag(tagId, newName);
       fetchTags();
       fetchApps(); // Refresh apps to update tag names in UI
-      toast.success('重命名标签成功');
+      message.success('重命名标签成功');
     } catch (error) {
       console.error('Failed to rename tag:', error);
-      toast.error('重命名标签失败');
+      message.error('重命名标签失败');
     }
   };
 
@@ -361,10 +361,10 @@ const App: React.FC = () => {
       await apiService.deleteTag(tagId);
       fetchTags();
       fetchApps(); // Refresh apps to remove deleted tag
-      toast.success('删除标签成功');
+      message.success('删除标签成功');
     } catch (error) {
       console.error('Failed to delete tag:', error);
-      toast.error('删除标签失败');
+      message.error('删除标签失败');
     }
   };
 
@@ -373,10 +373,10 @@ const App: React.FC = () => {
       await apiService.bindTag([tagId], appId, 'app');
       fetchApps();
       fetchTags(); // Update binding counts
-      toast.success('添加标签成功');
+      message.success('添加标签成功');
     } catch (error) {
       console.error('Failed to bind tag:', error);
-      toast.error('添加标签失败');
+      message.error('添加标签失败');
     }
   };
 
@@ -385,10 +385,10 @@ const App: React.FC = () => {
       await apiService.unBindTag(tagId, appId, 'app');
       fetchApps();
       fetchTags(); // Update binding counts
-      toast.success('移除标签成功');
+      message.success('移除标签成功');
     } catch (error) {
       console.error('Failed to unbind tag:', error);
-      toast.error('移除标签失败');
+      message.error('移除标签失败');
     }
   };
 
@@ -491,10 +491,10 @@ const App: React.FC = () => {
       }
       fetchApps();
       setEditingApp(null);
-      toast.success('应用保存成功');
+      message.success('应用保存成功');
     } catch (error) {
       console.error('Failed to save app:', error);
-      toast.error('保存失败，请重试');
+      message.error('保存失败，请重试');
     }
   };
 
@@ -516,10 +516,10 @@ const App: React.FC = () => {
             await apiService.deleteApp(id);
           }
           fetchApps();
-          toast.success('应用删除成功');
+          message.success('应用删除成功');
         } catch (error) {
           console.error('Failed to delete app:', error);
-          toast.error('删除失败，请重试');
+          message.error('删除失败，请重试');
         }
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       }
@@ -550,10 +550,10 @@ const App: React.FC = () => {
         config: config
       });
       fetchApps();
-      toast.success('应用复制成功');
+      message.success('应用复制成功');
     } catch (error) {
       console.error('Failed to copy app:', error);
-      toast.error('复制失败，请重试');
+      message.error('复制失败，请重试');
     }
   };
 
@@ -570,13 +570,13 @@ const App: React.FC = () => {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        toast.success('应用导出成功');
+        message.success('应用导出成功');
       } else {
-        toast.error('导出失败：未获取到数据');
+        message.error('导出失败：未获取到数据');
       }
     } catch (error) {
       console.error('Export failed:', error);
-      toast.error('导出失败，请重试');
+      message.error('导出失败，请重试');
     }
   };
 
@@ -606,10 +606,10 @@ const App: React.FC = () => {
       
       // Then refresh list
       await fetchApps();
-      toast.success('迁移成功');
+      message.success('迁移成功');
     } catch (error: any) {
       console.error('Failed to convert app:', error);
-      toast.error(`迁移失败: ${error.message || '未知错误'}`);
+      message.error(`迁移失败: ${error.message || '未知错误'}`);
     }
   };
 
@@ -919,7 +919,7 @@ const App: React.FC = () => {
       <CustomAppModal 
         isOpen={isCustomAppModalOpen} 
         onClose={() => { setIsCustomAppModalOpen(false); setEditingApp(null); }} 
-        onCreate={handleCreateOrUpdateApp}
+        onCreate={() => { fetchApps(); setEditingApp(null); }}
         initialData={editingApp}
       />
       <ImportAppModal 

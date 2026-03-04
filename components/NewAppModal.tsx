@@ -5,6 +5,7 @@ import IconPickerModal from './IconPickerModal';
 import { MessageSquare, FileText, Bot, GitBranch } from 'lucide-react';
 import { AppItem } from '../types';
 import { getIcon } from '../constants';
+import { message } from 'antd';
 
 interface NewAppModalProps {
   isOpen: boolean;
@@ -62,9 +63,14 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
   const subTypes = ['对话助手', '对话助手工作流'];
 
   const handleSubmit = () => {
+    if (!formData.name.trim()) {
+      message.error('应用名称不能为空');
+      return;
+    }
+
     onCreate({
       ...(initialData ? { id: initialData.id } : {}),
-      name: formData.name || '未命名应用',
+      name: formData.name,
       description: formData.description,
       typeLabel: formData.type,
       type: formData.type.includes('助手') ? '对话应用' : formData.type,

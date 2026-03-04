@@ -3,11 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { ScheduledTask } from '../types';
 import { apiService } from '../services/apiService';
 import { Calendar, ChevronDown, XCircle, X, Save, Clock, Activity, Globe, Server, Code, FileJson, CheckCircle2, Search } from 'lucide-react';
-import { DatePicker, ConfigProvider } from 'antd';
+import { DatePicker, ConfigProvider, message } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
-import toast from 'react-hot-toast';
 
 dayjs.locale('zh-cn');
 
@@ -120,7 +119,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
           requestBodyObj = JSON.parse(formData.request_body);
         }
       } catch (e) {
-        toast.error('请求体 JSON 格式不正确');
+        message.error('请求体 JSON 格式不正确');
         return;
       }
 

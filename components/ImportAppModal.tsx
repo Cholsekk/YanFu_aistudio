@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import Modal from './Modal';
 import { UploadCloud, Loader2 } from 'lucide-react';
 import { apiService } from '../services/apiService';
-import toast from 'react-hot-toast';
+import { message } from 'antd';
 
 interface ImportAppModalProps {
   isOpen: boolean;
@@ -51,10 +51,10 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
       
       onImport(app);
       onClose();
-      toast.success('应用导入成功');
+      message.success('应用导入成功');
     } catch (error) {
       console.error('Import failed:', error);
-      toast.error('导入失败，请检查文件格式或网络连接');
+      message.error('导入失败，请检查文件格式或网络连接');
     } finally {
       setIsLoading(false);
     }

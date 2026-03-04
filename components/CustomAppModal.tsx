@@ -171,17 +171,65 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     }
   }, [initialData, isOpen]);
 
-  const handleSubmit = () => {
-    onCreate({
-      ...(initialData ? { id: initialData.id, itemId: initialData.itemId } : {}),
-      name: formData.name || '未命名定制应用',
-      type: '定制应用',
-      typeLabel: '定制化应用',
-      description: formData.description,
-      tags: initialData?.tags || [],
-      ...formData
-    });
-    onClose();
+  const handleSubmit = async () => {
+    if (!formData.name.trim()) {
+      message.error('应用名称不能为空');
+      return;
+    }
+
+    try {
+      const customAppPayload = {
+        id: initialData?.itemId, // Outer ID for update
+        app: {
+          id: initialData?.id, // Inner ID
+          name: formData.name,
+          mode: 'custom',
+          icon: formData.icon,
+          icon_type: formData.iconType,
+          icon_url: formData.iconType === 'image' ? formData.icon : undefined,
+          url: formData.appUrl
+        },
+        app_id: initialData?.id,
+        description: formData.description,
+        copyright: 'Yanfu.AI',
+        privacy_policy: '',
+        custom_disclaimer: '',
+        category: formData.category,
+        position: 0,
+        is_listed: true,
+        label_type: 'free',
+        label_name: '免费使用',
+        is_token_verified: formData.needToken,
+        login_api: formData.loginUrl,
+        jwt_api: formData.authUrl,
+        default_username: formData.account,
+        default_password: formData.password,
+        is_menu: formData.customMenu,
+        menus: formData.customMenu ? JSON.stringify({ menus: formData.menuItems }) : null,
+        created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d'
+      };
+
+      if (initialData?.id) {
+        await apiService.updateCustomApp(customAppPayload);
+        message.success('应用更新成功');
+      } else {
+        const createPayload = { ...customAppPayload };
+        // @ts-ignore
+        delete createPayload.id;
+        // @ts-ignore
+        delete createPayload.app.id;
+        // @ts-ignore
+        delete createPayload.app_id;
+        await apiService.createCustomApp(createPayload);
+        message.success('应用创建成功');
+      }
+      
+      onCreate(null); // Trigger refresh
+      onClose();
+    } catch (error: any) {
+      console.error('Failed to save custom app:', error);
+      message.error(error.message || '保存失败，请重试');
+    }
   };
 
   const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
