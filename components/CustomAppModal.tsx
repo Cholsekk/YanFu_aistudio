@@ -209,7 +209,10 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d'
       };
 
-      if (initialData?.id) {
+      const isCustomApp = initialData?.type === '定制应用' || initialData?.mode === 'custom';
+      const updateId = isCustomApp ? initialData?.itemId : initialData?.id;
+
+      if (updateId) {
         await apiService.updateCustomApp(customAppPayload);
         message.success('应用更新成功');
       } else {
