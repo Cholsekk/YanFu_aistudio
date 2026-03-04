@@ -36,7 +36,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         >
           <div className="p-6">
             <div className="flex items-start gap-4">
-              <div className={`p-2 rounded-full ${type === 'danger' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+              <div className={`p-2 rounded-full ${type === 'danger' ? 'bg-red-100 text-red-600' : 'bg-primary-100 text-primary-600'}`}>
                 <AlertCircle size={24} />
               </div>
               <div className="flex-1">
@@ -57,7 +57,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
                 type === 'danger' 
                   ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-primary-600 hover:bg-primary-700'
               }`}
             >
               {confirmText}

@@ -66,11 +66,11 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
         {/* Create New Tag Section */}
         <div className="mb-4">
           {isCreating ? (
-            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="flex items-center gap-2 p-3 bg-primary-50 rounded-xl border border-primary-100">
               <input 
                 autoFocus
                 type="text" 
-                className="flex-grow px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm outline-none shadow-sm focus:ring-2 focus:ring-blue-500/20"
+                className="flex-grow px-3 py-1.5 bg-white border border-primary-300 rounded-lg text-sm outline-none shadow-sm focus:ring-2 focus:ring-primary-500/20"
                 placeholder="输入标签名称..."
                 value={newTagName}
                 onChange={e => setNewTagName(e.target.value)}
@@ -78,7 +78,7 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
               />
               <button 
                 onClick={handleCreateTag}
-                className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="p-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 <Check className="w-4 h-4" />
               </button>
@@ -92,7 +92,7 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
           ) : (
             <button 
               onClick={() => setIsCreating(true)}
-              className="w-full flex items-center justify-center gap-2 p-3 border border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
+              className="w-full flex items-center justify-center gap-2 p-3 border border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 transition-all"
             >
               <Plus className="w-4 h-4" />
               <span className="text-sm font-medium">新建标签</span>
@@ -110,21 +110,21 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
             {tags.map(tag => (
               <div 
                 key={tag.id} 
-                className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-100 group hover:border-blue-200 transition-all h-12"
+                className="flex items-center justify-between p-2 bg-gray-50 rounded-xl border border-gray-100 group hover:border-primary-200 transition-all h-12"
               >
                 {editingTagId === tag.id ? (
                   <div className="flex-grow flex items-center gap-1 min-w-0">
                     <input 
                       autoFocus
                       type="text" 
-                      className="flex-grow min-w-0 px-2 py-1 bg-white border border-blue-500 rounded text-sm outline-none shadow-sm"
+                      className="flex-grow min-w-0 px-2 py-1 bg-white border border-primary-500 rounded text-sm outline-none shadow-sm"
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSaveEdit(tag.id)}
                     />
                     <button 
                       onClick={() => handleSaveEdit(tag.id)}
-                      className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors shrink-0"
+                      className="p-1 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors shrink-0"
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>
@@ -151,7 +151,7 @@ const ManageTagsModal: React.FC<ManageTagsModalProps> = ({
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button 
                         onClick={() => handleStartEdit(tag)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
                         title="重命名"
                       >
                         <Edit2 className="w-3.5 h-3.5" />

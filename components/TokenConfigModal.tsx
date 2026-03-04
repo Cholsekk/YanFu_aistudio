@@ -64,7 +64,7 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
           </button>
           <button 
             onClick={handleSave}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm"
+            className="px-6 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-all shadow-sm"
           >
             保存
           </button>
@@ -73,8 +73,8 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
     >
       <div className="flex flex-col gap-4 py-2">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-            <Key className="w-5 h-5 text-blue-600" />
+          <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center">
+            <Key className="w-5 h-5 text-primary-600" />
           </div>
           <div>
             <h3 className="text-base font-bold text-gray-900">鉴权配置</h3>
@@ -90,7 +90,7 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
               placeholder="http://192.168.1.201:5005"
-              className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
+              className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-mono"
             />
             <button
               onClick={handleTestConnection}
@@ -109,7 +109,7 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
               {testStatus === 'error' && (testMessage.includes('Mixed Content') || testMessage.includes('Private Network Access') || testMessage.includes('Failed to fetch')) && (
                 <button
                   onClick={() => setMockMode(true)}
-                  className="self-start ml-5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors border border-blue-200"
+                  className="self-start ml-5 px-3 py-1.5 bg-primary-50 text-primary-600 rounded-lg text-xs font-medium hover:bg-primary-100 transition-colors border border-primary-200"
                 >
                   立即开启 Mock 模式 (推荐)
                 </button>
@@ -125,7 +125,7 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
             value={token}
             onChange={(e) => setToken(e.target.value)}
             placeholder="请输入您的 console_token"
-            className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none font-mono"
+            className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none font-mono"
           />
         </div>
 
@@ -136,7 +136,7 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
             value={tenantId}
             onChange={(e) => setTenantId(e.target.value)}
             placeholder="请输入您的 tenant_id"
-            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-mono"
           />
         </div>
 
@@ -147,7 +147,7 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
           </div>
           <button 
             onClick={() => setMockMode(!mockMode)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${mockMode ? 'bg-blue-600' : 'bg-gray-200'}`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${mockMode ? 'bg-primary-600' : 'bg-gray-200'}`}
           >
             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${mockMode ? 'translate-x-6' : 'translate-x-1'}`} />
           </button>

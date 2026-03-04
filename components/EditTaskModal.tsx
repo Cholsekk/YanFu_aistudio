@@ -190,7 +190,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
         {/* Header */}
         <div className="sticky top-0 bg-white/90 backdrop-blur-md z-10 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center text-primary-600 border border-primary-100 shadow-sm">
               <Clock className="w-5 h-5" />
             </div>
             <div>
@@ -212,7 +212,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
           {/* Basic Info Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 pb-2 border-b border-gray-100">
-              <Activity className="w-4 h-4 text-blue-500" />
+              <Activity className="w-4 h-4 text-primary-500" />
               基本信息
             </h3>
             
@@ -226,7 +226,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     type="text"
                     value={formData.name || ''}
                     onChange={e => handleChange('name', e.target.value)}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all group-hover:bg-white"
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all group-hover:bg-white"
                     placeholder="请输入任务名称"
                   />
                   {formData.name && (
@@ -249,7 +249,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     value={formData.description || ''}
                     onChange={e => handleChange('description', e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none group-hover:bg-white"
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none group-hover:bg-white"
                     placeholder="请输入任务描述"
                   />
                 </div>
@@ -275,7 +275,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                     className={`w-full px-3 py-2.5 bg-white border rounded-lg text-sm text-left flex items-center justify-between transition-all ${
                       isTypeDropdownOpen 
-                        ? 'border-blue-500 ring-2 ring-blue-500/20' 
+                        ? 'border-primary-500 ring-2 ring-primary-500/20' 
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
@@ -307,10 +307,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                               setIsTypeDropdownOpen(false);
                             }}
                             className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 flex flex-col ${
-                              formData.schedule_type === option.value ? 'bg-blue-50/50' : ''
+                              formData.schedule_type === option.value ? 'bg-primary-50/50' : ''
                             }`}
                           >
-                            <span className={`font-medium ${formData.schedule_type === option.value ? 'text-blue-600' : 'text-gray-900'}`}>{option.label}</span>
+                            <span className={`font-medium ${formData.schedule_type === option.value ? 'text-primary-600' : 'text-gray-900'}`}>{option.label}</span>
                             <span className="text-xs text-gray-500 mt-0.5">{option.desc}</span>
                           </button>
                         ))}
@@ -330,7 +330,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     <DatePicker
                       showTime
                       placeholder="请选择日期时间"
-                      className="w-full h-[38px] rounded-lg border-gray-200 hover:border-blue-500 focus:border-blue-500"
+                      className="w-full h-[38px] rounded-lg border-gray-200 hover:border-primary-500 focus:border-primary-500"
                       value={formData.schedule_expression ? dayjs(formData.schedule_expression) : null}
                       onChange={(date) => {
                         handleChange('schedule_expression', date ? date.format('YYYY-MM-DD HH:mm:ss') : '');
@@ -348,7 +348,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                       placeholder="请输入 Cron 表达式 (e.g., 0 0 * * *)"
                       value={formData.schedule_expression || ''}
                       onChange={e => handleChange('schedule_expression', e.target.value)}
-                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono group-hover:bg-white"
+                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-mono group-hover:bg-white"
                     />
                   </div>
                 )}
@@ -370,7 +370,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             min="0"
                             value={interval[item.key as keyof typeof interval]}
                             onChange={e => handleIntervalChange(item.key as keyof typeof interval, e.target.value)}
-                            className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-center font-mono"
+                            className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-center font-mono"
                           />
                         </div>
                       ))}
@@ -400,7 +400,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                       onClick={() => handleChange('status', 'active')}
                       className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
                         formData.status === 'active' 
-                          ? 'bg-white text-blue-600 shadow-sm' 
+                          ? 'bg-white text-primary-600 shadow-sm' 
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
@@ -430,7 +430,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                       onClick={() => handleChange('appType', 'internal')}
                       className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
                         formData.appType === 'internal' 
-                          ? 'bg-white text-blue-600 shadow-sm' 
+                          ? 'bg-white text-primary-600 shadow-sm' 
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
@@ -441,7 +441,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                       onClick={() => handleChange('appType', 'external')}
                       className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
                         formData.appType === 'external' 
-                          ? 'bg-white text-blue-600 shadow-sm' 
+                          ? 'bg-white text-primary-600 shadow-sm' 
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
@@ -462,7 +462,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                       onClick={() => setIsAppDropdownOpen(!isAppDropdownOpen)}
                       className={`w-full px-3 py-2.5 bg-gray-50 border rounded-lg text-sm text-left flex items-center justify-between transition-all hover:bg-white ${
                         isAppDropdownOpen 
-                          ? 'border-blue-500 ring-2 ring-blue-500/20' 
+                          ? 'border-primary-500 ring-2 ring-primary-500/20' 
                           : 'border-gray-200'
                       }`}
                     >
@@ -487,7 +487,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 placeholder="搜索应用..."
                                 value={appSearchTerm}
                                 onChange={(e) => setAppSearchTerm(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                                 autoFocus
                               />
                             </div>
@@ -499,11 +499,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                                 type="button"
                                 onClick={() => handleAppSelect(app)}
                                 className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-gray-50 flex items-center justify-between ${
-                                  formData.app_id === app.id ? 'bg-blue-50/50 text-blue-600' : 'text-gray-900'
+                                  formData.app_id === app.id ? 'bg-primary-50/50 text-primary-600' : 'text-gray-900'
                                 }`}
                               >
                                 <span>{app.name}</span>
-                                {formData.app_id === app.id && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+                                {formData.app_id === app.id && <CheckCircle2 className="w-3.5 h-3.5 text-primary-600" />}
                               </button>
                             ))
                           ) : (
@@ -528,7 +528,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     type="text"
                     value={formData.api_endpoint || ''}
                     onChange={e => handleChange('api_endpoint', e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all group-hover:bg-white font-mono text-gray-600"
+                    className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all group-hover:bg-white font-mono text-gray-600"
                     placeholder="https://api.example.com/v1/..."
                   />
                   <Server className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -553,7 +553,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                         onClick={() => handleChange('method', method)}
                         className={`py-2 rounded-lg text-xs font-bold border transition-all ${
                           formData.method === method
-                            ? method === 'GET' ? 'bg-blue-50 text-blue-600 border-blue-200 ring-1 ring-blue-200' :
+                            ? method === 'GET' ? 'bg-primary-50 text-primary-600 border-primary-200 ring-1 ring-primary-200' :
                               method === 'POST' ? 'bg-green-50 text-green-600 border-green-200 ring-1 ring-green-200' :
                               method === 'PUT' ? 'bg-orange-50 text-orange-600 border-orange-200 ring-1 ring-orange-200' :
                               method === 'DELETE' ? 'bg-red-50 text-red-600 border-red-200 ring-1 ring-red-200' :
@@ -581,7 +581,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                     value={formData.request_body || ''}
                     onChange={e => handleChange('request_body', e.target.value)}
                     rows={8}
-                    className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none font-mono group-hover:bg-white text-gray-600 leading-relaxed"
+                    className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none font-mono group-hover:bg-white text-gray-600 leading-relaxed"
                     placeholder="{ ... }"
                   />
                 </div>
@@ -600,7 +600,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
           </button>
           <button 
             onClick={handleSubmit}
-            className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             保存修改

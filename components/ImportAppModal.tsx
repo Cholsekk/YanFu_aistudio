@@ -74,8 +74,8 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
             disabled={isLoading || (activeTab === 'url' && !url) || (activeTab === 'file' && !fileContent)}
             className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2 ${
               (isLoading || (activeTab === 'url' && !url) || (activeTab === 'file' && !fileContent))
-                ? 'bg-blue-100 text-white cursor-not-allowed' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-primary-100 text-white cursor-not-allowed' 
+                : 'bg-primary-600 text-white hover:bg-primary-700'
             }`}
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -91,20 +91,20 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
             className={`px-4 py-2 text-sm font-medium transition-all relative ${activeTab === 'file' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
           >
             文件
-            {activeTab === 'file' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
+            {activeTab === 'file' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
           </button>
           <button 
             onClick={() => setActiveTab('url')}
             className={`px-4 py-2 text-sm font-medium transition-all relative ${activeTab === 'url' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
           >
             URL
-            {activeTab === 'url' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />}
+            {activeTab === 'url' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
           </button>
         </div>
 
         {activeTab === 'file' ? (
           <div 
-            className="border-2 border-dashed border-gray-100 rounded-xl py-12 flex flex-col items-center justify-center bg-gray-50/30 group hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer relative"
+            className="border-2 border-dashed border-gray-100 rounded-xl py-12 flex flex-col items-center justify-center bg-gray-50/30 group hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer relative"
             onClick={() => fileInputRef.current?.click()}
           >
             <input 
@@ -114,14 +114,14 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
               accept=".yml,.yaml"
               onChange={handleFileChange}
             />
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
-              <UploadCloud className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
+            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3 group-hover:bg-primary-100 transition-colors">
+              <UploadCloud className="w-6 h-6 text-gray-400 group-hover:text-primary-500" />
             </div>
             <p className="text-sm text-gray-500">
               {fileName ? (
                 <span className="text-gray-900 font-medium">{fileName}</span>
               ) : (
-                <>拖拽文件至此，或者 <span className="text-blue-600 font-medium">选择文件</span></>
+                <>拖拽文件至此，或者 <span className="text-primary-600 font-medium">选择文件</span></>
               )}
             </p>
             {fileName && (
@@ -134,7 +134,7 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
             <input 
               type="text" 
               placeholder="输入 DSL 文件的 URL" 
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />

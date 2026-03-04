@@ -22,7 +22,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     subType: '对话助手',
     icon: 'MessageSquare',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-blue-600',
+    iconBgColor: 'bg-primary-600',
     builtIn: false
   });
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
@@ -36,7 +36,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         subType: '对话助手',
         icon: initialData.icon,
         iconType: initialData.iconType,
-        iconBgColor: initialData.iconBgColor || 'bg-blue-600',
+        iconBgColor: initialData.iconBgColor || 'bg-primary-600',
         builtIn: false // Default to false or fetch from initialData if available
       });
     } else {
@@ -47,7 +47,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         subType: '对话助手',
         icon: 'MessageSquare',
         iconType: 'icon',
-        iconBgColor: 'bg-blue-600',
+        iconBgColor: 'bg-primary-600',
         builtIn: false
       });
     }
@@ -84,7 +84,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
   };
 
   const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
-    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-blue-600' });
+    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-primary-600' });
   };
 
   return (
@@ -98,7 +98,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
             <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200">取消</button>
             <button 
               onClick={handleSubmit} 
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-200"
             >
               {initialData ? '保存' : '创建'}
             </button>
@@ -111,7 +111,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
             <div className="flex gap-3">
               <button 
                 onClick={() => setIsIconPickerOpen(true)}
-                className="w-12 h-12 rounded-xl border border-gray-100 flex items-center justify-center flex-shrink-0 hover:border-blue-300 transition-colors overflow-hidden group relative"
+                className="w-12 h-12 rounded-xl border border-gray-100 flex items-center justify-center flex-shrink-0 hover:border-primary-300 transition-colors overflow-hidden group relative"
               >
                 {formData.iconType === 'image' ? (
                   <img src={formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
@@ -138,7 +138,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
               <input 
                 type="text" 
                 placeholder="请输入应用名称" 
-                className="flex-grow px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                className="flex-grow px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
               />
@@ -149,7 +149,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
             <label className="block text-sm font-medium text-gray-700 mb-2">描述</label>
             <textarea 
               placeholder="描述该应用的应用场景及用途，如:XXX 小助手回答用户提出的 XXX 产品使用问题" 
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all min-h-[100px] text-sm"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all min-h-[100px] text-sm"
               value={formData.description}
               onChange={e => setFormData({...formData, description: e.target.value})}
             />
@@ -163,7 +163,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
               </div>
               <button 
                 onClick={() => setFormData(prev => ({ ...prev, builtIn: !prev.builtIn }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.builtIn ? 'bg-blue-600' : 'bg-gray-200'}`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.builtIn ? 'bg-primary-600' : 'bg-gray-200'}`}
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.builtIn ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
@@ -180,12 +180,12 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                       key={t.id}
                       onClick={() => setFormData({...formData, type: t.id})}
                       className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col gap-2 ${
-                        formData.type === t.id ? 'border-blue-50 bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
+                        formData.type === t.id ? 'border-primary-50 bg-primary-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.type === t.id ? 'border-blue-500' : 'border-gray-300'}`}>
-                          {formData.type === t.id && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.type === t.id ? 'border-primary-500' : 'border-gray-300'}`}>
+                          {formData.type === t.id && <div className="w-2 h-2 rounded-full bg-primary-500" />}
                         </div>
                         <span className="font-semibold text-gray-900 text-sm">{t.title}</span>
                       </div>
@@ -203,11 +203,11 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                       key={st}
                       onClick={() => setFormData({...formData, subType: st})}
                       className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
-                        formData.subType === st ? 'border-blue-500 bg-blue-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
+                        formData.subType === st ? 'border-primary-500 bg-primary-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.subType === st ? 'border-blue-500' : 'border-gray-300'}`}>
-                        {formData.subType === st && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.subType === st ? 'border-primary-500' : 'border-gray-300'}`}>
+                        {formData.subType === st && <div className="w-2 h-2 rounded-full bg-primary-500" />}
                       </div>
                       <span className="font-medium text-gray-900 text-sm">{st}</span>
                     </div>

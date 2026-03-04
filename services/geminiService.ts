@@ -21,7 +21,7 @@ export class GeminiService {
           - typeLabel: string (e.g., '对话助手', '智能体', '工作流')
           - description: string (short and professional in Chinese)
           - icon: string (one of: 'MessageSquare', 'Bot', 'GitBranch', 'Search', 'FileText', 'Scissors', 'Code', 'Database', 'BookOpen')
-          - iconBgColor: string (a Tailwind background color class like 'bg-blue-600')
+          - iconBgColor: string (a Tailwind background color class like 'bg-primary-600')
           - tags: string[]`,
         config: {
           responseMimeType: "application/json",

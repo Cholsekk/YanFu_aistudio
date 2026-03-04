@@ -237,7 +237,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
             <div className="flex gap-4 items-center">
               <div 
                 onClick={() => setIsIconPickerOpen(true)}
-                className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all group relative overflow-hidden"
+                className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all group relative overflow-hidden"
               >
                 {typeof icon === 'string' ? (
                   <img src={icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -256,7 +256,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="网络搜索工具"
-                  className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                  className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
                 />
               </div>
             </div>
@@ -273,7 +273,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
               value={toolCallName}
               onChange={(e) => setToolCallName(e.target.value)}
               placeholder="network_information_retrieval"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
             />
           </div>
 
@@ -287,7 +287,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="用于进行网络信息检索"
               rows={4}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm resize-none"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm resize-none"
             />
           </div>
 
@@ -333,30 +333,30 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
                                 <div className="fixed inset-0 z-10" onClick={() => setOpenParamDropdown(null)} />
                                 <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-lg shadow-xl z-20 overflow-hidden min-w-[200px]">
                                   <div 
-                                    className={`px-3 py-2 cursor-pointer border-b border-gray-50 flex justify-between items-center ${parameterForms[param.name] === 'llm' ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
+                                    className={`px-3 py-2 cursor-pointer border-b border-gray-50 flex justify-between items-center ${parameterForms[param.name] === 'llm' ? 'bg-primary-50/50' : 'hover:bg-gray-50'}`}
                                     onClick={() => {
                                       handleFormChange(param.name, 'llm');
                                       setOpenParamDropdown(null);
                                     }}
                                   >
                                     <div>
-                                      <div className={`font-medium text-xs ${parameterForms[param.name] === 'llm' ? 'text-blue-700' : 'text-gray-900'}`}>LLM 填入</div>
+                                      <div className={`font-medium text-xs ${parameterForms[param.name] === 'llm' ? 'text-primary-700' : 'text-gray-900'}`}>LLM 填入</div>
                                       <div className="text-[10px] text-gray-500 mt-0.5">由大模型自动生成参数值</div>
                                     </div>
-                                    {parameterForms[param.name] === 'llm' && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                                    {parameterForms[param.name] === 'llm' && <Check className="w-3.5 h-3.5 text-primary-600" />}
                                   </div>
                                   <div 
-                                    className={`px-3 py-2 cursor-pointer flex justify-between items-center ${parameterForms[param.name] === 'query' ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
+                                    className={`px-3 py-2 cursor-pointer flex justify-between items-center ${parameterForms[param.name] === 'query' ? 'bg-primary-50/50' : 'hover:bg-gray-50'}`}
                                     onClick={() => {
                                       handleFormChange(param.name, 'query');
                                       setOpenParamDropdown(null);
                                     }}
                                   >
                                     <div>
-                                      <div className={`font-medium text-xs ${parameterForms[param.name] === 'query' ? 'text-blue-700' : 'text-gray-900'}`}>用户输入</div>
+                                      <div className={`font-medium text-xs ${parameterForms[param.name] === 'query' ? 'text-primary-700' : 'text-gray-900'}`}>用户输入</div>
                                       <div className="text-[10px] text-gray-500 mt-0.5">由用户手动填写参数值</div>
                                     </div>
-                                    {parameterForms[param.name] === 'query' && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                                    {parameterForms[param.name] === 'query' && <Check className="w-3.5 h-3.5 text-primary-600" />}
                                   </div>
                                 </div>
                               </>
@@ -393,7 +393,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
               <div className="flex flex-wrap gap-1.5">
                 {selectedLabels.length > 0 ? (
                   selectedLabels.map(l => (
-                    <span key={l} className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-xs font-medium border border-blue-100 flex items-center gap-1">
+                    <span key={l} className="bg-primary-50 text-primary-600 px-2 py-0.5 rounded text-xs font-medium border border-primary-100 flex items-center gap-1">
                       {LABEL_MAPPING[l] || l}
                       <X className="w-3 h-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleLabel(l); }} />
                     </span>
@@ -417,7 +417,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
                         placeholder="搜索标签..."
                         value={labelSearch}
                         onChange={(e) => setLabelSearch(e.target.value)}
-                        className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border-none rounded-lg text-xs focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                        className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border-none rounded-lg text-xs focus:ring-2 focus:ring-primary-500/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -431,7 +431,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
                           className="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <span>{LABEL_MAPPING[label] || label}</span>
-                          {isSelected && <Check className="w-4 h-4 text-blue-600" />}
+                          {isSelected && <Check className="w-4 h-4 text-primary-600" />}
                         </button>
                       );
                     })}
@@ -451,7 +451,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
               value={privacyPolicy}
               onChange={(e) => setPrivacyPolicy(e.target.value)}
               placeholder="请输入隐私协议"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
             />
           </div>
         </div>
@@ -475,7 +475,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-medium shadow-sm shadow-blue-200 disabled:opacity-50"
+              className="px-8 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl transition-colors text-sm font-medium shadow-sm shadow-primary-200 disabled:opacity-50"
             >
               {isSaving ? '保存中...' : '保存'}
             </button>

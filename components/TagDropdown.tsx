@@ -54,13 +54,13 @@ const TagDropdown: React.FC<TagDropdownProps> = ({
     >
       <div className="p-3 border-bottom border-gray-50">
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-blue-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-primary-500" />
           <form onSubmit={handleCreate}>
             <input 
               autoFocus
               type="text" 
               placeholder="搜索或者创建" 
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border-none rounded-lg text-xs focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none"
+              className="w-full pl-9 pr-3 py-2 bg-gray-50 border-none rounded-lg text-xs focus:ring-2 focus:ring-primary-500/20 focus:bg-white transition-all outline-none"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -78,7 +78,7 @@ const TagDropdown: React.FC<TagDropdownProps> = ({
                 onClick={() => onToggleTag(tag.id)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors group"
               >
-                <div className={`transition-colors ${isSelected ? 'text-blue-600' : 'text-gray-300 group-hover:text-gray-400'}`}>
+                <div className={`transition-colors ${isSelected ? 'text-primary-600' : 'text-gray-300 group-hover:text-gray-400'}`}>
                   {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                 </div>
                 <span className={`flex-grow text-left truncate ${isSelected ? 'font-medium text-gray-900' : ''}`}>
@@ -91,7 +91,7 @@ const TagDropdown: React.FC<TagDropdownProps> = ({
           search.trim() ? (
             <button 
               onClick={() => { onCreateTag(search.trim()); setSearch(''); }}
-              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-primary-600 hover:bg-primary-50 transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>创建标签 "{search}"</span>

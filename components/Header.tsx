@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">
             应用开发
           </h1>
           <nav className="flex h-16">
@@ -34,11 +34,11 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 h-full relative flex items-center text-sm font-medium transition-colors
-                  ${activeTab === tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                  ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'}`}
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
                 )}
               </button>
             ))}

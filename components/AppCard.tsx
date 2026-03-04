@@ -150,7 +150,7 @@ const AppCard: React.FC<AppCardProps> = ({
   };
 
   const getTypeColor = (type: string) => {
-    if (type.includes('对话')) return 'bg-blue-500';
+    if (type.includes('对话')) return 'bg-primary-500';
     if (type.includes('智能体')) return 'bg-brown-500';
     if (type.includes('工作流')) return 'bg-orange-500';
     if (type.includes('文本')) return 'bg-green-500';
@@ -205,7 +205,7 @@ const AppCard: React.FC<AppCardProps> = ({
         <div className="flex-grow flex items-center gap-6">
           <div className="w-1/4 min-w-0">
             <Tooltip title={app.name} arrow={false}>
-              <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate">
+              <h3 className="font-semibold text-gray-900 text-sm group-hover:text-primary-600 transition-colors truncate">
                 {app.name}
               </h3>
             </Tooltip>
@@ -229,7 +229,7 @@ const AppCard: React.FC<AppCardProps> = ({
             <MoreHorizontal className="w-4 h-4" />
           </button>
           {isMenuOpen && renderMenu()}
-          <button onClick={handleEnterApp} className="p-1.5 text-blue-600 rounded-md bg-blue-50 hover:bg-blue-100">
+          <button onClick={handleEnterApp} className="p-1.5 text-primary-600 rounded-md bg-primary-50 hover:bg-primary-100">
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
@@ -247,7 +247,7 @@ const AppCard: React.FC<AppCardProps> = ({
           {renderAppIcon(false)}
           <div className="min-w-0">
             <Tooltip title={app.name} arrow={false}>
-              <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors truncate">
+              <h3 className="font-semibold text-gray-900 text-lg group-hover:text-primary-600 transition-colors truncate">
                 {app.name}
               </h3>
             </Tooltip>
@@ -279,7 +279,7 @@ const AppCard: React.FC<AppCardProps> = ({
           {(app.type === '定制应用' || app.mode === 'custom') ? null : (
             <>
               {app.tags.map(tag => (
-                <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-600 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
+                <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-primary-50 border border-primary-100 rounded text-[10px] text-primary-600 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
                   {tag.name}
                   <X className="w-2.5 h-2.5 cursor-pointer opacity-0 group-hover/tag:opacity-100" onClick={(e) => removeTag(e, tag.id)} />
                 </span>
@@ -287,7 +287,7 @@ const AppCard: React.FC<AppCardProps> = ({
               {isAddingTag ? (
                 <div className="relative" onClick={e => e.stopPropagation()}>
                   <button 
-                    className="text-[10px] text-blue-600 border border-blue-200 bg-blue-50 px-2 py-1 rounded transition-colors flex items-center gap-1 font-medium"
+                    className="text-[10px] text-primary-600 border border-primary-200 bg-primary-50 px-2 py-1 rounded transition-colors flex items-center gap-1 font-medium"
                   >
                     <Plus className="w-2.5 h-2.5" />
                     添加标签
@@ -313,7 +313,7 @@ const AppCard: React.FC<AppCardProps> = ({
             </>
           )}
         </div>
-        <button onClick={handleEnterApp} className="hidden group-hover:flex items-center gap-1 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all">
+        <button onClick={handleEnterApp} className="hidden group-hover:flex items-center gap-1 text-primary-600 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary-50 hover:bg-primary-100 transition-all">
           进入应用
           <ExternalLink className="w-3 h-3" />
         </button>

@@ -594,7 +594,7 @@ const LABEL_MAPPING: Record<string, string> = {
 };
 
 const TAG_COLORS = [
-  { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  { bg: 'bg-primary-50', text: 'text-primary-700', border: 'border-primary-200' },
   { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
   { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
   { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
@@ -862,7 +862,7 @@ const ToolExtensions: React.FC = () => {
             onClick={() => setActiveTab('builtin')}
             className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'builtin'
-                ? 'bg-white text-blue-600 shadow-sm'
+                ? 'bg-white text-primary-600 shadow-sm'
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -872,7 +872,7 @@ const ToolExtensions: React.FC = () => {
             onClick={() => setActiveTab('custom')}
             className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'custom'
-                ? 'bg-white text-blue-600 shadow-sm'
+                ? 'bg-white text-primary-600 shadow-sm'
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -884,24 +884,22 @@ const ToolExtensions: React.FC = () => {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-grow md:flex-grow-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <form onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="text"
-                name="tool-extensions-search-query"
-                autoComplete="off"
-                placeholder="搜索工具名称或描述..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              />
-            </form>
+            <input
+              type="text"
+              name="tool-search"
+              autoComplete="off"
+              placeholder="搜索工具名称或描述..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+            />
           </div>
           
           <div className="relative">
             <button 
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-all bg-white min-w-[100px] justify-between
-                ${selectedLabel !== '全部' ? 'border-blue-500 text-blue-600 bg-blue-50/10' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                ${selectedLabel !== '全部' ? 'border-primary-500 text-primary-600 bg-primary-50/10' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
             >
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4" />
@@ -933,7 +931,7 @@ const ToolExtensions: React.FC = () => {
                         placeholder="搜索标签..."
                         value={labelSearchQuery}
                         onChange={(e) => setLabelSearchQuery(e.target.value)}
-                        className="w-full pl-7 pr-2 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full pl-7 pr-2 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
                         autoFocus
                       />
                     </div>
@@ -941,7 +939,7 @@ const ToolExtensions: React.FC = () => {
                   <div className="max-h-[300px] overflow-y-auto">
                     <button
                       onClick={() => { setSelectedLabel('全部'); setIsFilterOpen(false); setLabelSearchQuery(''); }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${selectedLabel === '全部' ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-gray-600'}`}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${selectedLabel === '全部' ? 'text-primary-600 font-medium bg-primary-50/50' : 'text-gray-600'}`}
                     >
                       全部
                     </button>
@@ -950,7 +948,7 @@ const ToolExtensions: React.FC = () => {
                         <button
                           key={label}
                           onClick={() => { setSelectedLabel(label); setIsFilterOpen(false); setLabelSearchQuery(''); }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${selectedLabel === label ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-gray-600'}`}
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${selectedLabel === label ? 'text-primary-600 font-medium bg-primary-50/50' : 'text-gray-600'}`}
                         >
                           {LABEL_MAPPING[label] || label}
                         </button>
@@ -971,7 +969,7 @@ const ToolExtensions: React.FC = () => {
       {/* Grid Section */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
-          <div className="w-10 h-10 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4" />
+          <div className="w-10 h-10 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin mb-4" />
           <p className="text-sm font-medium">加载工具列表中...</p>
         </div>
       ) : error ? (
@@ -1007,11 +1005,11 @@ const ToolExtensions: React.FC = () => {
             return (
               <div 
                 key={tool.id} 
-                className="group bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:border-blue-100 transition-all duration-300 flex flex-col h-full cursor-pointer relative overflow-hidden"
+                className="group bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:border-primary-100 transition-all duration-300 flex flex-col h-full cursor-pointer relative overflow-hidden"
                 onClick={() => handleToolClick(tool)}
               >
                 <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-blue-50 text-blue-600 p-1.5 rounded-lg">
+                  <div className="bg-primary-50 text-primary-600 p-1.5 rounded-lg">
                     <ExternalLink className="w-4 h-4" />
                   </div>
                 </div>
@@ -1058,7 +1056,7 @@ const ToolExtensions: React.FC = () => {
                 </div>
                 
                 <div className="mb-3">
-                  <h3 className="font-semibold text-gray-900 text-base mb-1 group-hover:text-blue-600 transition-colors line-clamp-1" title={tool.label.zh_Hans}>{tool.label.zh_Hans}</h3>
+                  <h3 className="font-semibold text-gray-900 text-base mb-1 group-hover:text-primary-600 transition-colors line-clamp-1" title={tool.label.zh_Hans}>{tool.label.zh_Hans}</h3>
                   <p className="text-xs text-gray-400 font-medium">{tool.author}</p>
                 </div>
                 

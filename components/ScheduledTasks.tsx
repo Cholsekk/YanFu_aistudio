@@ -150,7 +150,7 @@ const ScheduledTasks: React.FC = () => {
       {/* Search and Action Bar */}
       <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto flex-1">
-          <div className="flex items-center gap-3 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+          <div className="flex items-center gap-3 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all">
             <span className="text-sm text-gray-500 whitespace-nowrap font-medium">任务名称</span>
             <div className="w-px h-4 bg-gray-300"></div>
             <input 
@@ -165,7 +165,7 @@ const ScheduledTasks: React.FC = () => {
           <div className="flex items-center gap-2">
             <button 
               onClick={handleSearch}
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+              className="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-all shadow-sm hover:shadow-md"
             >
               查询
             </button>
@@ -181,7 +181,7 @@ const ScheduledTasks: React.FC = () => {
         <div className="flex items-center gap-3 w-full md:w-auto justify-end pl-4 md:border-l md:border-gray-100">
           <button 
             onClick={() => setIsNewModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <Plus className="w-4 h-4" />
             新建任务
@@ -211,7 +211,7 @@ const ScheduledTasks: React.FC = () => {
                 <tr>
                   <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
                       <span className="text-sm text-gray-400">加载中...</span>
                     </div>
                   </td>
@@ -233,7 +233,7 @@ const ScheduledTasks: React.FC = () => {
                       <div className="flex items-center gap-3 mt-2">
                         <button 
                           onClick={() => fetchTasks(currentPage, pageSize)}
-                          className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-all"
+                          className="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 transition-all"
                         >
                           点击重试
                         </button>
@@ -266,7 +266,7 @@ const ScheduledTasks: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm ${
-                        task.method === 'GET' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                        task.method === 'GET' ? 'bg-primary-50 text-primary-600 border-primary-200' :
                         task.method === 'POST' ? 'bg-green-50 text-green-600 border-green-200' :
                         task.method === 'PUT' ? 'bg-orange-50 text-orange-600 border-orange-200' :
                         task.method === 'DELETE' ? 'bg-red-50 text-red-600 border-red-200' :
@@ -278,7 +278,7 @@ const ScheduledTasks: React.FC = () => {
                     <td className="px-6 py-4 text-center">
                       <button 
                         onClick={() => handleToggleStatusClick(task)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${task.status === 'active' ? 'bg-blue-600' : 'bg-gray-200'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${task.status === 'active' ? 'bg-primary-600' : 'bg-gray-200'}`}
                       >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${task.status === 'active' ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
@@ -318,7 +318,7 @@ const ScheduledTasks: React.FC = () => {
                       <div className="flex items-center justify-end gap-3">
                         <button 
                           onClick={() => handleEdit(task)}
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                         >
                           编辑
                         </button>
@@ -330,7 +330,7 @@ const ScheduledTasks: React.FC = () => {
                         </button>
                         <button 
                           onClick={() => handleViewLog(task)}
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                         >
                           查看
                         </button>
@@ -366,7 +366,7 @@ const ScheduledTasks: React.FC = () => {
                 onClick={() => setCurrentPage(page)}
                 className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-medium transition-all ${
                   currentPage === page 
-                    ? 'bg-white border border-blue-500 text-blue-600 shadow-sm' 
+                    ? 'bg-white border border-primary-500 text-primary-600 shadow-sm' 
                     : 'text-gray-500 hover:bg-white'
                 }`}
               >
@@ -392,7 +392,7 @@ const ScheduledTasks: React.FC = () => {
                 <button
                   key={size}
                   onClick={() => { setPageSize(size); setCurrentPage(1); }}
-                  className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${pageSize === size ? 'text-blue-600 font-medium' : 'text-gray-600'}`}
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${pageSize === size ? 'text-primary-600 font-medium' : 'text-gray-600'}`}
                 >
                   {size} 条/页
                 </button>

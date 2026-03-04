@@ -20,7 +20,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
   // Icon state
   const [icon, setIcon] = useState('MessageSquare');
   const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>('icon');
-  const [iconBgColor, setIconBgColor] = useState('bg-blue-600');
+  const [iconBgColor, setIconBgColor] = useState('bg-primary-600');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
       // Initialize icon state from app
       setIcon(app.icon);
       setIconType(app.iconType);
-      setIconBgColor(app.iconBgColor || 'bg-blue-600');
+      setIconBgColor(app.iconBgColor || 'bg-primary-600');
     }
   }, [app, isOpen]);
 
@@ -86,7 +86,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
               onClick={handleToggleDelete}
             >
               {deleteOriginal ? (
-                <CheckSquare className="w-5 h-5 text-blue-600" />
+                <CheckSquare className="w-5 h-5 text-primary-600" />
               ) : (
                 <Square className="w-5 h-5 text-gray-400" />
               )}
@@ -123,7 +123,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
           <div className="flex gap-3">
             <button 
               onClick={() => setIsIconPickerOpen(true)}
-              className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0 hover:border-blue-300 transition-colors overflow-hidden group relative"
+              className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0 hover:border-primary-300 transition-colors overflow-hidden group relative"
             >
               {iconType === 'image' ? (
                 <img src={icon} alt="icon" className="w-full h-full object-cover" />
@@ -140,7 +140,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
               type="text" 
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="flex-grow px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="flex-grow px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
               placeholder="输入新应用名称"
             />
           </div>

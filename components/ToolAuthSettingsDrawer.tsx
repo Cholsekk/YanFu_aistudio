@@ -75,7 +75,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
             配置凭据后，工作区中的所有成员都可以在编排应用程序时使用此工具。
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <div className="space-y-6">
             {Array.isArray(schema) && schema.map((field) => (
               <div key={field.name} className="space-y-2">
                 <div className="flex items-center gap-1">
@@ -103,7 +103,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                         value={values[field.name] || ''}
                         onChange={(e) => handleChange(field.name, e.target.value)}
                         placeholder={field.placeholder?.zh_Hans}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm pr-10"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm pr-10"
                       />
                       <button
                         type="button"
@@ -125,14 +125,13 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                       value={values[field.name] || ''}
                       onChange={(e) => handleChange(field.name, e.target.value)}
                       placeholder={field.placeholder?.zh_Hans}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                     />
                   )}
                 </div>
               </div>
             ))}
-            <button type="submit" className="hidden" />
-          </form>
+          </div>
         </div>
 
         {/* Footer */}
@@ -145,7 +144,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
           >
             保存
           </button>

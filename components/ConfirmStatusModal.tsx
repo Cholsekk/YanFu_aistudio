@@ -30,7 +30,7 @@ const ConfirmStatusModal: React.FC<ConfirmStatusModalProps> = ({ isOpen, onClose
               onConfirm();
               onClose();
             }}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm"
+            className="px-6 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-all shadow-sm"
           >
             确定
           </button>

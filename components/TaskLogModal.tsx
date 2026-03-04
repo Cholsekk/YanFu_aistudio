@@ -111,7 +111,7 @@ const TaskLogModal: React.FC<TaskLogModalProps> = ({ isOpen, onClose, taskId, ta
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-3">
-              <div className="w-8 h-8 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-primary-600/20 border-t-primary-600 rounded-full animate-spin" />
               <span className="text-sm text-gray-400">加载日志中...</span>
             </div>
           ) : fetchError ? (
@@ -119,7 +119,7 @@ const TaskLogModal: React.FC<TaskLogModalProps> = ({ isOpen, onClose, taskId, ta
               <div className="text-sm text-red-500 font-medium">{fetchError}</div>
               <button 
                 onClick={loadLogs}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-primary-600 hover:underline"
               >
                 点击重试
               </button>
@@ -136,7 +136,7 @@ const TaskLogModal: React.FC<TaskLogModalProps> = ({ isOpen, onClose, taskId, ta
                     <div className={`w-8 h-8 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${
                       log.status === 'success' ? 'bg-green-100 text-green-600' :
                       log.status === 'failed' ? 'bg-red-100 text-red-600' :
-                      'bg-blue-100 text-blue-600'
+                      'bg-primary-100 text-primary-600'
                     }`}>
                       {log.status === 'success' ? <CheckCircle2 className="w-4 h-4" /> :
                        log.status === 'failed' ? <XCircle className="w-4 h-4" /> :
@@ -151,7 +151,7 @@ const TaskLogModal: React.FC<TaskLogModalProps> = ({ isOpen, onClose, taskId, ta
                         <span className={`text-sm font-bold ${
                           log.status === 'success' ? 'text-green-700' :
                           log.status === 'failed' ? 'text-red-700' :
-                          'text-blue-700'
+                          'text-primary-700'
                         }`}>
                           {log.status === 'success' ? '执行成功' :
                            log.status === 'failed' ? '执行失败' :
@@ -182,7 +182,7 @@ const TaskLogModal: React.FC<TaskLogModalProps> = ({ isOpen, onClose, taskId, ta
                             </span>
                             <button 
                               onClick={() => handleViewResult(log.result!)}
-                              className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                              className="text-xs text-primary-600 hover:text-primary-700 hover:underline"
                             >
                               查看详情
                             </button>

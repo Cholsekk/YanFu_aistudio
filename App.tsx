@@ -221,7 +221,7 @@ const App: React.FC = () => {
           iconType: appData.icon_type || (appData.icon_url ? 'image' : 'icon'),
           icon_url: appData.icon_url,
           tags: appData.tags || [],
-          iconBgColor: appData.icon_background || 'bg-blue-600',
+          iconBgColor: appData.icon_background || 'bg-primary-600',
           mode: appData.mode || (params.is_custom_app_list ? 'custom' : undefined),
           // Map custom app fields if present
           category: categoryMap[appData.category || item.category] || appData.category || item.category,
@@ -650,9 +650,9 @@ const App: React.FC = () => {
           <div className="space-y-3">
             <button 
               onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all group"
+              className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 transition-all group"
             >
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+              <div className="p-2 bg-primary-50 text-primary-600 rounded-lg group-hover:bg-primary-100 transition-colors">
                 <Plus className="w-5 h-5" />
               </div>
               <div className="text-left">
@@ -692,7 +692,7 @@ const App: React.FC = () => {
     return (
       <div className="bg-white rounded-xl border border-dashed border-gray-200 p-4 shadow-sm flex items-center gap-6 mb-2">
         <div className="flex-shrink-0 flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center">
             <LayoutGrid className="w-5 h-5" />
           </div>
           <div>
@@ -703,7 +703,7 @@ const App: React.FC = () => {
         <div className="flex-grow flex gap-3">
           <button 
             onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-all text-sm text-gray-600 hover:text-blue-600 font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-primary-500 hover:bg-primary-50 transition-all text-sm text-gray-600 hover:text-primary-600 font-medium"
           >
             <Plus className="w-4 h-4" />
             新建应用
@@ -760,7 +760,7 @@ const App: React.FC = () => {
                 }}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                   activeFilterTab === type 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                    ? 'bg-white text-primary-600 shadow-sm' 
                     : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
@@ -771,13 +771,13 @@ const App: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500" />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500" />
               <input
                 type="text"
                 placeholder="搜索应用或标签..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
               />
             </div>
             
@@ -786,10 +786,10 @@ const App: React.FC = () => {
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-all shadow-sm
                   ${isFilterOpen || isFiltered 
-                    ? 'border-blue-500 text-blue-600 bg-blue-50/30' 
+                    ? 'border-primary-500 text-primary-600 bg-primary-50/30' 
                     : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}
               >
-                <Filter className={`w-4 h-4 ${isFiltered ? 'fill-blue-600/10' : ''}`} />
+                <Filter className={`w-4 h-4 ${isFiltered ? 'fill-primary-600/10' : ''}`} />
                 筛选
                 <ChevronDown className={`w-3 h-3 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -812,7 +812,7 @@ const App: React.FC = () => {
                     {isFiltered && (
                       <button 
                         onClick={handleResetFilters}
-                        className="text-blue-600 hover:text-blue-700 normal-case flex items-center gap-0.5"
+                        className="text-primary-600 hover:text-primary-700 normal-case flex items-center gap-0.5"
                       >
                         <RotateCcw className="w-2.5 h-2.5" />
                         重置
@@ -822,7 +822,7 @@ const App: React.FC = () => {
                   
                   <button 
                     onClick={() => { setSortBy('default'); setIsFilterOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'default' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'default' ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
                     <div className="flex items-center gap-2">
                       <ListOrdered className="w-4 h-4 opacity-50" />
@@ -832,20 +832,20 @@ const App: React.FC = () => {
 
                   <button 
                     onClick={() => { setSortBy('name'); setIsFilterOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'name' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'name' ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
                     <span>按名称</span>
                   </button>
                   <button 
                     onClick={() => { setSortBy('time-desc'); setIsFilterOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'time-desc' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'time-desc' ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
                     <span>按创建时间 (降序)</span>
                     <SortDesc className="w-4 h-4 opacity-70" />
                   </button>
                   <button 
                     onClick={() => { setSortBy('time-asc'); setIsFilterOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'time-asc' ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${sortBy === 'time-asc' ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
                     <span>按创建时间 (升序)</span>
                     <SortAsc className="w-4 h-4 opacity-70" />
@@ -870,13 +870,13 @@ const App: React.FC = () => {
             <div className="flex items-center bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
               <button 
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 <Grid className="w-4 h-4" />
               </button>
               <button 
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -913,7 +913,7 @@ const App: React.FC = () => {
               {isFiltered && (
                 <button 
                   onClick={handleResetFilters}
-                  className="mt-4 text-sm text-blue-600 font-medium hover:underline"
+                  className="mt-4 text-sm text-primary-600 font-medium hover:underline"
                 >
                   清除筛选条件
                 </button>
@@ -978,7 +978,7 @@ const App: React.FC = () => {
       {showBackToTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-blue-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
+          className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-primary-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
           aria-label="Back to top"
         >
           <ArrowUp className="w-5 h-5" />

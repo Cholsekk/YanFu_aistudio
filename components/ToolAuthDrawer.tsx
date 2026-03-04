@@ -92,9 +92,9 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
             <>
               {/* Authorization Status */}
               {((tool.type as string) === 'model' || tool.allow_delete !== false) && (
-                <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                <div className="bg-primary-50/50 rounded-xl p-4 border border-primary-100">
                   <div className="flex items-start gap-3">
-                    <ShieldCheck className={`w-5 h-5 mt-0.5 ${tool.is_team_authorization ? 'text-green-600' : 'text-blue-600'}`} />
+                    <ShieldCheck className={`w-5 h-5 mt-0.5 ${tool.is_team_authorization ? 'text-green-600' : 'text-primary-600'}`} />
                     <div>
                       <h4 className="font-medium text-gray-900 text-sm">
                         {tool.is_team_authorization ? '已授权' : '需要授权'}
@@ -107,14 +107,13 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                     </div>
                   </div>
                   <button 
-                    type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       e.nativeEvent.stopImmediatePropagation();
                       onAuthorize();
                     }}
-                    className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2"
+                    className="mt-4 w-full py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary-200 flex items-center justify-center gap-2"
                   >
                     {tool.is_team_authorization ? '更新授权' : '去授权'}
                     <ExternalLink className="w-4 h-4" />
@@ -135,11 +134,11 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                     {toolDetail.map((detail, index) => (
                       <div 
                         key={index} 
-                        className="group rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all bg-white cursor-pointer"
+                        className="group rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all bg-white cursor-pointer"
                         onClick={() => setSelectedSubTool(detail)}
                       >
                         <div className="flex items-start justify-between mb-2">
-                          <h5 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                          <h5 className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
                             {detail.label.zh_Hans}
                           </h5>
                           <span className="text-xs font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
@@ -160,7 +159,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                             <div className="space-y-2">
                               {detail.parameters.slice(0, 3).map((param) => (
                                 <div key={param.name} className="flex items-baseline gap-2 text-xs">
-                                  <span className="font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                  <span className="font-mono text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">
                                     {param.name}
                                   </span>
                                   <span className="text-gray-400">
@@ -188,7 +187,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                 </div>
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-gray-400">
-                  <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-3" />
+                  <div className="w-8 h-8 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin mb-3" />
                   <p className="text-xs">加载工具详情...</p>
                 </div>
               )}
@@ -198,7 +197,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
               {/* Custom Tool Actions */}
               <div className="flex gap-3">
                 <button 
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary-200 flex items-center justify-center gap-2"
                   onClick={() => {}} // Placeholder functionality
                 >
                   在应用开发中打开
@@ -236,7 +235,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                 </div>
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-gray-400">
-                  <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-3" />
+                  <div className="w-8 h-8 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin mb-3" />
                   <p className="text-xs">加载工具详情...</p>
                 </div>
               )}

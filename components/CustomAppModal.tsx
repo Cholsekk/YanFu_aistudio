@@ -269,7 +269,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         footer={
           <>
             <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200">取消</button>
-            <button onClick={handleSubmit} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
+            <button onClick={handleSubmit} className="px-6 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-200">
               {initialData ? '保存' : '创建'}
             </button>
           </>
@@ -281,7 +281,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
             <div className="flex gap-3">
               <button 
                 onClick={() => setIsIconPickerOpen(true)}
-                className="w-10 h-10 rounded-lg border border-gray-100 flex items-center justify-center flex-shrink-0 hover:border-blue-300 transition-colors overflow-hidden group relative"
+                className="w-10 h-10 rounded-lg border border-gray-100 flex items-center justify-center flex-shrink-0 hover:border-primary-300 transition-colors overflow-hidden group relative"
               >
                 {formData.iconType === 'image' ? (
                   <img src={formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
@@ -308,7 +308,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
               <input 
                 type="text" 
                 placeholder="给你的应用起个名字" 
-                className="flex-grow px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                className="flex-grow px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
               />
@@ -330,13 +330,13 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                   {categories.map(cat => (
                     <div
                       key={cat.id}
-                      className={`group w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors ${formData.category === cat.id ? 'bg-blue-50/50 text-blue-600' : ''}`}
+                      className={`group w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors ${formData.category === cat.id ? 'bg-primary-50/50 text-primary-600' : ''}`}
                     >
                       {editingCategoryId === cat.id ? (
                         <div className="flex items-center gap-2 w-full" onClick={e => e.stopPropagation()}>
                           <input
                             type="text"
-                            className="flex-grow px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="flex-grow px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
                             value={editingCategoryName}
                             onChange={e => setEditingCategoryName(e.target.value)}
                             onKeyDown={e => {
@@ -345,7 +345,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                             }}
                             autoFocus
                           />
-                          <button onClick={(e) => handleUpdateCategory(e, cat.id)} className="text-blue-600 hover:text-blue-700 p-1">
+                          <button onClick={(e) => handleUpdateCategory(e, cat.id)} className="text-primary-600 hover:text-primary-700 p-1">
                             <Check className="w-4 h-4" />
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); setEditingCategoryId(null); }} className="text-gray-400 hover:text-gray-600 p-1">
@@ -371,7 +371,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                                 setEditingCategoryId(cat.id);
                                 setEditingCategoryName(cat.category);
                               }}
-                              className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                              className="p-1 text-gray-400 hover:text-primary-600 rounded"
                               title="编辑"
                             >
                               <Pencil className="w-3.5 h-3.5" />
@@ -395,7 +395,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                         <input
                           type="text"
                           placeholder="输入新分类名称"
-                          className="flex-grow px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="flex-grow px-2 py-1 text-sm border border-primary-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
                           value={newCategoryName}
                           onChange={e => setNewCategoryName(e.target.value)}
                           onKeyDown={e => {
@@ -404,7 +404,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                           }}
                           autoFocus
                         />
-                        <button onClick={handleAddCategory} className="text-blue-600 hover:text-blue-700 p-1">
+                        <button onClick={handleAddCategory} className="text-primary-600 hover:text-primary-700 p-1">
                           <Check className="w-4 h-4" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); setIsAddingCategory(false); }} className="text-gray-400 hover:text-gray-600 p-1">
@@ -418,7 +418,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                           setIsAddingCategory(true);
                           setNewCategoryName('');
                         }}
-                        className="w-full flex items-center justify-center gap-1 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        className="w-full flex items-center justify-center gap-1 py-1.5 text-sm text-primary-600 hover:bg-primary-50 rounded transition-colors"
                       >
                         <Plus className="w-4 h-4" />
                         添加新分类
@@ -445,7 +445,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
             <label className="block text-sm font-medium text-gray-700 mb-2">是否需要token认证</label>
             <button 
               onClick={() => setFormData({...formData, needToken: !formData.needToken})}
-              className={`w-11 h-6 rounded-full transition-colors relative ${formData.needToken ? 'bg-blue-600' : 'bg-gray-200'}`}
+              className={`w-11 h-6 rounded-full transition-colors relative ${formData.needToken ? 'bg-primary-600' : 'bg-gray-200'}`}
             >
               <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.needToken ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
@@ -501,7 +501,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
             <label className="block text-sm font-medium text-gray-700 mb-2">是否需要自定义菜单</label>
             <button 
               onClick={() => setFormData({...formData, customMenu: !formData.customMenu})}
-              className={`w-11 h-6 rounded-full transition-colors relative ${formData.customMenu ? 'bg-blue-600' : 'bg-gray-200'}`}
+              className={`w-11 h-6 rounded-full transition-colors relative ${formData.customMenu ? 'bg-primary-600' : 'bg-gray-200'}`}
             >
               <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.customMenu ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
@@ -536,7 +536,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
               ))}
               <button 
                 onClick={addMenuItem}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 text-xs font-semibold rounded-lg border border-dashed border-blue-200 hover:bg-blue-50 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-primary-600 text-xs font-semibold rounded-lg border border-dashed border-primary-200 hover:bg-primary-50 transition-all"
               >
                 <Plus className="w-3 h-3" />
                 添加菜单项
@@ -548,7 +548,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
             <label className="block text-sm font-medium text-gray-700 mb-2">描述</label>
             <textarea 
               placeholder="输入应用的描述" 
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all min-h-[80px] text-sm"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all min-h-[80px] text-sm"
               value={formData.description}
               onChange={e => setFormData({...formData, description: e.target.value})}
             />

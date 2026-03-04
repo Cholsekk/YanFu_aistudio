@@ -202,7 +202,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
           {/* Section 1: Basic Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-bold text-gray-900 pb-2 border-b border-gray-100">
-              <Activity className="w-4 h-4 text-blue-500" />
+              <Activity className="w-4 h-4 text-primary-500" />
               基本信息
             </div>
             
@@ -216,7 +216,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                   placeholder="请输入任务名称"
                   value={formData.name || ''}
                   onChange={e => handleChange('name', e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 hover:border-gray-300"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-gray-400 hover:border-gray-300"
                 />
               </div>
 
@@ -229,7 +229,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                   value={formData.description || ''}
                   onChange={e => handleChange('description', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 hover:border-gray-300 resize-none"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-gray-400 hover:border-gray-300 resize-none"
                 />
               </div>
             </div>
@@ -253,7 +253,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                     onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                     className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-left flex items-center justify-between transition-all ${
                       isTypeDropdownOpen 
-                        ? 'border-blue-500 ring-2 ring-blue-500/20' 
+                        ? 'border-primary-500 ring-2 ring-primary-500/20' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -285,10 +285,10 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                               setIsTypeDropdownOpen(false);
                             }}
                             className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 flex flex-col gap-0.5 ${
-                              formData.schedule_type === option.value ? 'bg-blue-50/50' : ''
+                              formData.schedule_type === option.value ? 'bg-primary-50/50' : ''
                             }`}
                           >
-                            <span className={`font-medium ${formData.schedule_type === option.value ? 'text-blue-600' : 'text-gray-900'}`}>
+                            <span className={`font-medium ${formData.schedule_type === option.value ? 'text-primary-600' : 'text-gray-900'}`}>
                               {option.label}
                             </span>
                             <span className="text-xs text-gray-500">{option.desc}</span>
@@ -310,7 +310,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                     <DatePicker
                       showTime
                       placeholder="请选择日期时间"
-                      className="w-full h-[38px] rounded-lg border-gray-200 hover:border-blue-500 focus:border-blue-500"
+                      className="w-full h-[38px] rounded-lg border-gray-200 hover:border-primary-500 focus:border-primary-500"
                       value={formData.schedule_expression ? dayjs(formData.schedule_expression) : null}
                       onChange={(date) => {
                         handleChange('schedule_expression', date ? date.format('YYYY-MM-DD HH:mm:ss') : '');
@@ -328,9 +328,9 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                       placeholder="请输入 Cron 表达式 (e.g. 0 0 * * *)"
                       value={formData.schedule_expression || ''}
                       onChange={e => handleChange('schedule_expression', e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 hover:border-gray-300 font-mono"
+                      className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-gray-400 hover:border-gray-300 font-mono"
                     />
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                   </div>
                 )}
 
@@ -350,7 +350,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                           min="0"
                           value={(interval as any)[item.key]}
                           onChange={e => handleIntervalChange(item.key as any, e.target.value)}
-                          className="w-full px-1 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                          className="w-full px-1 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                         />
                       </div>
                     ))}
@@ -379,7 +379,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                       onClick={() => handleChange('status', 'active')}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all ${
                         formData.status === 'active' 
-                          ? 'bg-white text-blue-600 shadow-sm' 
+                          ? 'bg-white text-primary-600 shadow-sm' 
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
@@ -411,7 +411,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                       onClick={() => handleChange('appType', 'internal')}
                       className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
                         formData.appType === 'internal' 
-                          ? 'bg-white text-blue-600 shadow-sm' 
+                          ? 'bg-white text-primary-600 shadow-sm' 
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
@@ -422,7 +422,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                       onClick={() => handleChange('appType', 'external')}
                       className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
                         formData.appType === 'external' 
-                          ? 'bg-white text-blue-600 shadow-sm' 
+                          ? 'bg-white text-primary-600 shadow-sm' 
                           : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
@@ -443,7 +443,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                       onClick={() => setIsAppDropdownOpen(!isAppDropdownOpen)}
                       className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-left flex items-center justify-between transition-all ${
                         isAppDropdownOpen 
-                          ? 'border-blue-500 ring-2 ring-blue-500/20' 
+                          ? 'border-primary-500 ring-2 ring-primary-500/20' 
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -468,7 +468,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                                 placeholder="搜索应用..."
                                 value={appSearchTerm}
                                 onChange={(e) => setAppSearchTerm(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
                                 autoFocus
                               />
                             </div>
@@ -480,11 +480,11 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                                 type="button"
                                 onClick={() => handleAppSelect(app)}
                                 className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-gray-50 flex items-center justify-between ${
-                                  formData.app_id === app.id ? 'bg-blue-50/50 text-blue-600' : 'text-gray-900'
+                                  formData.app_id === app.id ? 'bg-primary-50/50 text-primary-600' : 'text-gray-900'
                                 }`}
                               >
                                 <span>{app.name}</span>
-                                {formData.app_id === app.id && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+                                {formData.app_id === app.id && <CheckCircle2 className="w-3.5 h-3.5 text-primary-600" />}
                               </button>
                             ))
                           ) : (
@@ -509,9 +509,9 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                     placeholder="请输入 API 地址"
                     value={formData.api_endpoint || ''}
                     onChange={e => handleChange('api_endpoint', e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 hover:border-gray-300"
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-gray-400 hover:border-gray-300"
                   />
-                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                 </div>
               </div>
 
@@ -533,7 +533,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                         onClick={() => handleChange('method', method)}
                         className={`py-1.5 text-xs font-bold rounded-md border transition-all ${
                           formData.method === method
-                            ? method === 'GET' ? 'bg-blue-50 text-blue-600 border-blue-200'
+                            ? method === 'GET' ? 'bg-primary-50 text-primary-600 border-primary-200'
                             : method === 'POST' ? 'bg-green-50 text-green-600 border-green-200'
                             : method === 'PUT' ? 'bg-orange-50 text-orange-600 border-orange-200'
                             : method === 'DELETE' ? 'bg-red-50 text-red-600 border-red-200'
@@ -559,9 +559,9 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
                     value={typeof formData.request_body === 'string' ? formData.request_body : JSON.stringify(formData.request_body, null, 2)}
                     onChange={e => handleChange('request_body', e.target.value)}
                     rows={6}
-                    className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none font-mono placeholder:text-gray-400 hover:border-gray-300 text-xs leading-relaxed"
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none font-mono placeholder:text-gray-400 hover:border-gray-300 text-xs leading-relaxed"
                   />
-                  <FileJson className="absolute left-3 top-3 w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                  <FileJson className="absolute left-3 top-3 w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                 </div>
               </div>
             </div>
@@ -579,7 +579,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
           </button>
           <button 
             onClick={handleSubmit}
-            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <Save className="w-4 h-4" />
             保存任务

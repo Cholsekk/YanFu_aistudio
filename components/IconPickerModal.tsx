@@ -173,7 +173,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
             <button onClick={cancelCrop} className="px-6 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200 transition-colors">取消</button>
             <button 
               onClick={applyCrop}
-              className="px-8 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+              className="px-8 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-200"
             >
               确定
             </button>
@@ -183,7 +183,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
             <button onClick={onClose} className="px-6 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200 transition-colors">取消</button>
             <button 
               onClick={handleConfirm}
-              className="px-8 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+              className="px-8 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-200"
             >
               确认
             </button>
@@ -196,14 +196,14 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
           <div className="flex p-1 bg-gray-100 rounded-xl">
             <button 
               onClick={() => setActiveTab('system')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'system' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'system' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <Sparkles className="w-4 h-4" />
               系统图标
             </button>
             <button 
               onClick={() => setActiveTab('image')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'image' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'image' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <ImageIcon className="w-4 h-4" />
               图片
@@ -268,7 +268,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
                 step="0.01" 
                 value={zoom} 
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="flex-grow h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                className="flex-grow h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
               />
               <ZoomIn className="w-4 h-4 text-gray-400" />
             </div>
@@ -281,7 +281,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
                 <button
                   key={id}
                   onClick={() => setSelectedIcon(id)}
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center relative transition-all hover:scale-105 active:scale-95 bg-gray-50 overflow-hidden ${selectedIcon === id ? 'ring-2 ring-offset-2 ring-blue-500' : 'hover:bg-gray-100'}`}
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center relative transition-all hover:scale-105 active:scale-95 bg-gray-50 overflow-hidden ${selectedIcon === id ? 'ring-2 ring-offset-2 ring-primary-500' : 'hover:bg-gray-100'}`}
                 >
                   <img 
                     src={`/sys_icons/Component ${id}.svg`} 
@@ -292,7 +292,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
                     }}
                   />
                   {selectedIcon === id && (
-                    <div className="absolute top-1 right-1 bg-blue-600 rounded-full p-0.5 shadow-sm">
+                    <div className="absolute top-1 right-1 bg-primary-600 rounded-full p-0.5 shadow-sm">
                       <Check className="w-2 h-2 text-white" />
                     </div>
                   )}
@@ -306,7 +306,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
             <div className="flex flex-col items-center gap-4">
               {uploadedImage ? (
                 <div className="relative group">
-                  <img src={uploadedImage} alt="Uploaded" className="w-24 h-24 rounded-xl object-cover border-2 border-blue-100" />
+                  <img src={uploadedImage} alt="Uploaded" className="w-24 h-24 rounded-xl object-cover border-2 border-primary-100" />
                   <div className="absolute inset-0 bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl gap-2">
                     <button 
                       onClick={() => setUploadedImage('')}
@@ -331,7 +331,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
               ) : (
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:border-blue-500 hover:bg-blue-50 transition-all text-gray-400 hover:text-blue-500"
+                  className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:border-primary-500 hover:bg-primary-50 transition-all text-gray-400 hover:text-primary-500"
                 >
                   <Upload className="w-6 h-6" />
                   <span className="text-[10px] font-medium">上传图片</span>
