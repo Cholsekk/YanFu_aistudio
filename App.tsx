@@ -205,7 +205,7 @@ const App: React.FC = () => {
           icon_url: appData.icon_url,
           tags: appData.tags || [],
           iconBgColor: appData.icon_background || 'bg-blue-600',
-          mode: appData.mode,
+          mode: appData.mode || (params.is_custom_app_list ? 'custom' : undefined),
           // Map custom app fields if present
           category: appData.category || item.category,
           
@@ -256,6 +256,11 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Clear apps immediately when switching tabs to prevent stale data display
+    setApps([]);
+    setPage(1);
+    setHasMore(false);
+    
     // Debounce search to avoid too many requests
     const timer = setTimeout(() => {
       fetchApps(false);
@@ -305,17 +310,9 @@ const App: React.FC = () => {
     if (activeFilterTab !== '全部') {
       if (activeFilterTab === '内置应用') {
         // Assuming built-in apps are not supported in this view or handled via API
-        // If we have a way to identify built-in apps in the list, we filter here.
-        // But currently AppItem doesn't have built_in flag explicitly mapped?
-        // Let's assume the API handles it or we skip client-side filter for this one if unsure.
-        // However, we can filter by mode for others.
       } else {
         const targetMode = mapTypeToAppMode(activeFilterTab);
-        if (targetMode === 'custom') {
-          // Do not filter client-side for custom apps, API handles it
-        } else {
-          result = result.filter(app => app.mode === targetMode);
-        }
+        result = result.filter(app => app.mode === targetMode);
       }
     }
 
