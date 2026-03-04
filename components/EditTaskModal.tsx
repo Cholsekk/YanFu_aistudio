@@ -34,18 +34,35 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
   useEffect(() => {
     if (isOpen) {
-      fetchApps();
+      fetchApps(1, false);
     }
   }, [isOpen]);
 
-  const fetchApps = async () => {
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !loading) {
+      fetchApps(page + 1, true);
+    }
+  };
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const fetchApps = async (pageNum: number = 1, append: boolean = false) => {
+    if (loading || (!append && pageNum > 1)) return;
+    setLoading(true);
     try {
-      const response = await apiService.getApps();
+      const response = await apiService.getApps({ built_in: false, limit: 100, page: pageNum });
       if (response && response.data) {
-        setAppList(response.data);
+        setAppList(prev => append ? [...prev, ...response.data] : response.data);
+        setHasMore(response.has_more || false);
+        setPage(pageNum);
       }
     } catch (error) {
       console.error("Failed to fetch apps", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,7 +109,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleAppSelect = (app: any) => {
+  const handleAppSelect = async (app: any) => {
     setFormData(prev => ({
       ...prev,
       app_id: app.id,
@@ -100,6 +117,28 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
       method: 'POST' // Auto-set method for internal apps
     }));
     setIsAppDropdownOpen(false);
+
+    try {
+      const appDetail = await apiService.fetchAppDetail(app.id);
+      if (appDetail) {
+        let endpoint = '';
+        const mode = appDetail.mode;
+        if (['chat', 'advanced-chat', 'agent-chat'].includes(mode)) {
+          endpoint = `/console/api/app_expand/${app.id}/chat-messages`;
+        } else if (mode === 'completion') {
+          endpoint = `/console/api/app_expand/${app.id}/completion-messages`;
+        } else if (mode === 'workflow') {
+          endpoint = `/console/api/app_expand/${app.id}/workflows/run`;
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          api_endpoint: endpoint
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch app detail", error);
+    }
   };
 
   const handleIntervalChange = (field: keyof typeof interval, value: string) => {
@@ -439,7 +478,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                           className="fixed inset-0 z-40" 
                           onClick={() => setIsAppDropdownOpen(false)}
                         />
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-xl overflow-hidden z-50 py-1 max-h-60 overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-xl overflow-hidden z-50 py-1 max-h-60 overflow-y-auto" onScroll={handleScroll}>
                           <div className="px-3 py-2 sticky top-0 bg-white border-b border-gray-50">
                             <div className="relative">
                               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
@@ -469,9 +508,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
                             ))
                           ) : (
                             <div className="px-4 py-3 text-center text-xs text-gray-400">
-                              未找到相关应用
+                              {loading ? '加载中...' : '未找到相关应用'}
                             </div>
                           )}
+                          {loading && <div className="px-4 py-2 text-center text-xs text-gray-400">加载中...</div>}
                         </div>
                       </>
                     )}

@@ -45,7 +45,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
 
   const fetchApps = async () => {
     try {
-      const response = await apiService.getApps();
+      const response = await apiService.getApps({ built_in: false, limit: 1000 });
       if (response && response.data) {
         setAppList(response.data);
       }
@@ -69,8 +69,6 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
   // Auto-set method for internal apps
   useEffect(() => {
     if (formData.appType === 'internal') {
-      // For internal apps, method is typically POST (or determined by app logic, here we assume POST for now as per requirement "auto matched")
-      // If we had app mode info here, we could refine it. For now, default to POST and disable edit.
       setFormData(prev => ({ ...prev, method: 'POST' }));
     }
   }, [formData.appType]);
@@ -79,7 +77,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleAppSelect = (app: any) => {
+  const handleAppSelect = async (app: any) => {
     setFormData(prev => ({
       ...prev,
       app_id: app.id,
@@ -87,6 +85,28 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
       method: 'POST' // Auto-set method for internal apps
     }));
     setIsAppDropdownOpen(false);
+
+    try {
+      const appDetail = await apiService.fetchAppDetail(app.id);
+      if (appDetail) {
+        let endpoint = '';
+        const mode = appDetail.mode;
+        if (['chat', 'advanced-chat', 'agent-chat'].includes(mode)) {
+          endpoint = `/console/api/app_expand/${app.id}/chat-messages`;
+        } else if (mode === 'completion') {
+          endpoint = `/console/api/app_expand/${app.id}/completion-messages`;
+        } else if (mode === 'workflow') {
+          endpoint = `/console/api/app_expand/${app.id}/workflows/run`;
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          api_endpoint: endpoint
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch app detail", error);
+    }
   };
 
   const handleIntervalChange = (field: keyof typeof interval, value: string) => {

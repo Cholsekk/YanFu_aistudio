@@ -590,7 +590,7 @@ class ApiService {
     });
   }
 
-  async getApps(params: Record<string, any> = { page: 1, limit: 100 }): Promise<any> {
+  async getApps(params: Record<string, any> = { page: 1, limit: 100, built_in: false }): Promise<any> {
     const tenantId = localStorage.getItem('console_tenant_id');
     const queryParams = { ...params };
     
@@ -611,6 +611,10 @@ class ApiService {
     // For other apps, do not include tenant_id
     const queryString = new URLSearchParams(queryParams as any).toString();
     return this.request(`/console/api/apps?${queryString}`);
+  }
+
+  async fetchAppDetail(id: string): Promise<any> {
+    return this.request(`/console/api/apps/${id}`);
   }
 
   async getAppDetail(id: string): Promise<any> {
