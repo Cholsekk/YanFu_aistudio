@@ -153,6 +153,23 @@ const App: React.FC = () => {
         }
       }
 
+      // Fetch categories if fetching custom apps
+      let categoryMap: Record<string, string> = {};
+      if (params.is_custom_app_list) {
+        try {
+          const categories = await apiService.getAppCategories();
+          if (Array.isArray(categories)) {
+            categories.forEach((c: any) => {
+              if (c.id && c.name) {
+                categoryMap[c.id] = c.name;
+              }
+            });
+          }
+        } catch (e) {
+          console.error('Failed to fetch categories:', e);
+        }
+      }
+
       const response = await apiService.getApps(params);
       
       // Check if this is the latest request
@@ -207,7 +224,7 @@ const App: React.FC = () => {
           iconBgColor: appData.icon_background || 'bg-blue-600',
           mode: appData.mode || (params.is_custom_app_list ? 'custom' : undefined),
           // Map custom app fields if present
-          category: appData.category || item.category,
+          category: categoryMap[appData.category || item.category] || appData.category || item.category,
           
           // Fix: appUrl from appData.url (nested app object)
           appUrl: appData.url || appData.config?.appUrl || appData.appUrl,

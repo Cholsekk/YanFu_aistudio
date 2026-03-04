@@ -633,9 +633,13 @@ class ApiService {
   }
 
   async createCustomApp(data: any): Promise<any> {
+    const tenantId = localStorage.getItem('console_tenant_id');
+    if (!tenantId) {
+      throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
+    }
     return this.request('/console/api/explore/apps', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify({ ...data, tenant_id: tenantId })
     });
   }
 

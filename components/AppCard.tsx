@@ -251,7 +251,7 @@ const AppCard: React.FC<AppCardProps> = ({
           {(app.type === '定制应用' || app.mode === 'custom') ? null : (
             <>
               {app.tags.map(tag => (
-                <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
+                <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-600 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
                   {tag.name}
                   <X className="w-2.5 h-2.5 cursor-pointer opacity-0 group-hover/tag:opacity-100" onClick={(e) => removeTag(e, tag.id)} />
                 </span>
