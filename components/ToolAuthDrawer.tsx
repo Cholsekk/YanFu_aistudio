@@ -87,29 +87,33 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
           {tool.type === 'builtin' ? (
             <>
               {/* Authorization Status */}
-              <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className={`w-5 h-5 mt-0.5 ${tool.is_team_authorization ? 'text-green-600' : 'text-blue-600'}`} />
-                  <div>
-                    <h4 className="font-medium text-gray-900 text-sm">
-                      {tool.is_team_authorization ? '已授权' : '需要授权'}
-                    </h4>
-                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                      {tool.is_team_authorization 
-                        ? '该工具已获得授权，可以正常使用。如需更新授权信息，请点击下方按钮。' 
-                        : '使用该工具需要先进行授权配置。请点击下方按钮前往授权页面。'}
-                    </p>
+              {!tool.is_team_authorization && (
+                <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className={`w-5 h-5 mt-0.5 ${tool.is_team_authorization ? 'text-green-600' : 'text-blue-600'}`} />
+                    <div>
+                      <h4 className="font-medium text-gray-900 text-sm">
+                        {tool.is_team_authorization ? '已授权' : '需要授权'}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                        {tool.is_team_authorization 
+                          ? '该工具已获得授权，可以正常使用。如需更新授权信息，请点击下方按钮。' 
+                          : '使用该工具需要先进行授权配置。请点击下方按钮前往授权页面。'}
+                      </p>
+                    </div>
                   </div>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onAuthorize();
+                    }}
+                    className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2"
+                  >
+                    {tool.is_team_authorization ? '更新授权' : '去授权'}
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
                 </div>
-                <button 
-                  onClick={onAuthorize}
-                  className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2"
-                >
-                  {tool.is_team_authorization ? '更新授权' : '去授权'}
-                  <ExternalLink className="w-4 h-4" />
-                </button>
-              </div>
-
+              )}
               {/* Tool Details */}
               {Array.isArray(toolDetail) ? (
                 <div>
