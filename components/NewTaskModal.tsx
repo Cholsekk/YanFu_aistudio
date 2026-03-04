@@ -45,7 +45,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
 
   const fetchApps = async () => {
     try {
-      const response = await apiService.getApps({ built_in: false, limit: 1000 });
+      const response = await apiService.getApps({ built_in: false, limit: 100 });
       if (response && response.data) {
         setAppList(response.data);
       }
