@@ -4,6 +4,7 @@ import { AppItem, Tag } from '../types';
 import { getIcon } from '../constants';
 import { MoreHorizontal, ExternalLink, X, Plus } from 'lucide-react';
 import TagDropdown from './TagDropdown';
+import { Tooltip } from 'antd';
 
 interface AppCardProps {
   app: AppItem;
@@ -179,9 +180,11 @@ const AppCard: React.FC<AppCardProps> = ({
         
         <div className="flex-grow flex items-center gap-6">
           <div className="w-1/4">
-            <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate" title={app.name}>
-              {app.name}
-            </h3>
+            <Tooltip title={app.name} arrow={false}>
+              <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate">
+                {app.name}
+              </h3>
+            </Tooltip>
             <span className="text-[10px] text-gray-400 font-medium">{app.typeLabel}</span>
           </div>
           <p className="text-xs text-gray-500 flex-grow line-clamp-1">{app.description}</p>
@@ -219,9 +222,11 @@ const AppCard: React.FC<AppCardProps> = ({
         <div className="flex items-start gap-4">
           {renderAppIcon(false)}
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors truncate" title={app.name}>
-              {app.name}
-            </h3>
+            <Tooltip title={app.name} arrow={false}>
+              <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors truncate">
+                {app.name}
+              </h3>
+            </Tooltip>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${getTypeColor(app.typeLabel)}`}></span>
               <span className="text-xs text-gray-500 font-medium">
