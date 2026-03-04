@@ -670,8 +670,13 @@ class ApiService {
   }
 
   async deleteAppCategory(categoryId: string): Promise<any> {
-    return this.request(`/console/api/explore/apps/categories/${categoryId}`, {
-      method: 'DELETE'
+    const tenantId = localStorage.getItem('console_tenant_id');
+    if (!tenantId) {
+      throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
+    }
+    return this.request('/console/api/explore/apps/categories', {
+      method: 'DELETE',
+      body: JSON.stringify({ tenant_id: tenantId, category_id: categoryId })
     });
   }
 

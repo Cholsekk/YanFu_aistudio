@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Check, Plus, Trash2, Pencil, X } from 'lucide-r
 import { AppItem, AppCategory, MenuItem } from '../types';
 import { getIcon } from '../constants';
 import { apiService } from '../services/apiService';
+import { message, Modal as AntModal } from 'antd';
 
 interface CustomAppModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     } catch (error: any) {
       console.error('Failed to fetch categories:', error);
       if (error.message && error.message.includes('鉴权失败')) {
-        alert('鉴权失败：请配置您的 Token 和 tenant_id');
+        message.error('鉴权失败：请配置您的 Token 和 tenant_id');
         window.dispatchEvent(new CustomEvent('open-token-config'));
       }
     }
@@ -79,9 +80,10 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
       setNewCategoryName('');
       setIsAddingCategory(false);
       await fetchCategories();
+      message.success('添加分类成功');
     } catch (error: any) {
       console.error('Failed to add category:', error);
-      alert(error.message || '添加分类失败');
+      message.error(error.message || '添加分类失败');
     }
   };
 
@@ -92,25 +94,34 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
       await apiService.updateAppCategory(id, editingCategoryName.trim());
       setEditingCategoryId(null);
       await fetchCategories();
+      message.success('更新分类成功');
     } catch (error: any) {
       console.error('Failed to update category:', error);
-      alert(error.message || '更新分类失败');
+      message.error(error.message || '更新分类失败');
     }
   };
 
   const handleDeleteCategory = async (e: React.MouseEvent, id: string, categoryName: string) => {
     e.stopPropagation();
-    if (!window.confirm(`确定要删除分类 "${categoryName}" 吗？`)) return;
-    try {
-      await apiService.deleteAppCategory(id);
-      if (formData.category === categoryName) {
-        setFormData(prev => ({ ...prev, category: '' }));
+    AntModal.confirm({
+      title: '确认删除',
+      content: `确定要删除分类 "${categoryName}" 吗？`,
+      okText: '确认',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await apiService.deleteAppCategory(id);
+          if (formData.category === categoryName) {
+            setFormData(prev => ({ ...prev, category: '' }));
+          }
+          await fetchCategories();
+          message.success('删除分类成功');
+        } catch (error: any) {
+          console.error('Failed to delete category:', error);
+          message.error(error.message || '删除分类失败');
+        }
       }
-      await fetchCategories();
-    } catch (error: any) {
-      console.error('Failed to delete category:', error);
-      alert(error.message || '删除分类失败');
-    }
+    });
   };
 
   useEffect(() => {
