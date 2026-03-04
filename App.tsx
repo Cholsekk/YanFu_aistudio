@@ -795,9 +795,20 @@ const App: React.FC = () => {
               </button>
               
               {isFilterOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[60] animate-in fade-in slide-in-from-top-2 overflow-hidden">
-                  <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
-                    <span>排序</span>
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={(e) => {
+                      // 检查点击是否来自模态框区域
+                      if ((e.target as HTMLElement).closest('.tool-auth-drawer, .tool-auth-settings-drawer, .tool-param-drawer, .edit-custom-tool-modal')) {
+                        return;
+                      }
+                      setIsFilterOpen(false);
+                    }} 
+                  />
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[60] animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                    <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                      <span>排序</span>
                     {isFiltered && (
                       <button 
                         onClick={handleResetFilters}
@@ -851,7 +862,8 @@ const App: React.FC = () => {
                       </button>
                     </div>
                   )}
-                </div>
+                  </div>
+                </>
               )}
             </div>
 
