@@ -75,7 +75,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
             配置凭据后，工作区中的所有成员都可以在编排应用程序时使用此工具。
           </div>
 
-          <div className="space-y-6">
+          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
             {Array.isArray(schema) && schema.map((field) => (
               <div key={field.name} className="space-y-2">
                 <div className="flex items-center gap-1">
@@ -131,7 +131,8 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                 </div>
               </div>
             ))}
-          </div>
+            <button type="submit" className="hidden" />
+          </form>
         </div>
 
         {/* Footer */}

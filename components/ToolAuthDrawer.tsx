@@ -107,6 +107,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                     </div>
                   </div>
                   <button 
+                    type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
