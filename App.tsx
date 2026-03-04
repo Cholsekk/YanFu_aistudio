@@ -874,7 +874,6 @@ const App: React.FC = () => {
 
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'flex flex-col gap-3'}>
           <CreateAppContent />
-
           {filteredApps.map(app => (
             <AppCard 
               key={app.id} 

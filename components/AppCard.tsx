@@ -179,10 +179,10 @@ const AppCard: React.FC<AppCardProps> = ({
         
         <div className="flex-grow flex items-center gap-6">
           <div className="w-1/4">
-            <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate">
+            <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate" title={app.name}>
               {app.name}
             </h3>
-            <span className="text-[10px] text-gray-400 font-medium">{app.typeLabel} {app.category && `· ${app.category}`}</span>
+            <span className="text-[10px] text-gray-400 font-medium">{app.typeLabel}</span>
           </div>
           <p className="text-xs text-gray-500 flex-grow line-clamp-1">{app.description}</p>
           <div className="flex gap-2 min-w-[200px] justify-end overflow-hidden">
@@ -219,14 +219,13 @@ const AppCard: React.FC<AppCardProps> = ({
         <div className="flex items-start gap-4">
           {renderAppIcon(false)}
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">
+            <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors truncate" title={app.name}>
               {app.name}
             </h3>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${getTypeColor(app.typeLabel)}`}></span>
               <span className="text-xs text-gray-500 font-medium">
                 {app.typeLabel}
-                {(app.type === '定制应用' || app.mode === 'custom') && app.category && ` · ${app.category}`}
               </span>
             </div>
           </div>
