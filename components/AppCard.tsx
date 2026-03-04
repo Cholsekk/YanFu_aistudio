@@ -110,8 +110,13 @@ const AppCard: React.FC<AppCardProps> = ({
     setIsMenuOpen(false);
   };
 
+  const truncateName = (name: string, maxLength: number = 12) => {
+    if (name.length <= maxLength) return name;
+    return name.slice(0, maxLength) + '...';
+  };
+
   const renderAppIcon = (isList: boolean) => {
-    const containerClass = isList ? "w-8 h-8" : "w-11 h-11";
+    const containerClass = isList ? "w-8 h-8 flex-shrink-0" : "w-11 h-11 flex-shrink-0";
     const iconClass = isList ? "w-5 h-5" : "w-6 h-6";
     const paddingClass = isList ? "p-1.5" : "p-2.5";
 
@@ -206,7 +211,7 @@ const AppCard: React.FC<AppCardProps> = ({
           <div className="w-1/4 min-w-0">
             <Tooltip title={app.name} arrow={false}>
               <h3 className="font-semibold text-gray-900 text-sm group-hover:text-primary-600 transition-colors truncate">
-                {app.name}
+                {truncateName(app.name)}
               </h3>
             </Tooltip>
             <span className="text-[10px] text-gray-400 font-medium">{app.typeLabel}</span>
@@ -248,7 +253,7 @@ const AppCard: React.FC<AppCardProps> = ({
           <div className="min-w-0">
             <Tooltip title={app.name} arrow={false}>
               <h3 className="font-semibold text-gray-900 text-lg group-hover:text-primary-600 transition-colors truncate">
-                {app.name}
+                {truncateName(app.name)}
               </h3>
             </Tooltip>
             <div className="flex items-center gap-1.5 mt-0.5">
