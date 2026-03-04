@@ -105,6 +105,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                   <button 
                     onClick={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       onAuthorize();
                     }}
                     className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2"
@@ -199,7 +200,10 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                 </button>
                 <button 
                   className="flex-1 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
-                  onClick={onEdit}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit();
+                  }}
                 >
                   编辑
                 </button>
