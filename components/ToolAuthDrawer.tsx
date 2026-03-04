@@ -28,7 +28,10 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
       />
 
       {/* Drawer */}
-      <div className="fixed top-0 right-0 h-full w-[480px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto border-l border-gray-100">
+      <div 
+        className="fixed top-0 right-0 h-full w-[480px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto border-l border-gray-100"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white/80 backdrop-blur-md z-10 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -105,7 +108,6 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                   <button 
                     onClick={(e) => {
                       e.preventDefault();
-                      e.stopPropagation();
                       onAuthorize();
                     }}
                     className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-200 flex items-center justify-center gap-2"
@@ -200,10 +202,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                 </button>
                 <button 
                   className="flex-1 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit();
-                  }}
+                  onClick={onEdit}
                 >
                   编辑
                 </button>
