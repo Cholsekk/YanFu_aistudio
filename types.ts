@@ -231,7 +231,7 @@ export type CredentialData = Record<string, string>;
 
 // --- New App Development Types ---
 
-export type AppMode = 'chat' | 'agent-chat' | 'workflow' | 'completion' | 'custom';
+export type AppMode = 'chat' | 'agent-chat' | 'workflow' | 'completion' | 'custom' | 'advanced-chat';
 
 export type App = {
   id: string

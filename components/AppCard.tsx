@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppItem, Tag } from '../types';
 import { getIcon } from '../constants';
 import { MoreHorizontal, ExternalLink, X, Plus } from 'lucide-react';
@@ -50,6 +51,29 @@ const AppCard: React.FC<AppCardProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const navigate = useNavigate();
+
+  const handleEnterApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (app.type === '定制应用' || app.mode === 'custom') {
+      navigate(`/client/custom/${app.id}`);
+    } else {
+      let modeType = 'configuration';
+      switch (app.mode) {
+        case 'chat':
+        case 'agent-chat':
+        case 'completion':
+          modeType = 'configuration';
+          break;
+        case 'advanced-chat':
+        case 'workflow':
+          modeType = 'workflow';
+          break;
+      }
+      navigate(`/client/apps/app/${app.id}/${modeType}`);
+    }
+  };
 
   const removeTag = (e: React.MouseEvent, tagId: string) => {
     e.stopPropagation();
@@ -205,7 +229,7 @@ const AppCard: React.FC<AppCardProps> = ({
             <MoreHorizontal className="w-4 h-4" />
           </button>
           {isMenuOpen && renderMenu()}
-          <button className="p-1.5 text-blue-600 rounded-md bg-blue-50 hover:bg-blue-100">
+          <button onClick={handleEnterApp} className="p-1.5 text-blue-600 rounded-md bg-blue-50 hover:bg-blue-100">
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
@@ -289,7 +313,7 @@ const AppCard: React.FC<AppCardProps> = ({
             </>
           )}
         </div>
-        <button className="hidden group-hover:flex items-center gap-1 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all">
+        <button onClick={handleEnterApp} className="hidden group-hover:flex items-center gap-1 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all">
           进入应用
           <ExternalLink className="w-3 h-3" />
         </button>
