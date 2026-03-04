@@ -186,7 +186,7 @@ const AppCard: React.FC<AppCardProps> = ({
           </div>
           <p className="text-xs text-gray-500 flex-grow line-clamp-1">{app.description}</p>
           <div className="flex gap-2 min-w-[200px] justify-end overflow-hidden">
-            {app.tags.map(tag => (
+            {!(app.type === '定制应用' || app.mode === 'custom') && app.tags.map(tag => (
               <span key={tag.id} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium whitespace-nowrap">
                 {tag.name}
               </span>
@@ -224,7 +224,10 @@ const AppCard: React.FC<AppCardProps> = ({
             </h3>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${getTypeColor(app.typeLabel)}`}></span>
-              <span className="text-xs text-gray-500 font-medium">{app.typeLabel}</span>
+              <span className="text-xs text-gray-500 font-medium">
+                {app.typeLabel}
+                {(app.type === '定制应用' || app.mode === 'custom') && app.category && ` · ${app.category}`}
+              </span>
             </div>
           </div>
         </div>
@@ -245,37 +248,41 @@ const AppCard: React.FC<AppCardProps> = ({
 
       <div className="flex items-center justify-between mt-auto">
         <div className="flex flex-wrap gap-1.5 max-w-[70%]">
-          {app.tags.map(tag => (
-            <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
-              {tag.name}
-              <X className="w-2.5 h-2.5 cursor-pointer opacity-0 group-hover/tag:opacity-100" onClick={(e) => removeTag(e, tag.id)} />
-            </span>
-          ))}
-          {isAddingTag ? (
-            <div className="relative" onClick={e => e.stopPropagation()}>
-              <button 
-                className="text-[10px] text-blue-600 border border-blue-200 bg-blue-50 px-2 py-1 rounded transition-colors flex items-center gap-1 font-medium"
-              >
-                <Plus className="w-2.5 h-2.5" />
-                添加标签
-              </button>
-              <TagDropdown 
-                allTags={allTags}
-                selectedTags={app.tags}
-                onToggleTag={toggleTag}
-                onCreateTag={createTag}
-                onManageTags={() => { setIsAddingTag(false); onManageTags(); }}
-                onClose={() => setIsAddingTag(false)}
-              />
-            </div>
-          ) : (
-            <button 
-              onClick={(e) => { e.stopPropagation(); setIsAddingTag(true); }}
-              className="text-[10px] text-gray-400 border border-dashed border-gray-300 px-2 py-1 rounded hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-1"
-            >
-              <Plus className="w-2.5 h-2.5" />
-              添加
-            </button>
+          {(app.type === '定制应用' || app.mode === 'custom') ? null : (
+            <>
+              {app.tags.map(tag => (
+                <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">
+                  {tag.name}
+                  <X className="w-2.5 h-2.5 cursor-pointer opacity-0 group-hover/tag:opacity-100" onClick={(e) => removeTag(e, tag.id)} />
+                </span>
+              ))}
+              {isAddingTag ? (
+                <div className="relative" onClick={e => e.stopPropagation()}>
+                  <button 
+                    className="text-[10px] text-blue-600 border border-blue-200 bg-blue-50 px-2 py-1 rounded transition-colors flex items-center gap-1 font-medium"
+                  >
+                    <Plus className="w-2.5 h-2.5" />
+                    添加标签
+                  </button>
+                  <TagDropdown 
+                    allTags={allTags}
+                    selectedTags={app.tags}
+                    onToggleTag={toggleTag}
+                    onCreateTag={createTag}
+                    onManageTags={() => { setIsAddingTag(false); onManageTags(); }}
+                    onClose={() => setIsAddingTag(false)}
+                  />
+                </div>
+              ) : (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setIsAddingTag(true); }}
+                  className="text-[10px] text-gray-400 border border-dashed border-gray-300 px-2 py-1 rounded hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-2.5 h-2.5" />
+                  添加
+                </button>
+              )}
+            </>
           )}
         </div>
         <button className="hidden group-hover:flex items-center gap-1 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all">
