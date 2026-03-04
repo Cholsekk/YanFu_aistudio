@@ -114,6 +114,8 @@ const App: React.FC = () => {
     }
   };
 
+  const lastRequestId = React.useRef(0);
+
   const fetchApps = async (isLoadMore = false) => {
     if (activeNavTab !== 'app-dev') return;
     
@@ -122,6 +124,8 @@ const App: React.FC = () => {
     } else {
       setIsLoading(true);
     }
+
+    const requestId = ++lastRequestId.current;
 
     try {
       const currentPage = isLoadMore ? page + 1 : 1;
@@ -150,6 +154,11 @@ const App: React.FC = () => {
       }
 
       const response = await apiService.getApps(params);
+      
+      // Check if this is the latest request
+      if (requestId !== lastRequestId.current) {
+        return;
+      }
       
       // Handle different response formats (Array or Object with data)
       let appList: any[] = [];
@@ -229,12 +238,16 @@ const App: React.FC = () => {
 
     } catch (error) {
       console.error('Failed to fetch apps:', error);
-      if (!isLoadMore) {
+      // Only clear apps if this is the latest request
+      if (requestId === lastRequestId.current && !isLoadMore) {
         setApps([]);
       }
     } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
+      // Only update loading state if this is the latest request
+      if (requestId === lastRequestId.current) {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
     }
   };
 

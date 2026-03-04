@@ -48,14 +48,20 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
       const response = await apiService.getAppCategories();
       if (response && Array.isArray(response)) {
         setCategories(response);
-        if (!formData.category && response.length > 0) {
-          setFormData(prev => ({ ...prev, category: response[0].category }));
-        }
+        setFormData(prev => {
+          if (!prev.category && response.length > 0) {
+            return { ...prev, category: response[0].id };
+          }
+          return prev;
+        });
       } else if (response && response.items && Array.isArray(response.items)) {
         setCategories(response.items);
-        if (!formData.category && response.items.length > 0) {
-          setFormData(prev => ({ ...prev, category: response.items[0].category }));
-        }
+        setFormData(prev => {
+          if (!prev.category && response.items.length > 0) {
+            return { ...prev, category: response.items[0].id };
+          }
+          return prev;
+        });
       }
     } catch (error: any) {
       console.error('Failed to fetch categories:', error);
@@ -111,7 +117,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
       onOk: async () => {
         try {
           await apiService.deleteAppCategory(id);
-          if (formData.category === categoryName) {
+          if (formData.category === id) {
             setFormData(prev => ({ ...prev, category: '' }));
           }
           await fetchCategories();
@@ -148,7 +154,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         ...prev,
         name: '',
         type: '全部',
-        category: categories[1]?.category || '',
+        category: categories[0]?.id || '',
         appUrl: 'http://localhost:3333',
         needToken: true,
         loginUrl: 'http://localhost:3333/api/login',
@@ -163,7 +169,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         iconBgColor: 'bg-indigo-600'
       }));
     }
-  }, [initialData, isOpen, categories]);
+  }, [initialData, isOpen]);
 
   const handleSubmit = () => {
     onCreate({
@@ -265,7 +271,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                 onClick={() => setIsCategoryOpen(!isCategoryOpen)}
                 className="w-full flex items-center justify-between px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white hover:border-gray-300 transition-all text-left"
               >
-                <span>{formData.category || '请选择类型'}</span>
+                <span>{categories.find(c => c.id === formData.category)?.category || '请选择类型'}</span>
                 {isCategoryOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
               </button>
               {isCategoryOpen && (
@@ -273,7 +279,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                   {categories.map(cat => (
                     <div
                       key={cat.id}
-                      className={`group w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors ${formData.category === cat.category ? 'bg-blue-50/50 text-blue-600' : ''}`}
+                      className={`group w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors ${formData.category === cat.id ? 'bg-blue-50/50 text-blue-600' : ''}`}
                     >
                       {editingCategoryId === cat.id ? (
                         <div className="flex items-center gap-2 w-full" onClick={e => e.stopPropagation()}>
@@ -300,12 +306,12 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                           <button
                             className="flex-grow text-left flex items-center gap-2"
                             onClick={() => {
-                              setFormData({...formData, category: cat.category});
+                              setFormData({...formData, category: cat.id});
                               setIsCategoryOpen(false);
                             }}
                           >
                             {cat.category}
-                            {formData.category === cat.category && <Check className="w-4 h-4 flex-shrink-0" />}
+                            {formData.category === cat.id && <Check className="w-4 h-4 flex-shrink-0" />}
                           </button>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
