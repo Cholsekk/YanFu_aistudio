@@ -214,7 +214,10 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
       />
 
       {/* Drawer */}
-      <div className="fixed top-0 right-0 h-full w-[800px] bg-white shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-100">
+      <div 
+        className="fixed top-0 right-0 h-full w-[800px] bg-white shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-100"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
           <h2 className="text-lg font-bold text-gray-900">发布为工具</h2>

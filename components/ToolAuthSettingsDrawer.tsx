@@ -51,7 +51,10 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
       />
 
       {/* Drawer - higher z-index than the main drawer */}
-      <div className="fixed top-0 right-0 h-full w-[480px] bg-gray-50 shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200">
+      <div 
+        className="fixed top-0 right-0 h-full w-[480px] bg-gray-50 shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
           <div>
