@@ -29,6 +29,7 @@ const ToolParamDrawer: React.FC<ToolParamDrawerProps> = ({
       <div 
         className="fixed top-0 right-0 h-full w-[520px] bg-white shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out overflow-y-auto border-l border-gray-100 flex flex-col"
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header Actions */}
         <div className="absolute top-4 right-4 z-10">

@@ -31,6 +31,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
       <div 
         className="fixed top-0 right-0 h-full w-[480px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out overflow-y-auto border-l border-gray-100"
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="sticky top-0 bg-white/80 backdrop-blur-md z-10 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
