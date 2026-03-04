@@ -87,7 +87,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
           {tool.type === 'builtin' ? (
             <>
               {/* Authorization Status */}
-              {!tool.is_team_authorization && (
+              {((tool.type as string) === 'model' || tool.allow_delete !== false) && (
                 <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
                   <div className="flex items-start gap-3">
                     <ShieldCheck className={`w-5 h-5 mt-0.5 ${tool.is_team_authorization ? 'text-green-600' : 'text-blue-600'}`} />
