@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import IconPickerModal from './IconPickerModal';
-import { ChevronDown, ChevronUp, Check, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Plus, Trash2, Pencil, X } from 'lucide-react';
 import { AppItem, AppCategory, MenuItem } from '../types';
 import { getIcon } from '../constants';
+import { apiService } from '../services/apiService';
 
 interface CustomAppModalProps {
   isOpen: boolean;
@@ -35,22 +36,82 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
   const [categories, setCategories] = useState<AppCategory[]>([]);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  const fetchCategories = async () => {
+    try {
+      const response = await apiService.getAppCategories();
+      if (response && Array.isArray(response)) {
+        setCategories(response);
+        if (!formData.category && response.length > 0) {
+          setFormData(prev => ({ ...prev, category: response[0].category }));
+        }
+      } else if (response && response.items && Array.isArray(response.items)) {
+        setCategories(response.items);
+        if (!formData.category && response.items.length > 0) {
+          setFormData(prev => ({ ...prev, category: response.items[0].category }));
+        }
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch categories:', error);
+      if (error.message && error.message.includes('鉴权失败')) {
+        alert('鉴权失败：请配置您的 Token 和 tenant_id');
+        window.dispatchEvent(new CustomEvent('open-token-config'));
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const mockData: AppCategory[] = [
-        { id: "e01afa29-dac2-4a29-a66f-9a5f639e9305", category: "工厂建设" },
-        { id: "f8913715-6c07-49f7-97d4-5841b1d47d3b", category: "产品设计" },
-        { id: "g9213715-6c07-49f7-97d4-5841b1d47d3c", category: "工艺设计" },
-        { id: "h0313715-6c07-49f7-97d4-5841b1d47d3d", category: "计划调度" },
-      ];
-      setCategories(mockData);
-      if (!formData.category && mockData.length > 0) {
-        setFormData(prev => ({ ...prev, category: mockData[1].category }));
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  const handleAddCategory = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!newCategoryName.trim()) return;
+    try {
+      await apiService.addAppCategory(newCategoryName.trim());
+      setNewCategoryName('');
+      setIsAddingCategory(false);
+      await fetchCategories();
+    } catch (error: any) {
+      console.error('Failed to add category:', error);
+      alert(error.message || '添加分类失败');
+    }
+  };
+
+  const handleUpdateCategory = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!editingCategoryName.trim()) return;
+    try {
+      await apiService.updateAppCategory(id, editingCategoryName.trim());
+      setEditingCategoryId(null);
+      await fetchCategories();
+    } catch (error: any) {
+      console.error('Failed to update category:', error);
+      alert(error.message || '更新分类失败');
+    }
+  };
+
+  const handleDeleteCategory = async (e: React.MouseEvent, id: string, categoryName: string) => {
+    e.stopPropagation();
+    if (!window.confirm(`确定要删除分类 "${categoryName}" 吗？`)) return;
+    try {
+      await apiService.deleteAppCategory(id);
+      if (formData.category === categoryName) {
+        setFormData(prev => ({ ...prev, category: '' }));
       }
-    };
-    fetchCategories();
-  }, []);
+      await fetchCategories();
+    } catch (error: any) {
+      console.error('Failed to delete category:', error);
+      alert(error.message || '删除分类失败');
+    }
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -197,20 +258,105 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                 {isCategoryOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
               </button>
               {isCategoryOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-xl z-[110] py-1 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-lg shadow-xl z-[110] py-1 max-h-60 overflow-y-auto flex flex-col">
                   {categories.map(cat => (
-                    <button
+                    <div
                       key={cat.id}
-                      onClick={() => {
-                        setFormData({...formData, category: cat.category});
-                        setIsCategoryOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors ${formData.category === cat.category ? 'bg-blue-50/50 text-blue-600' : ''}`}
+                      className={`group w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors ${formData.category === cat.category ? 'bg-blue-50/50 text-blue-600' : ''}`}
                     >
-                      {cat.category}
-                      {formData.category === cat.category && <Check className="w-4 h-4" />}
-                    </button>
+                      {editingCategoryId === cat.id ? (
+                        <div className="flex items-center gap-2 w-full" onClick={e => e.stopPropagation()}>
+                          <input
+                            type="text"
+                            className="flex-grow px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={editingCategoryName}
+                            onChange={e => setEditingCategoryName(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleUpdateCategory(e as any, cat.id);
+                              if (e.key === 'Escape') setEditingCategoryId(null);
+                            }}
+                            autoFocus
+                          />
+                          <button onClick={(e) => handleUpdateCategory(e, cat.id)} className="text-blue-600 hover:text-blue-700 p-1">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setEditingCategoryId(null); }} className="text-gray-400 hover:text-gray-600 p-1">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            className="flex-grow text-left flex items-center gap-2"
+                            onClick={() => {
+                              setFormData({...formData, category: cat.category});
+                              setIsCategoryOpen(false);
+                            }}
+                          >
+                            {cat.category}
+                            {formData.category === cat.category && <Check className="w-4 h-4 flex-shrink-0" />}
+                          </button>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCategoryId(cat.id);
+                                setEditingCategoryName(cat.category);
+                              }}
+                              className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                              title="编辑"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteCategory(e, cat.id, cat.category)}
+                              className="p-1 text-gray-400 hover:text-red-600 rounded"
+                              title="删除"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   ))}
+                  
+                  <div className="border-t border-gray-100 mt-1 p-2">
+                    {isAddingCategory ? (
+                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="text"
+                          placeholder="输入新分类名称"
+                          className="flex-grow px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={newCategoryName}
+                          onChange={e => setNewCategoryName(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') handleAddCategory(e as any);
+                            if (e.key === 'Escape') setIsAddingCategory(false);
+                          }}
+                          autoFocus
+                        />
+                        <button onClick={handleAddCategory} className="text-blue-600 hover:text-blue-700 p-1">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); setIsAddingCategory(false); }} className="text-gray-400 hover:text-gray-600 p-1">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsAddingCategory(true);
+                          setNewCategoryName('');
+                        }}
+                        className="w-full flex items-center justify-center gap-1 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        添加新分类
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
