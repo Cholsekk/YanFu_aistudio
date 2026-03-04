@@ -203,7 +203,7 @@ const AppCard: React.FC<AppCardProps> = ({
         </div>
         
         <div className="flex-grow flex items-center gap-6">
-          <div className="w-1/4">
+          <div className="w-1/4 min-w-0">
             <Tooltip title={app.name} arrow={false}>
               <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate">
                 {app.name}
@@ -243,9 +243,9 @@ const AppCard: React.FC<AppCardProps> = ({
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-4 relative">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 min-w-0">
           {renderAppIcon(false)}
-          <div>
+          <div className="min-w-0">
             <Tooltip title={app.name} arrow={false}>
               <h3 className="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors truncate">
                 {app.name}
