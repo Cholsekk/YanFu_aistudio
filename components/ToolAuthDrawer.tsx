@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Collection, ToolExtension } from '../types';
 import { X, ExternalLink, ShieldCheck, Info } from 'lucide-react';
 import ToolParamDrawer from './ToolParamDrawer';
@@ -16,8 +17,17 @@ interface ToolAuthDrawerProps {
 
 const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize, onEdit }) => {
   const [selectedSubTool, setSelectedSubTool] = useState<ToolExtension | null>(null);
+  const navigate = useNavigate();
 
   if (!isOpen || !tool) return null;
+
+  const handleOpenInAppDev = () => {
+    if (!tool) return;
+    
+    const appId = tool.workflow_app_id || tool.id;
+    navigate(`/client/apps/app/${appId}/workflow`);
+    onClose();
+  };
 
   return (
     <>
@@ -198,7 +208,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
               <div className="flex gap-3">
                 <button 
                   className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary-200 flex items-center justify-center gap-2"
-                  onClick={() => {}} // Placeholder functionality
+                  onClick={handleOpenInAppDev}
                 >
                   在应用开发中打开
                   <ExternalLink className="w-4 h-4" />
