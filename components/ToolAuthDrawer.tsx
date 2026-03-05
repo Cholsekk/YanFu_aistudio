@@ -24,9 +24,13 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
   const handleOpenInAppDev = () => {
     if (!tool) return;
     
-    const appId = tool.workflow_app_id || tool.id;
-    navigate(`/client/apps/app/${appId}/workflow`);
-    onClose();
+    if (tool.workflow_app_id) {
+      navigate(`/client/apps/app/${tool.workflow_app_id}/workflow`);
+      onClose();
+    } else {
+      console.error('Missing workflow_app_id for tool:', tool);
+      // 可选：添加用户提示
+    }
   };
 
   return (
