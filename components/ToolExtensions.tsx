@@ -672,7 +672,6 @@ const ToolExtensions: React.FC = () => {
   };
 
   const handleToolClick = async (tool: Collection) => {
-    console.log('Tool object in ToolExtensions.tsx:', tool);
     setSelectedTool(tool);
     setIsDrawerOpen(true);
     setToolDetail(null);
