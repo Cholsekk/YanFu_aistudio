@@ -458,6 +458,34 @@ class ApiService {
           allow_delete: true,
           tools: [],
           labels: []
+        },
+        {
+          id: "3abb6542-f735-412f-abb4-858efdc7613a",
+          author: "szyl",
+          name: "文本生成应用（workflow编排）",
+          description: {
+            "zh_Hans": "文本生成应用（workflow编排）",
+            "en_US": "Text Generation Workflow",
+            "pt_BR": "Text Generation Workflow",
+            "ja_JP": "Text Generation Workflow"
+          },
+          icon: {
+            "content": "🤖",
+            "background": "#D5F5F6"
+          },
+          label: {
+            "zh_Hans": "文本生成应用（workflow编排）",
+            "en_US": "Text Generation Workflow",
+            "pt_BR": "Text Generation Workflow",
+            "ja_JP": "Text Generation Workflow"
+          },
+          type: "workflow",
+          team_credentials: {},
+          is_team_authorization: true,
+          allow_delete: true,
+          tools: [],
+          labels: [],
+          workflow_app_id: "3abb6542-f735-412f-abb4-858efdc7613a"
         }
       ];
     }

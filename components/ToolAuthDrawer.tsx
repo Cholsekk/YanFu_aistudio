@@ -24,6 +24,8 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
   const handleOpenInAppDev = () => {
     if (!tool) return;
     
+    console.log('Tool object in ToolAuthDrawer:', tool);
+    
     if (tool.workflow_app_id) {
       navigate(`/client/apps/app/${tool.workflow_app_id}/workflow`);
       onClose();

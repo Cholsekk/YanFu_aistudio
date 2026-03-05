@@ -144,6 +144,7 @@ export interface ToolItem {
   allow_delete: boolean;
   tools: any[];
   labels: string[];
+  workflow_app_id?: string;
 }
 
 export interface ToolDetail {

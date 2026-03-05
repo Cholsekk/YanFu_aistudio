@@ -570,7 +570,8 @@ const MOCK_TOOLS: ToolItem[] = [
         "is_team_authorization": true,
         "allow_delete": true,
         "tools": [],
-        "labels": []
+        "labels": [],
+        "workflow_app_id": "3abb6542-f735-412f-abb4-858efdc7613a"
     }
 ];
 
@@ -671,6 +672,7 @@ const ToolExtensions: React.FC = () => {
   };
 
   const handleToolClick = async (tool: Collection) => {
+    console.log('Tool object in ToolExtensions.tsx:', tool);
     setSelectedTool(tool);
     setIsDrawerOpen(true);
     setToolDetail(null);
