@@ -57,7 +57,7 @@ const AppCard: React.FC<AppCardProps> = ({
   const handleEnterApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (app.type === '定制应用' || app.mode === 'custom') {
-      navigate(`/client/custom/${app.id}`);
+      navigate(`/client/custom/${app.itemId || app.id}`);
     } else {
       let modeType = 'configuration';
       switch (app.mode) {
