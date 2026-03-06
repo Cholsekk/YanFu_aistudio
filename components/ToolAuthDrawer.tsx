@@ -28,7 +28,8 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
   const handleOpenInAppDev = () => {
     if (!tool) return;
     
-    const appId = tool.workflow_app_id || tool.plugin_id || tool.id;
+    // 优先使用 workflow_app_id
+    const appId = isWorkflowDetail(toolDetail) ? toolDetail.workflow_app_id : (tool.workflow_app_id || tool.plugin_id || tool.id);
     
     if (appId) {
       navigate(`/client/apps/app/${appId}/workflow`);
@@ -252,7 +253,28 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
               </div>
 
               {/* Tool Parameters */}
-              {Array.isArray(toolDetail) ? (
+              {isWorkflowDetail(toolDetail) ? (
+                <div>
+                  <h4 className="font-medium text-gray-500 text-sm mb-3">工具入参</h4>
+                  <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4">
+                    {toolDetail.tool.parameters && toolDetail.tool.parameters.length > 0 ? (
+                      <div className="space-y-3">
+                        {toolDetail.tool.parameters.map((param) => (
+                          <div key={param.name} className="flex items-center gap-2 text-sm">
+                            <span className="font-medium text-gray-900">{param.label.zh_Hans}</span>
+                            <span className="text-gray-400 text-xs">{param.type}</span>
+                            {param.required && (
+                              <span className="text-red-500 text-xs">必须</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">无参数配置</p>
+                    )}
+                  </div>
+                </div>
+              ) : Array.isArray(toolDetail) ? (
                 <div>
                   <h4 className="font-medium text-gray-500 text-sm mb-3">工具入参</h4>
                   <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4">
