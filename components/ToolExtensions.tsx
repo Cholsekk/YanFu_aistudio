@@ -672,6 +672,8 @@ const ToolExtensions: React.FC = () => {
   };
 
   const handleToolClick = async (tool: Collection) => {
+    console.log('Tool clicked:', tool);
+    console.log('Tool workflow_app_id:', tool.workflow_app_id);
     setSelectedTool(tool);
     setIsDrawerOpen(true);
     setToolDetail(null);
@@ -683,7 +685,30 @@ const ToolExtensions: React.FC = () => {
       } else if (tool.type === 'api') {
         response = await apiService.fetchCustomToolList(tool.name);
       } else if (tool.type === 'workflow') {
-        response = await apiService.fetchWorkflowToolList(tool.id);
+        const workflowResponse = await apiService.fetchWorkflowToolDetail(tool.id);
+        // Convert WorkflowToolProviderResponse to ToolExtension[]
+        response = [{
+          name: workflowResponse.tool.name,
+          author: workflowResponse.tool.author,
+          label: workflowResponse.tool.label,
+          description: workflowResponse.tool.description,
+          parameters: workflowResponse.tool.parameters.map(p => ({
+            name: p.name,
+            label: p.label,
+            human_description: p.human_description,
+            type: p.type,
+            form: p.form,
+            llm_description: p.llm_description,
+            required: p.required,
+            default: p.default,
+            options: p.options,
+            min: p.min,
+            max: p.max,
+            multiple: false
+          })),
+          labels: workflowResponse.tool.labels,
+          output_schema: workflowResponse.tool.output_schema as any
+        }];
       }
       
       setToolDetail(response);

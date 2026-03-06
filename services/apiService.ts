@@ -539,6 +539,71 @@ class ApiService {
       ];
     }
 
+    // Mock for workflow tool detail
+    if (endpoint.includes('/tool-provider/workflow/get')) {
+      return {
+        workflow_app_id: "3abb6542-f735-412f-abb4-858efdc7613a",
+        workflow_tool_id: "3abb6542-f735-412f-abb4-858efdc7613a",
+        label: "文本生成应用（workflow编排）",
+        name: "text_generation_workflow",
+        icon: {
+          content: "🤖",
+          background: "#D5F5F6"
+        },
+        description: "Text generation workflow",
+        synced: true,
+        tool: {
+          author: "szyl",
+          name: "text_generation_workflow",
+          label: {
+            en_US: "Text Generation Workflow",
+            zh_Hans: "文本生成应用（workflow编排）",
+            pt_BR: "Text Generation Workflow",
+            ja_JP: "Text Generation Workflow"
+          },
+          description: {
+            en_US: "Text generation workflow",
+            zh_Hans: "文本生成应用（workflow编排）",
+            pt_BR: "Text generation workflow",
+            ja_JP: "Text generation workflow"
+          },
+          labels: [],
+          parameters: [
+            {
+              name: "query",
+              label: {
+                en_US: "Query",
+                zh_Hans: "query",
+                pt_BR: "Query",
+                ja_JP: "Query"
+              },
+              human_description: {
+                en_US: "Input query",
+                zh_Hans: "输入查询",
+                pt_BR: "Input query",
+                ja_JP: "Input query"
+              },
+              llm_description: "Input query",
+              type: "string",
+              form: "llm",
+              required: true,
+              default: ""
+            }
+          ],
+          output_schema: {
+            type: "object",
+            properties: {
+              text: {
+                type: "string",
+                description: "Generated text"
+              }
+            }
+          }
+        },
+        privacy_policy: ""
+      };
+    }
+
     // Mock for tool labels
     if (endpoint.includes('/tool-labels')) {
       return [
@@ -821,10 +886,6 @@ class ApiService {
 
   async fetchModelToolList(collectionName: string): Promise<ToolExtension[]> {
     return this.request(`/console/api/workspaces/current/tool-provider/model/tools?provider=${collectionName}`);
-  }
-
-  async fetchWorkflowToolList(appID: string): Promise<ToolExtension[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/workflow/tools?workflow_tool_id=${appID}`);
   }
 
   // 2. 内置工具认证管理
