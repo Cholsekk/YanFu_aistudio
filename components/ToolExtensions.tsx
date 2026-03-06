@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential, WorkflowToolProviderRequest } from '../types';
+import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential, WorkflowToolProviderRequest, WorkflowToolProviderResponse } from '../types';
 import ToolAuthDrawer from './ToolAuthDrawer';
 import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
 import EditCustomToolModal from './EditCustomToolModal';
@@ -630,7 +630,7 @@ const ToolExtensions: React.FC = () => {
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Collection | null>(null);
-  const [toolDetail, setToolDetail] = useState<ToolExtension[] | null>(null);
+  const [toolDetail, setToolDetail] = useState<ToolExtension[] | WorkflowToolProviderResponse | null>(null);
 
   // Auth Settings Drawer state
   const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
@@ -679,36 +679,13 @@ const ToolExtensions: React.FC = () => {
     setToolDetail(null);
     
     try {
-      let response: ToolExtension[] = [];
+      let response: ToolExtension[] | WorkflowToolProviderResponse | null = null;
       if (tool.type === 'builtin') {
         response = await apiService.fetchBuiltInToolList(tool.name);
       } else if (tool.type === 'api') {
         response = await apiService.fetchCustomToolList(tool.name);
       } else if (tool.type === 'workflow') {
-        const workflowResponse = await apiService.fetchWorkflowToolDetail(tool.id);
-        // Convert WorkflowToolProviderResponse to ToolExtension[]
-        response = [{
-          name: workflowResponse.tool.name,
-          author: workflowResponse.tool.author,
-          label: workflowResponse.tool.label,
-          description: workflowResponse.tool.description,
-          parameters: workflowResponse.tool.parameters.map(p => ({
-            name: p.name,
-            label: p.label,
-            human_description: p.human_description,
-            type: p.type,
-            form: p.form,
-            llm_description: p.llm_description,
-            required: p.required,
-            default: p.default,
-            options: p.options,
-            min: p.min,
-            max: p.max,
-            multiple: false
-          })),
-          labels: workflowResponse.tool.labels,
-          output_schema: workflowResponse.tool.output_schema as any
-        }];
+        response = await apiService.fetchWorkflowToolDetail(tool.id);
       }
       
       setToolDetail(response);

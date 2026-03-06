@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Collection, ToolExtension, ToolExtensionParameter } from '../types';
+import { Collection, ToolExtension, ToolExtensionParameter, WorkflowToolProviderResponse } from '../types';
 import { Search, ChevronDown, Info, Trash2, X, Check, Edit2 } from 'lucide-react';
 import IconPickerModal from './IconPickerModal';
 import { getIcon } from '../constants';
@@ -10,7 +10,7 @@ interface EditCustomToolModalProps {
   isOpen: boolean;
   onClose: () => void;
   tool: Collection | null;
-  toolDetail: ToolExtension[] | null;
+  toolDetail: ToolExtension[] | WorkflowToolProviderResponse | null;
   allLabels: string[];
   onSave: (data: any) => Promise<void>;
   onDelete: (id: string) => Promise<void>;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Collection, ToolExtension } from '../types';
+import { Collection, ToolExtension, WorkflowToolProviderResponse } from '../types';
 import { X, ExternalLink, ShieldCheck, Info } from 'lucide-react';
 import ToolParamDrawer from './ToolParamDrawer';
 import { getIcon, SYSTEM_ICONS } from '../constants';
@@ -10,7 +10,7 @@ interface ToolAuthDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   tool: Collection | null;
-  toolDetail: ToolExtension[] | null;
+  toolDetail: ToolExtension[] | WorkflowToolProviderResponse | null;
   onAuthorize: () => void;
   onEdit: () => void;
 }
@@ -18,6 +18,10 @@ interface ToolAuthDrawerProps {
 const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize, onEdit }) => {
   const [selectedSubTool, setSelectedSubTool] = useState<ToolExtension | null>(null);
   const navigate = useNavigate();
+
+  const isWorkflowDetail = (detail: any): detail is WorkflowToolProviderResponse => {
+    return detail && 'workflow_app_id' in detail;
+  };
 
   if (!isOpen || !tool) return null;
 
@@ -198,6 +202,27 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                         )}
                       </div>
                     ))}
+                  </div>
+                </div>
+              ) : isWorkflowDetail(toolDetail) ? (
+                <div>
+                  <h4 className="font-medium text-gray-500 text-sm mb-3">工具入参</h4>
+                  <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4">
+                    {toolDetail.tool.parameters && toolDetail.tool.parameters.length > 0 ? (
+                      <div className="space-y-3">
+                        {toolDetail.tool.parameters.map((param) => (
+                          <div key={param.name} className="flex items-center gap-2 text-sm">
+                            <span className="font-medium text-gray-900">{param.label.zh_Hans}</span>
+                            <span className="text-gray-400 text-xs">{param.type}</span>
+                            {param.required && (
+                              <span className="text-red-500 text-xs">必须</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">无参数配置</p>
+                    )}
                   </div>
                 </div>
               ) : (
