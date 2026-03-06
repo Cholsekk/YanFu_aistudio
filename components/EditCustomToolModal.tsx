@@ -266,7 +266,12 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
               工具调用名称 <span className="text-red-500">*</span>
-              <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+              <div className="group relative">
+                <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  用于机器识别，请输入有效的字母数字值（仅支持字母、数字、下划线 / 连字符），不支持中文、特殊符号等字符。
+                </div>
+              </div>
             </label>
             <input
               type="text"

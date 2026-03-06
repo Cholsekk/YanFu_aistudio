@@ -1,4 +1,5 @@
 import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag } from '../types';
+import { getTenantId, getToken } from '../utils/auth';
 
 const getBaseUrl = () => {
   return localStorage.getItem('console_api_base_url') || 'http://192.168.1.201:5005';
@@ -25,26 +26,19 @@ interface ApiResponse<T> {
 
 class ApiService {
   private getAuthHeader() {
-    const token = localStorage.getItem('console_token');
-    const tenantId = localStorage.getItem('console_tenant_id');
+    const token = getToken();
+    const tenantId = getTenantId();
     const headers: Record<string, string> = {};
 
     if (token) {
       console.log('[API] Using token:', token.substring(0, 8) + '...');
       headers['Authorization'] = `Bearer ${token}`;
     } else {
-      console.warn('[API] No console_token found in localStorage');
+      console.warn('[API] No console_token found');
     }
 
     if (tenantId) {
       console.log('[API] Using tenant_id:', tenantId);
-      // Assuming the header name is 'X-Tenant-ID' or similar, but since not specified, 
-      // I'll use a standard-looking one or just 'tenant_id' if that's what the backend expects.
-      // Given the user just said "tenant_id is used in some interfaces", I'll assume a custom header or maybe it's part of the token?
-      // But usually it's a separate header. I'll use 'X-Tenant-ID' as a safe default or 'tenant-id'.
-      // Let's stick to 'X-Tenant-ID' as it's common. If the user meant something else, they can clarify.
-      // Wait, if I look at the previous context, there was no mention of the specific header name.
-      // I'll use 'X-Tenant-ID'.
       headers['X-Tenant-ID'] = tenantId;
     }
 
@@ -684,7 +678,7 @@ class ApiService {
   }
 
   async getApps(params: Record<string, any> = { page: 1, limit: 100, built_in: false }): Promise<any> {
-    const tenantId = localStorage.getItem('console_tenant_id');
+    const tenantId = getTenantId();
     const queryParams = { ...params };
     
     // Check if we should use the explore endpoint for custom apps
@@ -730,7 +724,7 @@ class ApiService {
   }
 
   async createCustomApp(data: any): Promise<any> {
-    const tenantId = localStorage.getItem('console_tenant_id');
+    const tenantId = getTenantId();
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
@@ -741,7 +735,7 @@ class ApiService {
   }
 
   async getAppCategories(): Promise<any> {
-    const tenantId = localStorage.getItem('console_tenant_id');
+    const tenantId = getTenantId();
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
@@ -749,7 +743,7 @@ class ApiService {
   }
 
   async addAppCategory(category: string): Promise<any> {
-    const tenantId = localStorage.getItem('console_tenant_id');
+    const tenantId = getTenantId();
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
@@ -760,7 +754,7 @@ class ApiService {
   }
 
   async updateAppCategory(categoryId: string, category: string): Promise<any> {
-    const tenantId = localStorage.getItem('console_tenant_id');
+    const tenantId = getTenantId();
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
@@ -771,7 +765,7 @@ class ApiService {
   }
 
   async deleteAppCategory(categoryId: string): Promise<any> {
-    const tenantId = localStorage.getItem('console_tenant_id');
+    const tenantId = getTenantId();
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }

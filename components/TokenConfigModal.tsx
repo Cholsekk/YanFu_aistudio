@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Key, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import Modal from './Modal';
 import { apiService } from '../services/apiService';
+import { getTenantId, setTenantId as saveTenantId, getToken, setToken as saveToken } from '../utils/auth';
 
 interface TokenConfigModalProps {
   isOpen: boolean;
@@ -9,8 +10,8 @@ interface TokenConfigModalProps {
 }
 
 const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) => {
-  const [token, setToken] = useState(localStorage.getItem('console_token') || '');
-  const [tenantId, setTenantId] = useState(localStorage.getItem('console_tenant_id') || '');
+  const [token, setToken] = useState(getToken() || '');
+  const [tenantId, setTenantId] = useState(getTenantId() || '');
   const [baseUrl, setBaseUrl] = useState(localStorage.getItem('console_api_base_url') || 'http://192.168.1.201:5005');
   const [mockMode, setMockMode] = useState(localStorage.getItem('console_mock_mode') === 'true');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
@@ -39,8 +40,8 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
   };
 
   const handleSave = () => {
-    localStorage.setItem('console_token', token);
-    localStorage.setItem('console_tenant_id', tenantId);
+    saveToken(token);
+    saveTenantId(tenantId);
     localStorage.setItem('console_api_base_url', baseUrl);
     localStorage.setItem('console_mock_mode', mockMode.toString());
     onClose();
