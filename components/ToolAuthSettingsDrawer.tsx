@@ -52,7 +52,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
 
       {/* Drawer - higher z-index than the main drawer */}
       <div 
-        className="fixed top-0 right-0 h-full w-[480px] bg-gray-50 shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 tool-auth-settings-drawer"
+        className="fixed top-0 right-0 h-full w-[560px] bg-gray-50 shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 tool-auth-settings-drawer"
         onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
       >

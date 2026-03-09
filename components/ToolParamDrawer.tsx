@@ -27,7 +27,7 @@ const ToolParamDrawer: React.FC<ToolParamDrawerProps> = ({
 
       {/* Drawer */}
       <div 
-        className="fixed top-0 right-0 h-full w-[520px] bg-white shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out overflow-y-auto border-l border-gray-100 flex flex-col tool-param-drawer"
+        className="fixed top-0 right-0 h-full w-[600px] bg-white shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out overflow-y-auto border-l border-gray-100 flex flex-col tool-param-drawer"
         onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
       >

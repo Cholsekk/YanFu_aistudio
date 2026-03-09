@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal, Zap, Edit2, Trash2 } from 'lucide-react';
 import { Tooltip } from 'antd';
 import MCPServiceModal from './AddMCPServiceModal'; // 重命名并复用
+import { getIcon } from '../constants';
 
 // Mock data for MCP Services
 const MOCK_MCP_SERVICES = [
@@ -135,6 +136,40 @@ const MCPServices: React.FC = () => {
   const [drawerMenuOpen, setDrawerMenuOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<any | null>(null);
 
+  const renderServiceIcon = (service: any, containerClass: string, iconClass: string) => {
+    if (service.iconType === 'sys-icon') {
+      return (
+        <div className={`${containerClass} bg-gray-50 flex items-center justify-center overflow-hidden`}>
+          <img 
+            src={`/sys_icons/Component ${service.icon}.svg`} 
+            alt={service.name} 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg';
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (service.iconType === 'image') {
+      const src = service.icon_url || service.icon;
+      return (
+        <img 
+          src={src || undefined} 
+          alt={service.name} 
+          className={`${containerClass} object-cover border border-gray-100`} 
+        />
+      );
+    }
+
+    return (
+      <div className={`${containerClass} ${service.iconBgColor || 'bg-indigo-600'} text-white flex items-center justify-center`}>
+        {getIcon(service.icon, iconClass)}
+      </div>
+    );
+  };
+
   // Removed menuRef and handleClickOutside logic
 
   const handleAddService = (data: any) => {
@@ -242,9 +277,7 @@ const MCPServices: React.FC = () => {
             </div>
 
             <div className="flex items-start gap-4 mb-5">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${service.iconBgColor} text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300`}>
-                <Globe className="w-7 h-7" />
-              </div>
+              {renderServiceIcon(service, "w-14 h-14 rounded-2xl shrink-0 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300", "w-7 h-7")}
               <div className="flex-1 min-w-0 pr-4 pt-1">
                 <h3 className="font-bold text-gray-900 text-lg truncate leading-tight group-hover:text-indigo-600 transition-colors">{service.name}</h3>
                 <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
@@ -309,9 +342,7 @@ const MCPServices: React.FC = () => {
 
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center">
-                  <Globe className="w-7 h-7 text-indigo-600" />
-                </div>
+                {renderServiceIcon(selectedService, "w-14 h-14 rounded-2xl shrink-0 shadow-sm", "w-7 h-7")}
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-gray-900 text-xl">{selectedService.name}</h3>
@@ -414,7 +445,7 @@ const MCPServices: React.FC = () => {
       {/* Tool Details Modal */}
       {selectedTool && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4" onClick={() => setSelectedTool(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-indigo-500" />
