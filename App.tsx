@@ -242,7 +242,7 @@ const App: React.FC = () => {
           customMenu: item.is_menu !== undefined ? item.is_menu : (appData.config?.customMenu ?? appData.customMenu ?? false),
           
           menuItems: parsedMenuItems,
-          builtIn: appData.built_in || false,
+          builtIn: appData.built_in !== undefined ? appData.built_in : (params.built_in === true),
         };
       });
       
