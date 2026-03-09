@@ -24,6 +24,8 @@ interface ApiResponse<T> {
   };
 }
 
+const API_PREFIX = '/console/api';
+
 class ApiService {
   private getAuthHeader() {
     const token = getToken();
@@ -46,16 +48,19 @@ class ApiService {
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
+    // Ensure endpoint starts with API_PREFIX if it doesn't already
+    const fullEndpoint = endpoint.startsWith(API_PREFIX) ? endpoint : `${API_PREFIX}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+
     if (isMockMode()) {
-      console.log(`[Mock API] ${options.method || 'GET'} ${endpoint}`);
-      return this.getMockResponse(endpoint);
+      console.log(`[Mock API] ${options.method || 'GET'} ${fullEndpoint}`);
+      return this.getMockResponse(fullEndpoint);
     }
 
     const baseUrl = getBaseUrl();
     
     // Use the server-side proxy to bypass Mixed Content and Private Network Access issues
     // The proxy is mounted at /api-proxy on the same origin
-    const url = `/api-proxy${endpoint}`;
+    const url = `/api-proxy${fullEndpoint}`;
     
     const headers = {
       'Content-Type': 'application/json',
@@ -97,7 +102,7 @@ class ApiService {
 
   private getMockResponse(endpoint: string) {
     // Mock for export app only, as requested
-    if (endpoint.match(/\/console\/api\/apps\/[^\/]+\/export/)) {
+    if (endpoint.match(/\/apps\/[^\/]+\/export/)) {
       return {
         data: "app:\n  description: ''\n  icon: '156'\n  icon_background: null\n"
       };
@@ -274,7 +279,7 @@ class ApiService {
     }
 
     // Mock for explore apps (custom apps)
-    if (endpoint.includes('/console/api/explore/apps')) {
+    if (endpoint.includes('/explore/apps')) {
       const mockExploreApps = [
         {
             "id": "bee57668-def8-4b28-89c5-2c74771d669d",
@@ -343,7 +348,7 @@ class ApiService {
     }
 
     // Mock for apps list
-    if (endpoint.includes('/console/api/apps')) {
+    if (endpoint.includes('/apps')) {
       const mockApps = [
         {
           id: 'app-1',
@@ -611,7 +616,7 @@ class ApiService {
   }
 
   async exportApp(appId: string, includeSecret: boolean = false): Promise<{ data: string }> {
-    return this.request(`/console/api/apps/${appId}/export?include_secret=${includeSecret}`);
+    return this.request(`/apps/${appId}/export?include_secret=${includeSecret}`);
   }
 
   async importApp(data: { 
@@ -622,7 +627,7 @@ class ApiService {
     icon?: string; 
     icon_background?: string 
   }): Promise<any> {
-    return this.request('/console/api/apps/import', {
+    return this.request('/apps/import', {
       method: 'POST',
       body: JSON.stringify(data)
     });
@@ -635,7 +640,7 @@ class ApiService {
     icon?: string; 
     icon_background?: string 
   }): Promise<any> {
-    return this.request('/console/api/apps/import/url', {
+    return this.request('/apps/import/url', {
       method: 'POST',
       body: JSON.stringify(data)
     });
@@ -652,14 +657,14 @@ class ApiService {
     icon?: string; 
     icon_background?: string 
   }): Promise<any> {
-    return this.request('/console/api/apps/imports', {
+    return this.request('/apps/imports', {
       method: 'POST',
       body: JSON.stringify(data)
     });
   }
 
   async confirmDSLImport(import_id: string): Promise<any> {
-    return this.request(`/console/api/apps/imports/${import_id}/confirm`, {
+    return this.request(`/apps/imports/${import_id}/confirm`, {
       method: 'POST',
       body: JSON.stringify({ import_id })
     });
@@ -671,7 +676,7 @@ class ApiService {
     icon: string; 
     icon_background?: string | null 
   }): Promise<{ new_app_id: string }> {
-    return this.request(`/console/api/apps/${appID}/convert-to-workflow`, {
+    return this.request(`/apps/${appID}/convert-to-workflow`, {
       method: 'POST',
       body: JSON.stringify(data)
     });
@@ -692,16 +697,16 @@ class ApiService {
         exploreParams.append('limit', queryParams.limit.toString());
       }
       
-      return this.request(`/console/api/explore/apps?${exploreParams.toString()}`);
+      return this.request(`/explore/apps?${exploreParams.toString()}`);
     }
 
     // For other apps, do not include tenant_id
     const queryString = new URLSearchParams(queryParams as any).toString();
-    return this.request(`/console/api/apps?${queryString}`);
+    return this.request(`/apps?${queryString}`);
   }
 
   async fetchAppDetail(id: string): Promise<any> {
-    return this.request(`/console/api/apps/${id}`);
+    return this.request(`/apps/${id}`);
   }
 
   async getAppDetail(id: string): Promise<any> {
@@ -717,7 +722,7 @@ class ApiService {
     description?: string; 
     config?: any 
   }): Promise<any> {
-    return this.request('/console/api/apps', {
+    return this.request('/apps', {
       method: 'POST',
       body: JSON.stringify(data)
     });
@@ -728,7 +733,7 @@ class ApiService {
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
-    return this.request('/console/api/explore/apps', {
+    return this.request('/explore/apps', {
       method: 'POST',
       body: JSON.stringify({ ...data, tenant_id: tenantId })
     });
@@ -739,7 +744,7 @@ class ApiService {
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
-    return this.request(`/console/api/explore/apps/categories?tenant_id=${tenantId}`);
+    return this.request(`/explore/apps/categories?tenant_id=${tenantId}`);
   }
 
   async addAppCategory(category: string): Promise<any> {
@@ -747,7 +752,7 @@ class ApiService {
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
-    return this.request('/console/api/explore/apps/categories', {
+    return this.request('/explore/apps/categories', {
       method: 'POST',
       body: JSON.stringify({ tenant_id: tenantId, category })
     });
@@ -758,7 +763,7 @@ class ApiService {
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
-    return this.request('/console/api/explore/apps/categories', {
+    return this.request('/explore/apps/categories', {
       method: 'PUT',
       body: JSON.stringify({ tenant_id: tenantId, category_id: categoryId, category })
     });
@@ -769,7 +774,7 @@ class ApiService {
     if (!tenantId) {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
-    return this.request('/console/api/explore/apps/categories', {
+    return this.request('/explore/apps/categories', {
       method: 'DELETE',
       body: JSON.stringify({ tenant_id: tenantId, category_id: categoryId })
     });
@@ -784,14 +789,14 @@ class ApiService {
     use_icon_as_answer_icon?: boolean; 
     built_in?: boolean 
   }): Promise<any> {
-    return this.request(`/console/api/apps/${appID}`, {
+    return this.request(`/apps/${appID}`, {
       method: 'PUT',
       body: JSON.stringify(data)
     });
   }
 
   async updateCustomApp(data: any): Promise<any> {
-    return this.request('/console/api/explore/apps', {
+    return this.request('/explore/apps', {
       method: 'PUT',
       body: JSON.stringify(data)
     });
@@ -806,27 +811,27 @@ class ApiService {
     description?: string;
     config?: any;
   }): Promise<any> {
-    return this.request(`/console/api/apps/${appID}/copy`, {
+    return this.request(`/apps/${appID}/copy`, {
       method: 'POST',
       body: JSON.stringify(data)
     });
   }
 
   async deleteApp(appID: string): Promise<void> {
-    return this.request(`/console/api/apps/${appID}`, {
+    return this.request(`/apps/${appID}`, {
       method: 'DELETE'
     });
   }
 
   async deleteCustomApp(appID: string): Promise<void> {
-    return this.request('/console/api/explore/apps', {
+    return this.request('/explore/apps', {
       method: 'DELETE',
       body: JSON.stringify({ id: appID })
     });
   }
 
   async getTasks(page: number, perPage: number, taskName?: string): Promise<ApiResponse<ScheduledTask>> {
-    let url = `/console/api/scheduled-tasks?page=${page}&per_page=${perPage}`;
+    let url = `/scheduled-tasks?page=${page}&per_page=${perPage}`;
     if (taskName) {
       url += `&name=${encodeURIComponent(taskName)}`; // Doc says 'name' for filtering? Actually doc doesn't specify filter param name in list, but usually it's name. Let's assume 'name' or check if I should stick to 'task_name'. The doc summary says "Get Task List", but doesn't detail query params. I'll stick to 'name' as it's more standard, or keep 'task_name' if I'm unsure. Wait, the doc doesn't show list params. I'll keep it as is or change to 'name' if I want to be safe. Let's assume 'name' based on the field name.
     }
@@ -834,72 +839,72 @@ class ApiService {
   }
 
   async createTask(task: Partial<ScheduledTask>): Promise<ScheduledTask> {
-    return this.request('/console/api/scheduled-tasks', {
+    return this.request('/scheduled-tasks', {
       method: 'POST',
       body: JSON.stringify(task),
     });
   }
 
   async updateTask(id: string, task: Partial<ScheduledTask>): Promise<ScheduledTask> {
-    return this.request(`/console/api/scheduled-tasks/${id}`, {
+    return this.request(`/scheduled-tasks/${id}`, {
       method: 'PUT',
       body: JSON.stringify(task),
     });
   }
 
   async deleteTask(id: string): Promise<void> {
-    return this.request(`/console/api/scheduled-tasks/${id}`, {
+    return this.request(`/scheduled-tasks/${id}`, {
       method: 'DELETE',
     });
   }
 
   async toggleTaskStatus(id: string): Promise<void> {
-    return this.request(`/console/api/scheduled-tasks/${id}/toggle`, {
+    return this.request(`/scheduled-tasks/${id}/toggle`, {
       method: 'POST',
     });
   }
 
   async getTaskLogs(id: string, page: number, perPage: number): Promise<ApiResponse<TaskLog>> {
-    return this.request(`/console/api/scheduled-tasks/${id}/logs?page=${page}&per_page=${perPage}`);
+    return this.request(`/scheduled-tasks/${id}/logs?page=${page}&per_page=${perPage}`);
   }
 
   // --- Tool Extension APIs ---
 
   // 1. 工具集合管理
   async fetchCollectionList(): Promise<Collection[]> {
-    return this.request('/console/api/workspaces/current/tool-providers');
+    return this.request('/workspaces/current/tool-providers');
   }
 
   async fetchBuiltInToolList(collectionName: string): Promise<ToolExtension[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/tools`);
+    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/tools`);
   }
 
   async fetchCustomToolList(collectionName: string): Promise<ToolExtension[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/api/tools?provider=${collectionName}`);
+    return this.request(`/workspaces/current/tool-provider/api/tools?provider=${collectionName}`);
   }
 
   async fetchModelToolList(collectionName: string): Promise<ToolExtension[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/model/tools?provider=${collectionName}`);
+    return this.request(`/workspaces/current/tool-provider/model/tools?provider=${collectionName}`);
   }
 
   // 2. 内置工具认证管理
   async fetchBuiltInToolCredentialSchema(collectionName: string): Promise<ToolCredential[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/credentials_schema`);
+    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/credentials_schema`);
   }
 
   async fetchBuiltInToolCredential(collectionName: string): Promise<ToolCredential[]> {
-    return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/credentials`);
+    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/credentials`);
   }
 
   async updateBuiltInToolCredential(collectionName: string, credentials: Record<string, any>): Promise<void> {
-    return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/update`, {
+    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/update`, {
       method: 'POST',
       body: JSON.stringify({ credentials }),
     });
   }
 
   async removeBuiltInToolCredential(collectionName: string): Promise<void> {
-    return this.request(`/console/api/workspaces/current/tool-provider/builtin/${collectionName}/delete`, {
+    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/delete`, {
       method: 'POST',
       body: JSON.stringify({}),
     });
@@ -907,43 +912,43 @@ class ApiService {
 
   // 3. 自定义工具管理
   async parseParamsSchema(schema: string): Promise<{ parameters_schema: CustomParamSchema[], schema_type: string }> {
-    return this.request('/console/api/workspaces/current/tool-provider/api/schema', {
+    return this.request('/workspaces/current/tool-provider/api/schema', {
       method: 'POST',
       body: JSON.stringify({ schema }),
     });
   }
 
   async fetchCustomCollection(collectionName: string): Promise<CustomCollectionBackend> {
-    return this.request(`/console/api/workspaces/current/tool-provider/api/get?provider=${collectionName}`);
+    return this.request(`/workspaces/current/tool-provider/api/get?provider=${collectionName}`);
   }
 
   async createCustomCollection(collection: CustomCollectionBackend): Promise<void> {
-    return this.request('/console/api/workspaces/current/tool-provider/api/add', {
+    return this.request('/workspaces/current/tool-provider/api/add', {
       method: 'POST',
       body: JSON.stringify(collection),
     });
   }
 
   async updateCustomCollection(collection: CustomCollectionBackend): Promise<void> {
-    return this.request('/console/api/workspaces/current/tool-provider/api/update', {
+    return this.request('/workspaces/current/tool-provider/api/update', {
       method: 'POST',
       body: JSON.stringify(collection),
     });
   }
 
   async removeCustomCollection(collectionName: string): Promise<void> {
-    return this.request('/console/api/workspaces/current/tool-provider/api/delete', {
+    return this.request('/workspaces/current/tool-provider/api/delete', {
       method: 'POST',
       body: JSON.stringify({ provider: collectionName }),
     });
   }
 
   async importSchemaFromURL(url: string): Promise<void> {
-    return this.request(`/console/api/workspaces/current/tool-provider/api/remote?url=${encodeURIComponent(url)}`);
+    return this.request(`/workspaces/current/tool-provider/api/remote?url=${encodeURIComponent(url)}`);
   }
 
   async testAPIAvailable(payload: any): Promise<void> {
-    return this.request('/console/api/workspaces/current/tool-provider/api/test/pre', {
+    return this.request('/workspaces/current/tool-provider/api/test/pre', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
@@ -951,47 +956,47 @@ class ApiService {
 
   // 4. 工具列表获取
   async fetchAllBuiltInTools(): Promise<ToolExtension[]> {
-    return this.request('/console/api/workspaces/current/tools/builtin');
+    return this.request('/workspaces/current/tools/builtin');
   }
 
   async fetchAllCustomTools(): Promise<ToolExtension[]> {
-    return this.request('/console/api/workspaces/current/tools/api');
+    return this.request('/workspaces/current/tools/api');
   }
 
   async fetchAllWorkflowTools(): Promise<ToolExtension[]> {
-    return this.request('/console/api/workspaces/current/tools/workflow');
+    return this.request('/workspaces/current/tools/workflow');
   }
 
   // 5. 标签管理
   async fetchLabelList(): Promise<Label[]> {
-    return this.request('/console/api/workspaces/current/tool-labels');
+    return this.request('/workspaces/current/tool-labels');
   }
 
   // 6. 工作流工具提供商管理
   async createWorkflowToolProvider(data: WorkflowToolProviderRequest & { workflow_app_id: string }): Promise<void> {
-    return this.request('/console/api/workspaces/current/tool-provider/workflow/create', {
+    return this.request('/workspaces/current/tool-provider/workflow/create', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async saveWorkflowToolProvider(data: WorkflowToolProviderRequest & Partial<{ workflow_app_id: string, workflow_tool_id: string }>): Promise<void> {
-    return this.request('/console/api/workspaces/current/tool-provider/workflow/update', {
+    return this.request('/workspaces/current/tool-provider/workflow/update', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async fetchWorkflowToolDetailByAppID(appID: string): Promise<WorkflowToolProviderResponse> {
-    return this.request(`/console/api/workspaces/current/tool-provider/workflow/get?workflow_app_id=${appID}`);
+    return this.request(`/workspaces/current/tool-provider/workflow/get?workflow_app_id=${appID}`);
   }
 
   async fetchWorkflowToolDetail(toolID: string): Promise<WorkflowToolProviderResponse> {
-    return this.request(`/console/api/workspaces/current/tool-provider/workflow/get?workflow_tool_id=${toolID}`);
+    return this.request(`/workspaces/current/tool-provider/workflow/get?workflow_tool_id=${toolID}`);
   }
 
   async deleteWorkflowTool(toolID: string): Promise<void> {
-    return this.request('/console/api/workspaces/current/tool-provider/workflow/delete', {
+    return this.request('/workspaces/current/tool-provider/workflow/delete', {
       method: 'POST',
       body: JSON.stringify({ workflow_tool_id: toolID }),
     });
@@ -999,31 +1004,31 @@ class ApiService {
 
   // 7. 标签管理 (App Tags)
   async fetchTagList(type: string): Promise<Tag[]> {
-    return this.request(`/console/api/tags?type=${type}`);
+    return this.request(`/tags?type=${type}`);
   }
 
   async createTag(name: string, type: string): Promise<Tag> {
-    return this.request('/console/api/tags', {
+    return this.request('/tags', {
       method: 'POST',
       body: JSON.stringify({ name, type }),
     });
   }
 
   async updateTag(tagID: string, name: string): Promise<Tag> {
-    return this.request(`/console/api/tags/${tagID}`, {
+    return this.request(`/tags/${tagID}`, {
       method: 'PATCH',
       body: JSON.stringify({ name }),
     });
   }
 
   async deleteTag(tagID: string): Promise<void> {
-    return this.request(`/console/api/tags/${tagID}`, {
+    return this.request(`/tags/${tagID}`, {
       method: 'DELETE',
     });
   }
 
   async bindTag(tagIDList: string[], targetID: string, type: string): Promise<void> {
-    return this.request('/console/api/tag-bindings/create', {
+    return this.request('/tag-bindings/create', {
       method: 'POST',
       body: JSON.stringify({
         tag_ids: tagIDList,
@@ -1034,7 +1039,7 @@ class ApiService {
   }
 
   async unBindTag(tagID: string, targetID: string, type: string): Promise<void> {
-    return this.request('/console/api/tag-bindings/remove', {
+    return this.request('/tag-bindings/remove', {
       method: 'POST',
       body: JSON.stringify({
         tag_id: tagID,
