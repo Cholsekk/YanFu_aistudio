@@ -42,6 +42,7 @@ export interface AppItem {
   customMenu?: boolean;
   menuItems?: MenuItem[];
   mode?: AppMode;
+  builtIn?: boolean;
 }
 
 export type AppBasicInfo = {

@@ -37,7 +37,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         icon: initialData.icon,
         iconType: initialData.iconType,
         iconBgColor: initialData.iconBgColor || 'bg-primary-600',
-        builtIn: false // Default to false or fetch from initialData if available
+        builtIn: initialData.builtIn || false
       });
     } else {
       setFormData({ 
