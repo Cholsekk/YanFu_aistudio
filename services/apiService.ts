@@ -720,6 +720,7 @@ class ApiService {
     icon_background?: string; 
     mode: string; 
     description?: string; 
+    built_in?: boolean;
     config?: any 
   }): Promise<any> {
     return this.request('/apps', {

@@ -487,7 +487,7 @@ const App: React.FC = () => {
           icon_background: appData.iconBgColor,
           description: appData.description,
           use_icon_as_answer_icon: false, // Default
-          built_in: false, // Default
+          built_in: appData.builtIn || false,
           // Pass config with custom fields
           // @ts-ignore - apiService updateApp signature might need update or we cast
           config: config
@@ -501,6 +501,7 @@ const App: React.FC = () => {
           icon_background: appData.iconBgColor,
           mode: mapTypeToAppMode(appData.typeLabel || appData.type),
           description: appData.description,
+          built_in: appData.builtIn || false,
           config: config
         });
       }
