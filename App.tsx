@@ -643,46 +643,46 @@ const App: React.FC = () => {
   const CreateAppContent = () => {
     if (viewMode === 'grid') {
       return (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col gap-6">
+        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4 h-full">
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg mb-1">创建应用</h3>
-            <p className="text-xs text-gray-500">从头开始或导入现有配置</p>
+            <h3 className="font-semibold text-gray-900 text-base mb-0.5">创建应用</h3>
+            <p className="text-[11px] text-gray-500">从头开始或导入现有配置</p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 mt-auto">
             <button 
               onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 transition-all group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 transition-all group"
             >
-              <div className="p-2 bg-primary-50 text-primary-600 rounded-lg group-hover:bg-primary-100 transition-colors">
-                <Plus className="w-5 h-5" />
+              <div className="p-1.5 bg-primary-50 text-primary-600 rounded-lg group-hover:bg-primary-100 transition-colors">
+                <Plus className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-semibold">新建应用</p>
-                <p className="text-[10px] text-gray-400">创建全新的对话或工作流应用</p>
+                <p className="text-sm font-semibold leading-tight">新建应用</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">创建全新的对话或工作流应用</p>
               </div>
             </button>
             <button 
               onClick={() => { setEditingApp(null); setIsCustomAppModalOpen(true); }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all group"
             >
-              <div className="p-2 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-100 transition-colors">
-                <Sparkles className="w-5 h-5" />
+              <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-100 transition-colors">
+                <Sparkles className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-semibold">创建定制化应用</p>
-                <p className="text-[10px] text-gray-400">基于模板快速构建</p>
+                <p className="text-sm font-semibold leading-tight">创建定制化应用</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">基于模板快速构建</p>
               </div>
             </button>
             <button 
               onClick={() => setIsImportAppModalOpen(true)}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all group"
             >
-              <div className="p-2 bg-green-50 text-green-600 rounded-lg group-hover:bg-green-100 transition-colors">
-                <Upload className="w-5 h-5" />
+              <div className="p-1.5 bg-green-50 text-green-600 rounded-lg group-hover:bg-green-100 transition-colors">
+                <Upload className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-semibold">导入应用</p>
-                <p className="text-[10px] text-gray-400">从外部文件或链接导入</p>
+                <p className="text-sm font-semibold leading-tight">导入应用</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">从外部文件或链接导入</p>
               </div>
             </button>
           </div>

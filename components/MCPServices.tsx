@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal, Zap } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal, Zap, Edit2, Trash2 } from 'lucide-react';
+import { Tooltip } from 'antd';
+import MCPServiceModal from './AddMCPServiceModal'; // 重命名并复用
 
 // Mock data for MCP Services
 const MOCK_MCP_SERVICES = [
@@ -9,7 +11,15 @@ const MOCK_MCP_SERVICES = [
     host: 'https://mcp.composio.dev/notion/abc',
     status: 'authorized',
     tools: 5,
-    updatedAt: '3分钟前'
+    updatedAt: '3分钟前',
+    identifier: 'composio-notion',
+    clientId: '',
+    clientSecret: '',
+    timeout: 30,
+    sseTimeout: 300,
+    icon: 'LayoutGrid',
+    iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
+    iconBgColor: 'bg-indigo-600'
   },
   {
     id: '2',
@@ -17,7 +27,15 @@ const MOCK_MCP_SERVICES = [
     host: 'https://actions.zapier.com/mcp/sse',
     status: 'authorized',
     tools: 5,
-    updatedAt: '3分钟前'
+    updatedAt: '3分钟前',
+    identifier: 'zapier-actions',
+    clientId: '',
+    clientSecret: '',
+    timeout: 30,
+    sseTimeout: 300,
+    icon: 'LayoutGrid',
+    iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
+    iconBgColor: 'bg-indigo-600'
   },
   {
     id: '3',
@@ -25,7 +43,15 @@ const MOCK_MCP_SERVICES = [
     host: 'https://mcp.gmail.com/sse',
     status: 'unconfigured',
     tools: 0,
-    updatedAt: '3分钟前'
+    updatedAt: '3分钟前',
+    identifier: 'gmail-mcp',
+    clientId: '',
+    clientSecret: '',
+    timeout: 30,
+    sseTimeout: 300,
+    icon: 'LayoutGrid',
+    iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
+    iconBgColor: 'bg-indigo-600'
   }
 ];
 
@@ -99,12 +125,51 @@ const MOCK_TOOLS = [
 ];
 
 const MCPServices: React.FC = () => {
-  const [services] = useState(MOCK_MCP_SERVICES);
+  const [services, setServices] = useState(MOCK_MCP_SERVICES);
   const [selectedService, setSelectedService] = useState<typeof MOCK_MCP_SERVICES[0] | null>(null);
   const [tools, setTools] = useState<any[]>([]);
   const [loadingTools, setLoadingTools] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState<typeof MOCK_MCP_SERVICES[0] | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [drawerMenuOpen, setDrawerMenuOpen] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<any | null>(null);
+
+  // Removed menuRef and handleClickOutside logic
+
+  const handleAddService = (data: any) => {
+    const newService = {
+      id: Date.now().toString(),
+      ...data,
+      status: 'authorized',
+      tools: 0,
+      updatedAt: '刚刚'
+    };
+    setServices([newService, ...services]);
+  };
+
+  const handleUpdateService = (data: any) => {
+    setServices(services.map(s => s.id === editingService?.id ? { ...s, ...data } : s));
+    setEditingService(null);
+  };
+
+  const handleDeleteService = (id: string) => {
+    setServices(services.filter(s => s.id !== id));
+    setMenuOpenId(null);
+  };
+
+  const handleEditClick = (service: typeof MOCK_MCP_SERVICES[0]) => {
+    setEditingService(service);
+    setIsModalOpen(true);
+    setMenuOpenId(null);
+  };
 
   const handleSelectService = async (service: typeof MOCK_MCP_SERVICES[0]) => {
+    if (menuOpenId) {
+      setMenuOpenId(null);
+      return;
+    }
+    
     setSelectedService(service);
     if (service.status === 'authorized') {
       setLoadingTools(true);
@@ -118,74 +183,181 @@ const MCPServices: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-8 p-8 bg-gray-50/50 min-h-screen">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-8 p-8 min-h-screen font-sans text-gray-900 bg-[#F9FAFB]">
+      {/* Subtle Background Pattern */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none opacity-[0.4]" style={{ backgroundImage: 'radial-gradient(#E5E7EB 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+      
+      <div className="relative flex justify-between items-end border-b border-gray-200/80 pb-6">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">MCP 服务</h2>
-          <p className="text-sm text-gray-500 mt-2">管理和配置您的 MCP 服务连接，扩展应用能力。</p>
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900">MCP 服务</h2>
+          <p className="text-sm text-gray-500 mt-2 max-w-2xl leading-relaxed">
+            管理和配置您的 MCP 服务连接，扩展应用能力。已连接的服务将自动同步工具。
+          </p>
+        </div>
+        <div className="hidden sm:block">
+           <button 
+             onClick={() => setIsModalOpen(true)}
+             className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 active:scale-95"
+           >
+             <Plus className="w-4 h-4" />
+             新建服务
+           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {/* Add Service Card */}
-        <div className="bg-white rounded-2xl border-2 border-dashed border-primary-300 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-primary-50/30 transition-all min-h-[180px] group">
-          <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center border border-primary-200 mb-4 shadow-sm group-hover:scale-105 transition-transform">
-            <Plus className="w-6 h-6 text-primary-600" />
+      {/* Transparent overlay for closing menu */}
+      {menuOpenId && (
+        <div className="fixed inset-0 z-40" onClick={() => setMenuOpenId(null)} />
+      )}
+
+      <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Add Service Card (Always First) */}
+        <div 
+          className="group relative bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[220px]"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-indigo-100 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-300">
+            <Plus className="w-6 h-6 text-indigo-500 group-hover:text-white transition-colors" />
           </div>
-          <span className="text-sm font-semibold text-primary-700">添加 MCP 服务 (HTTP)</span>
+          <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">添加新服务</span>
+          <p className="text-xs text-indigo-400 mt-2 text-center px-4 leading-relaxed">连接新的 MCP 服务器以扩展工具集</p>
         </div>
 
         {/* Service Cards */}
         {services.map(service => (
           <div 
             key={service.id}
-            className={`bg-white rounded-2xl border p-6 flex flex-col cursor-pointer hover:shadow-lg transition-all ${service.status === 'authorized' ? 'border-gray-100' : 'border-red-100'}`}
+            className={`group relative bg-white rounded-2xl border border-gray-100 p-5 flex flex-col cursor-pointer shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out overflow-hidden ${menuOpenId === service.id ? 'z-50 ring-2 ring-indigo-500/20' : ''}`}
             onClick={() => handleSelectService(service)}
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-indigo-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-base">{service.name}</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">{service.tools} 个工具 · 更新于 {service.updatedAt}</p>
+            {/* Top accent line */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+            {/* Status Indicator */}
+            <div className="absolute top-5 right-5 flex items-center gap-2">
+                <span className={`relative flex h-2.5 w-2.5`}>
+                  {service.status === 'authorized' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${service.status === 'authorized' ? 'bg-emerald-500' : 'bg-amber-400'}`}></span>
+                </span>
+            </div>
+
+            <div className="flex items-start gap-4 mb-5">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${service.iconBgColor} text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300`}>
+                <Globe className="w-7 h-7" />
+              </div>
+              <div className="flex-1 min-w-0 pr-4 pt-1">
+                <h3 className="font-bold text-gray-900 text-lg truncate leading-tight group-hover:text-indigo-600 transition-colors">{service.name}</h3>
+                <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
+                    <span className="text-[10px] text-gray-500 font-mono truncate max-w-[120px]">{service.identifier}</span>
                 </div>
               </div>
-              <MoreHorizontal className="w-5 h-5 text-gray-400 hover:text-gray-600" />
             </div>
-            <p className="text-xs text-gray-500 truncate mb-4 bg-gray-50 p-2 rounded-lg font-mono">{service.host}</p>
-            <div className="mt-auto flex justify-end">
-              {service.status === 'authorized' ? (
-                <span className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> 已授权
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 px-3 py-1 rounded-full font-medium">
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span> 未配置服务 ●
-                </span>
-              )}
+
+            <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+               <div className="flex items-center gap-4">
+                 <div className="flex items-center gap-1.5 text-gray-500" title="工具数量">
+                    <Zap className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium">{service.tools}</span>
+                 </div>
+                 <div className="flex items-center gap-1.5 text-gray-400" title="更新时间">
+                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span className="text-xs">{service.updatedAt}</span>
+                 </div>
+               </div>
+               
+               <div className="relative">
+                <div 
+                  className={`p-2 rounded-lg transition-all cursor-pointer ${menuOpenId === service.id ? 'bg-gray-100 text-gray-900' : 'text-gray-300 hover:bg-gray-50 hover:text-gray-600'}`}
+                  onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === service.id ? null : service.id); }}
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </div>
+                {menuOpenId === service.id && (
+                    <div className="absolute right-0 bottom-full mb-2 w-36 bg-white rounded-xl shadow-xl border border-gray-100 z-50 p-1.5 animate-in fade-in zoom-in-95 duration-200 origin-bottom-right">
+                        <button onClick={(e) => { e.stopPropagation(); handleEditClick(service); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+                            <Edit2 className="w-3.5 h-3.5" /> 修改配置
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteService(service.id); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" /> 删除服务
+                        </button>
+                    </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Modal */}
+      <MCPServiceModal 
+        isOpen={isModalOpen} 
+        onClose={() => { setIsModalOpen(false); setEditingService(null); }} 
+        onAdd={editingService ? handleUpdateService : handleAddService}
+        initialData={editingService}
+      />
 
       {/* Drawer for Service Details */}
       {selectedService && (
         <>
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]" onClick={() => setSelectedService(null)} />
           <div className="fixed top-0 right-0 h-full w-[480px] bg-white shadow-2xl z-[70] p-8 border-l border-gray-100 flex flex-col">
+            
+            {/* Transparent overlay for closing drawer menu */}
+            {drawerMenuOpen && (
+              <div className="fixed inset-0 z-[75]" onClick={() => setDrawerMenuOpen(false)} />
+            )}
+
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center">
                   <Globe className="w-7 h-7 text-indigo-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 text-xl">{selectedService.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-900 text-xl">{selectedService.name}</h3>
+                    {selectedService.status === 'authorized' && (
+                      <span className="flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium border border-emerald-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 已授权
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500 mt-1">{selectedService.host}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedService(null)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-6 h-6 text-gray-400" /></button>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button 
+                    onClick={() => setDrawerMenuOpen(!drawerMenuOpen)} 
+                    className={`p-2 rounded-full transition-colors ${drawerMenuOpen ? 'bg-gray-100 text-gray-700' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
+                  >
+                    <MoreHorizontal className="w-6 h-6" />
+                  </button>
+                  {drawerMenuOpen && (
+                    <div className="absolute right-0 top-12 w-32 bg-white rounded-xl shadow-xl border border-gray-100 z-[80] p-1">
+                      <button 
+                        onClick={() => { 
+                          setDrawerMenuOpen(false); 
+                          handleEditClick(selectedService); 
+                        }} 
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                      >
+                        <Edit2 className="w-4 h-4" /> 修改
+                      </button>
+                      <button 
+                        onClick={() => { 
+                          setDrawerMenuOpen(false); 
+                          handleDeleteService(selectedService.id); 
+                          setSelectedService(null);
+                        }} 
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" /> 删除
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => setSelectedService(null)} className="p-2 hover:bg-gray-100 rounded-full"><X className="w-6 h-6 text-gray-400" /></button>
+              </div>
             </div>
             
             {selectedService.status === 'authorized' ? (
@@ -201,9 +373,22 @@ const MCPServices: React.FC = () => {
                     <p className="text-sm text-gray-400">加载中...</p>
                   ) : (
                     tools.map((tool, index) => (
-                      <div key={index} className="p-4 border border-gray-100 rounded-xl hover:border-primary-100 hover:bg-primary-50/30 transition-all">
-                        <h5 className="font-bold text-sm text-gray-900 mb-1">{tool.name}</h5>
-                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{tool.description}</p>
+                      <div 
+                        key={index} 
+                        className="p-4 border border-gray-100 rounded-xl hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group"
+                        onClick={() => setSelectedTool(tool)}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <h5 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors">{tool.name}</h5>
+                          <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors" />
+                        </div>
+                        <Tooltip 
+                          title={tool.description} 
+                          placement="left" 
+                          styles={{ body: { maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' } }}
+                        >
+                          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{tool.description}</p>
+                        </Tooltip>
                       </div>
                     ))
                   )}
@@ -211,7 +396,7 @@ const MCPServices: React.FC = () => {
               </div>
             ) : (
               <>
-                <button className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-bold mb-8 shadow-lg shadow-primary-200 transition-all">
+                <button className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold mb-8 shadow-lg shadow-indigo-200 transition-all">
                   授权
                 </button>
                 
@@ -224,6 +409,45 @@ const MCPServices: React.FC = () => {
             )}
           </div>
         </>
+      )}
+
+      {/* Tool Details Modal */}
+      {selectedTool && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4" onClick={() => setSelectedTool(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-indigo-500" />
+                {selectedTool.name}
+              </h3>
+              <button onClick={() => setSelectedTool(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="mb-8">
+                <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Info className="w-4 h-4 text-gray-400" />
+                  描述
+                </h4>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  {selectedTool.description}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-gray-400" />
+                  参数 (Parameters)
+                </h4>
+                <div className="bg-gray-900 rounded-xl p-5 overflow-x-auto shadow-inner">
+                  <pre className="text-xs text-gray-300 font-mono leading-relaxed">
+                    {JSON.stringify(selectedTool.parameters, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
