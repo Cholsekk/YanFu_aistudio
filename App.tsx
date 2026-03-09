@@ -317,9 +317,6 @@ const App: React.FC = () => {
   }, [activeFilterTab, sortBy, searchQuery]);
 
   const handleResetFilters = () => {
-    setApps([]); // Clear immediately to prevent stale data render
-    setPage(1);
-    setHasMore(false);
     setActiveFilterTab('全部');
     setSortBy('default');
     setSearchQuery('');
