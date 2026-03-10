@@ -229,15 +229,6 @@ const MCPServices: React.FC = () => {
             管理和配置您的 MCP 服务连接，扩展应用能力。已连接的服务将自动同步工具。
           </p>
         </div>
-        <div className="hidden sm:block">
-           <button 
-             onClick={() => setIsModalOpen(true)}
-             className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 active:scale-95"
-           >
-             <Plus className="w-4 h-4" />
-             新建服务
-           </button>
-        </div>
       </div>
 
       {/* Transparent overlay for closing menu */}
