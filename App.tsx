@@ -9,6 +9,7 @@ import ManageTagsModal from './components/ManageTagsModal';
 import ScheduledTasks from './components/ScheduledTasks';
 import ToolExtensions from './components/ToolExtensions';
 import MCPServices from './components/MCPServices';
+import AppDetail from './components/AppDetail';
 import TokenConfigModal from './components/TokenConfigModal';
 import ConvertToWorkflowModal from './components/ConvertToWorkflowModal';
 import { APP_TYPES } from './constants';
@@ -57,6 +58,7 @@ const App: React.FC = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [isConvertToWorkflowModalOpen, setIsConvertToWorkflowModalOpen] = useState(false);
   const [appToConvert, setAppToConvert] = useState<AppItem | null>(null);
+  const [selectedApp, setSelectedApp] = useState<AppItem | null>(null);
   
   const [editingApp, setEditingApp] = useState<AppItem | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -728,6 +730,15 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
+    if (selectedApp) {
+      return (
+        <AppDetail 
+          app={selectedApp} 
+          onBack={() => setSelectedApp(null)} 
+        />
+      );
+    }
+
     if (activeNavTab === 'tasks') {
       return <ScheduledTasks />;
     }
@@ -905,6 +916,11 @@ const App: React.FC = () => {
               onExport={handleExportApp}
               onConvertToWorkflow={handleConvertToWorkflow}
               onManageTags={() => setIsManageTagsModalOpen(true)}
+              onClick={() => {
+                if (app.type !== '定制应用' && app.mode !== 'custom') {
+                  setSelectedApp(app);
+                }
+              }}
             />
           ))}
 
@@ -934,11 +950,11 @@ const App: React.FC = () => {
     );
   };
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header activeTab={activeNavTab} setActiveTab={setActiveNavTab} />
+    return (
+    <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+      <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
 
-      <main className="flex-grow max-w-[1600px] w-full mx-auto px-6 py-8">
+      <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-6 py-8'}`}>
         {renderContent()}
       </main>
 

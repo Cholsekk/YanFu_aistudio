@@ -58,6 +58,8 @@ const AppCard: React.FC<AppCardProps> = ({
     e.stopPropagation();
     if (app.type === '定制应用' || app.mode === 'custom') {
       navigate(`/client/custom/${app.itemId || app.id}`);
+    } else if (onClick) {
+      onClick();
     } else {
       let modeType = 'configuration';
       switch (app.mode) {

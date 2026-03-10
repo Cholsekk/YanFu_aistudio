@@ -407,7 +407,7 @@ const MCPServices: React.FC = () => {
                         <Tooltip 
                           title={tool.description} 
                           placement="left" 
-                          styles={{ body: { maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' } }}
+                          overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' }}
                         >
                           <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{tool.description}</p>
                         </Tooltip>

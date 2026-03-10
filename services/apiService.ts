@@ -62,6 +62,11 @@ class ApiService {
     // The proxy is mounted at /api-proxy on the same origin
     const url = `/api-proxy${fullEndpoint}`;
     
+    // Automatically stringify body if it's an object and not a special type
+    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData) && !(options.body instanceof Blob)) {
+      options.body = JSON.stringify(options.body);
+    }
+
     const headers = {
       'Content-Type': 'application/json',
       'x-target-base-url': baseUrl, // Tell the proxy where to send the request
@@ -629,7 +634,7 @@ class ApiService {
   }): Promise<any> {
     return this.request('/apps/import', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
@@ -642,7 +647,7 @@ class ApiService {
   }): Promise<any> {
     return this.request('/apps/import/url', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
@@ -659,14 +664,14 @@ class ApiService {
   }): Promise<any> {
     return this.request('/apps/imports', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
   async confirmDSLImport(import_id: string): Promise<any> {
     return this.request(`/apps/imports/${import_id}/confirm`, {
       method: 'POST',
-      body: JSON.stringify({ import_id })
+      body: { import_id } as any
     });
   }
 
@@ -678,7 +683,7 @@ class ApiService {
   }): Promise<{ new_app_id: string }> {
     return this.request(`/apps/${appID}/convert-to-workflow`, {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
@@ -725,7 +730,7 @@ class ApiService {
   }): Promise<any> {
     return this.request('/apps', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
@@ -736,7 +741,7 @@ class ApiService {
     }
     return this.request('/explore/apps', {
       method: 'POST',
-      body: JSON.stringify({ ...data, tenant_id: tenantId })
+      body: { ...data, tenant_id: tenantId } as any
     });
   }
 
@@ -755,7 +760,7 @@ class ApiService {
     }
     return this.request('/explore/apps/categories', {
       method: 'POST',
-      body: JSON.stringify({ tenant_id: tenantId, category })
+      body: { tenant_id: tenantId, category } as any
     });
   }
 
@@ -766,7 +771,7 @@ class ApiService {
     }
     return this.request('/explore/apps/categories', {
       method: 'PUT',
-      body: JSON.stringify({ tenant_id: tenantId, category_id: categoryId, category })
+      body: { tenant_id: tenantId, category_id: categoryId, category } as any
     });
   }
 
@@ -777,7 +782,7 @@ class ApiService {
     }
     return this.request('/explore/apps/categories', {
       method: 'DELETE',
-      body: JSON.stringify({ tenant_id: tenantId, category_id: categoryId })
+      body: { tenant_id: tenantId, category_id: categoryId } as any
     });
   }
 
@@ -792,14 +797,14 @@ class ApiService {
   }): Promise<any> {
     return this.request(`/apps/${appID}`, {
       method: 'PUT',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
   async updateCustomApp(data: any): Promise<any> {
     return this.request('/explore/apps', {
       method: 'PUT',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
@@ -814,7 +819,7 @@ class ApiService {
   }): Promise<any> {
     return this.request(`/apps/${appID}/copy`, {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: data as any
     });
   }
 
@@ -827,7 +832,7 @@ class ApiService {
   async deleteCustomApp(appID: string): Promise<void> {
     return this.request('/explore/apps', {
       method: 'DELETE',
-      body: JSON.stringify({ id: appID })
+      body: { id: appID } as any
     });
   }
 
@@ -842,14 +847,14 @@ class ApiService {
   async createTask(task: Partial<ScheduledTask>): Promise<ScheduledTask> {
     return this.request('/scheduled-tasks', {
       method: 'POST',
-      body: JSON.stringify(task),
+      body: task as any,
     });
   }
 
   async updateTask(id: string, task: Partial<ScheduledTask>): Promise<ScheduledTask> {
     return this.request(`/scheduled-tasks/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(task),
+      body: task as any,
     });
   }
 
@@ -900,14 +905,14 @@ class ApiService {
   async updateBuiltInToolCredential(collectionName: string, credentials: Record<string, any>): Promise<void> {
     return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/update`, {
       method: 'POST',
-      body: JSON.stringify({ credentials }),
+      body: { credentials } as any,
     });
   }
 
   async removeBuiltInToolCredential(collectionName: string): Promise<void> {
     return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/delete`, {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: {} as any,
     });
   }
 
@@ -915,7 +920,7 @@ class ApiService {
   async parseParamsSchema(schema: string): Promise<{ parameters_schema: CustomParamSchema[], schema_type: string }> {
     return this.request('/workspaces/current/tool-provider/api/schema', {
       method: 'POST',
-      body: JSON.stringify({ schema }),
+      body: { schema } as any,
     });
   }
 
@@ -926,21 +931,21 @@ class ApiService {
   async createCustomCollection(collection: CustomCollectionBackend): Promise<void> {
     return this.request('/workspaces/current/tool-provider/api/add', {
       method: 'POST',
-      body: JSON.stringify(collection),
+      body: collection as any,
     });
   }
 
   async updateCustomCollection(collection: CustomCollectionBackend): Promise<void> {
     return this.request('/workspaces/current/tool-provider/api/update', {
       method: 'POST',
-      body: JSON.stringify(collection),
+      body: collection as any,
     });
   }
 
   async removeCustomCollection(collectionName: string): Promise<void> {
     return this.request('/workspaces/current/tool-provider/api/delete', {
       method: 'POST',
-      body: JSON.stringify({ provider: collectionName }),
+      body: { provider: collectionName } as any,
     });
   }
 
@@ -951,7 +956,7 @@ class ApiService {
   async testAPIAvailable(payload: any): Promise<void> {
     return this.request('/workspaces/current/tool-provider/api/test/pre', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: payload as any,
     });
   }
 
@@ -977,14 +982,14 @@ class ApiService {
   async createWorkflowToolProvider(data: WorkflowToolProviderRequest & { workflow_app_id: string }): Promise<void> {
     return this.request('/workspaces/current/tool-provider/workflow/create', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data as any,
     });
   }
 
   async saveWorkflowToolProvider(data: WorkflowToolProviderRequest & Partial<{ workflow_app_id: string, workflow_tool_id: string }>): Promise<void> {
     return this.request('/workspaces/current/tool-provider/workflow/update', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data as any,
     });
   }
 
@@ -999,7 +1004,7 @@ class ApiService {
   async deleteWorkflowTool(toolID: string): Promise<void> {
     return this.request('/workspaces/current/tool-provider/workflow/delete', {
       method: 'POST',
-      body: JSON.stringify({ workflow_tool_id: toolID }),
+      body: { workflow_tool_id: toolID } as any,
     });
   }
 
@@ -1011,14 +1016,14 @@ class ApiService {
   async createTag(name: string, type: string): Promise<Tag> {
     return this.request('/tags', {
       method: 'POST',
-      body: JSON.stringify({ name, type }),
+      body: { name, type } as any,
     });
   }
 
   async updateTag(tagID: string, name: string): Promise<Tag> {
     return this.request(`/tags/${tagID}`, {
       method: 'PATCH',
-      body: JSON.stringify({ name }),
+      body: { name } as any,
     });
   }
 
@@ -1031,22 +1036,22 @@ class ApiService {
   async bindTag(tagIDList: string[], targetID: string, type: string): Promise<void> {
     return this.request('/tag-bindings/create', {
       method: 'POST',
-      body: JSON.stringify({
+      body: {
         tag_ids: tagIDList,
         target_id: targetID,
         type,
-      }),
+      } as any,
     });
   }
 
   async unBindTag(tagID: string, targetID: string, type: string): Promise<void> {
     return this.request('/tag-bindings/remove', {
       method: 'POST',
-      body: JSON.stringify({
+      body: {
         tag_id: tagID,
         target_id: targetID,
         type,
-      }),
+      } as any,
     });
   }
 }
