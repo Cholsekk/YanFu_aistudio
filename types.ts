@@ -820,6 +820,8 @@ export interface McpProvider {
   icon_background: string;
   server_identifier: string;
   is_authed: boolean;
+  is_team_authorization?: boolean;
+  tools?: any[];
 }
 
 export interface McpProviderRequest {

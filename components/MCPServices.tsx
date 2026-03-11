@@ -149,8 +149,11 @@ const MCPServices: React.FC = () => {
       // We map it to the format expected by the UI without fetching details immediately
       if (data && data.length > 0) {
         const mapped = data.map((item: any) => {
-          const name = item.label?.zh_Hans || item.label?.en_US || item.name || item.provider || '';
-          const id = item.id || item.provider || item.name || '';
+          let name = item.label?.zh_Hans || item.label?.en_US || item.name || item.provider || '';
+          if (typeof name === 'object' && name !== null) {
+            name = name.zh_Hans || name.en_US || JSON.stringify(name);
+          }
+          const id = item.id || item.provider || (typeof item.name === 'string' ? item.name : '') || '';
           return {
             id: id,
             name: name,
@@ -233,14 +236,18 @@ const MCPServices: React.FC = () => {
     setMenuOpenId(null);
     try {
       const detail = await apiService.fetchMcpProviderDetail(service.id);
+      let nameStr = detail?.name || service.name;
+      if (typeof nameStr === 'object' && nameStr !== null) {
+        nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
+      }
       const fullService = {
         ...service,
-        name: detail.name || service.name,
-        host: detail.server_url,
-        identifier: detail.server_identifier,
-        icon: detail.icon || service.icon,
-        iconType: detail.icon_type || service.iconType,
-        iconBgColor: detail.icon_background || service.iconBgColor,
+        name: nameStr,
+        host: typeof detail?.server_url === 'string' ? detail.server_url : (service.host || ''),
+        identifier: typeof detail?.server_identifier === 'string' ? detail.server_identifier : (service.identifier || ''),
+        icon: typeof detail?.icon === 'string' ? detail.icon : service.icon,
+        iconType: typeof detail?.icon_type === 'string' ? detail.icon_type : service.iconType,
+        iconBgColor: typeof detail?.icon_background === 'string' ? detail.icon_background : service.iconBgColor,
       };
       setEditingService(fullService);
       setIsModalOpen(true);
@@ -260,30 +267,49 @@ const MCPServices: React.FC = () => {
     let fullService = service;
     try {
       const detail = await apiService.fetchMcpProviderDetail(service.id);
+      
+      let nameStr = detail?.name || service.name;
+      if (typeof nameStr === 'object' && nameStr !== null) {
+        nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
+      }
+
       fullService = {
         ...service,
-        name: detail.name || service.name,
-        host: detail.server_url,
-        identifier: detail.server_identifier,
-        icon: detail.icon || service.icon,
-        iconType: detail.icon_type || service.iconType,
-        iconBgColor: detail.icon_background || service.iconBgColor,
-        is_team_authorization: detail.is_team_authorization // Ensure this is mapped
+        name: nameStr,
+        host: typeof detail?.server_url === 'string' ? detail.server_url : (service.host || ''),
+        identifier: typeof detail?.server_identifier === 'string' ? detail.server_identifier : (service.identifier || ''),
+        icon: typeof detail?.icon === 'string' ? detail.icon : service.icon,
+        iconType: typeof detail?.icon_type === 'string' ? detail.icon_type : service.iconType,
+        iconBgColor: typeof detail?.icon_background === 'string' ? detail.icon_background : service.iconBgColor,
+        is_team_authorization: detail?.is_team_authorization // Ensure this is mapped
       };
       setSelectedService(fullService);
+
+      if (fullService.is_team_authorization) {
+        setLoadingTools(true);
+        let fetchedTools = detail?.tools || service.rawTools;
+        if (fetchedTools) {
+          if (!Array.isArray(fetchedTools)) {
+            fetchedTools = Object.values(fetchedTools);
+          }
+          setTools(fetchedTools);
+        } else {
+          // 模拟请求
+          await new Promise(resolve => setTimeout(resolve, 500));
+          setTools(MOCK_TOOLS);
+        }
+        setLoadingTools(false);
+      } else {
+        setTools([]);
+      }
     } catch (error) {
       console.error('Failed to fetch MCP details:', error);
       setSelectedService(service);
-    }
-
-    if (fullService.is_team_authorization) {
-      setLoadingTools(true);
-      // 模拟请求
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setTools(MOCK_TOOLS);
-      setLoadingTools(false);
-    } else {
-      setTools([]);
+      if (service.is_team_authorization) {
+        setTools(Array.isArray(service.rawTools) ? service.rawTools : []);
+      } else {
+        setTools([]);
+      }
     }
   };
 
@@ -349,12 +375,10 @@ const MCPServices: React.FC = () => {
 
             <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
                <div className="flex items-center gap-4">
-                 <Tooltip title="工具数量" arrow={false}>
-                   <div className="flex items-center gap-1.5 text-gray-500">
-                      <Zap className="w-3.5 h-3.5" />
-                      <span className="text-xs font-medium">{service.tools}</span>
-                   </div>
-                 </Tooltip>
+                 <div className="flex items-center gap-1.5 text-gray-500 cursor-pointer" title="工具数量">
+                    <Zap className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium">{service.tools}</span>
+                 </div>
                  <div className="flex items-center gap-1.5 text-gray-400" title="更新时间">
                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                     <span className="text-xs">{service.updatedAt}</span>
@@ -457,7 +481,7 @@ const MCPServices: React.FC = () => {
             {selectedService.is_team_authorization ? (
               <div className="flex-grow overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-bold text-gray-900">{selectedService.rawTools?.length || 0} 个工具已包含</h4>
+                  <h4 className="font-bold text-gray-900">{tools?.length || 0} 个工具已包含</h4>
                   <button className="text-xs text-primary-600 font-medium flex items-center gap-1 hover:text-primary-700 transition-colors">
                     <Zap className="w-3 h-3" /> 更新
                   </button>
@@ -466,26 +490,34 @@ const MCPServices: React.FC = () => {
                   {loadingTools ? (
                     <p className="text-sm text-gray-400">加载中...</p>
                   ) : (
-                    (selectedService.rawTools || []).map((tool: any, index: number) => (
-                      <div 
-                        key={index} 
-                        className="p-4 border border-gray-100 rounded-xl hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group"
-                        onClick={() => setSelectedTool(tool)}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <h5 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors">{tool.name}</h5>
-                          <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors" />
-                        </div>
-                        <Tooltip 
-                          title={typeof tool.description === 'string' ? tool.description : JSON.stringify(tool.description)} 
-                          placement="left" 
-                          arrow={false}
-                          overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' }}
+                    (tools || []).map((tool: any, index: number) => {
+                      const descText = typeof tool.description === 'string' 
+                        ? tool.description 
+                        : (tool.description?.zh_Hans || tool.description?.en_US || JSON.stringify(tool.description) || '');
+                      const nameText = typeof tool.name === 'string'
+                        ? tool.name
+                        : (tool.name?.zh_Hans || tool.name?.en_US || JSON.stringify(tool.name) || '');
+                      return (
+                        <div 
+                          key={index} 
+                          className="p-4 border border-gray-100 rounded-xl hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group"
+                          onClick={() => setSelectedTool(tool)}
                         >
-                          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{tool.description}</p>
-                        </Tooltip>
-                      </div>
-                    ))
+                          <div className="flex items-center justify-between mb-1">
+                            <h5 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors">{nameText}</h5>
+                            <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors" />
+                          </div>
+                          <Tooltip 
+                            title={descText} 
+                            placement="left" 
+                            arrow={false}
+                            overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' }}
+                          >
+                            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{descText}</p>
+                          </Tooltip>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -513,7 +545,7 @@ const MCPServices: React.FC = () => {
             <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-indigo-500" />
-                {selectedTool.name}
+                {typeof selectedTool.name === 'string' ? selectedTool.name : (selectedTool.name?.zh_Hans || selectedTool.name?.en_US || JSON.stringify(selectedTool.name))}
               </h3>
               <button onClick={() => setSelectedTool(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
@@ -526,7 +558,9 @@ const MCPServices: React.FC = () => {
                   描述
                 </h4>
                 <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  {selectedTool.description}
+                  {typeof selectedTool.description === 'string' 
+                    ? selectedTool.description 
+                    : (selectedTool.description?.zh_Hans || selectedTool.description?.en_US || JSON.stringify(selectedTool.description) || '')}
                 </p>
               </div>
               <div>
