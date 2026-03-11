@@ -11,119 +11,94 @@ const MOCK_MCP_SERVICES = [
   {
     id: '1',
     name: 'Composio Notion MCP',
-    host: 'https://mcp.composio.dev/notion/abc',
+    server_url: 'https://mcp.composio.dev/notion/abc',
     status: 'authorized',
     tools: 5,
     updatedAt: '3分钟前',
-    identifier: 'composio-notion',
+    server_identifier: 'composio-notion',
     clientId: '',
     clientSecret: '',
     timeout: 30,
     sseTimeout: 300,
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600'
+    iconBgColor: 'bg-indigo-600',
+    is_team_authorization: true
   },
   {
     id: '2',
     name: 'Zapier AI Actions',
-    host: 'https://actions.zapier.com/mcp/sse',
+    server_url: 'https://actions.zapier.com/mcp/sse',
     status: 'authorized',
     tools: 5,
     updatedAt: '3分钟前',
-    identifier: 'zapier-actions',
+    server_identifier: 'zapier-actions',
     clientId: '',
     clientSecret: '',
     timeout: 30,
     sseTimeout: 300,
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600'
+    iconBgColor: 'bg-indigo-600',
+    is_team_authorization: true
   },
   {
     id: '3',
     name: 'Gmail MCP',
-    host: 'https://mcp.gmail.com/sse',
+    server_url: 'https://mcp.gmail.com/sse',
     status: 'unconfigured',
     tools: 0,
     updatedAt: '3分钟前',
-    identifier: 'gmail-mcp',
+    server_identifier: 'gmail-mcp',
     clientId: '',
     clientSecret: '',
     timeout: 30,
     sseTimeout: 300,
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600'
+    iconBgColor: 'bg-indigo-600',
+    is_team_authorization: false
   }
 ];
 
 const MOCK_TOOLS = [
     {
         "name": "read_query",
-        "description": "Execute a SELECT query on the IoTDB. Please use table sql_dialect when generating SQL queries.\n\nArgs:\n    query_sql: The SQL query to execute (using TABLE dialect, time using ISO 8601 format, e.g. 2017-11-01T00:08:00.000)",
-        "parameters": {
-            "properties": {
-                "query_sql": {
-                    "title": "Query Sql",
-                    "type": "string"
+        "label": {
+            "en_US": "read_query",
+            "zh_Hans": "read_query"
+        },
+        "description": {
+            "en_US": "Execute a SELECT query on the IoTDB. Please use table sql_dialect when generating SQL queries.\n\nArgs:\n    query_sql: The SQL query to execute (using TABLE dialect, time using ISO 8601 format, e.g. 2017-11-01T00:08:00.000)",
+            "zh_Hans": "在 IoTDB 上执行 SELECT 查询。生成 SQL 查询时请使用 table sql_dialect。\n\n参数：\n    query_sql: 要执行的 SQL 查询（使用 TABLE 方言，时间使用 ISO 8601 格式，例如 2017-11-01T00:08:00.000）"
+        },
+        "parameters": [
+            {
+                "name": "query_sql",
+                "label": {
+                    "en_US": "query_sql",
+                    "zh_Hans": "查询 SQL"
+                },
+                "required": true,
+                "type": "string",
+                "human_description": {
+                    "en_US": "The SQL query to execute",
+                    "zh_Hans": "要执行的 SQL 查询"
                 }
-            },
-            "required": [
-                "query_sql"
-            ],
-            "type": "object"
-        }
+            }
+        ]
     },
     {
         "name": "list_tables",
-        "description": "List all tables in the IoTDB database.",
-        "parameters": {
-            "properties": {},
-            "type": "object"
-        }
-    },
-    {
-        "name": "describe_table",
-        "description": "Get the schema information for a specific table\nArgs:\n    table_name: name of the table to describe",
-        "parameters": {
-            "properties": {
-                "table_name": {
-                    "title": "Table Name",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "table_name"
-            ],
-            "type": "object"
-        }
-    },
-    {
-        "name": "export_table_query",
-        "description": "Execute a query and export the results to a CSV or Excel file.\n\nArgs:\n    query_sql: The SQL query to execute (using TABLE dialect, time using ISO 8601 format, e.g. 2017-11-01T00:08:00.000)\n    format: Export format, either \"csv\" or \"excel\" (default: \"csv\")\n    filename: Optional filename for the exported file. If not provided, a unique filename will be generated.\n            \nSQL Syntax:\n    SELECT ⟨select_list⟩\n      FROM ⟨tables⟩\n      [WHERE ⟨condition⟩]\n      [GROUP BY ⟨groups⟩]\n      [HAVING ⟨group_filter⟩]\n      [FILL ⟨fill_methods⟩]\n      [ORDER BY ⟨order_expression⟩]\n      [OFFSET ⟨n⟩]\n      [LIMIT ⟨n⟩];\n\nReturns:\n    Information about the exported file and a preview of the data (max 10 rows)",
-        "parameters": {
-            "properties": {
-                "query_sql": {
-                    "title": "Query Sql",
-                    "type": "string"
-                },
-                "format": {
-                    "default": "csv",
-                    "title": "Format",
-                    "type": "string"
-                },
-                "filename": {
-                    "default": null,
-                    "title": "Filename",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "query_sql"
-            ],
-            "type": "object"
-        }
+        "label": {
+            "en_US": "list_tables",
+            "zh_Hans": "列出表"
+        },
+        "description": {
+            "en_US": "List all tables in the IoTDB database.",
+            "zh_Hans": "列出 IoTDB 数据库中的所有表。"
+        },
+        "parameters": []
     }
 ];
 
@@ -142,11 +117,20 @@ const MCPServices: React.FC = () => {
     fetchServices();
   }, []);
 
+  const formatTimestamp = (timestamp: number | undefined) => {
+    if (!timestamp) return '刚刚';
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+    return date.toLocaleDateString();
+  };
+
   const fetchServices = async () => {
     try {
       const data = await apiService.fetchCollectionList('mcp');
-      // fetchCollectionList returns ToolProvider[] which has provider, type, is_valid, tools
-      // We map it to the format expected by the UI without fetching details immediately
       if (data && data.length > 0) {
         const mapped = data.map((item: any) => {
           let name = item.label?.zh_Hans || item.label?.en_US || item.name || item.provider || '';
@@ -154,18 +138,20 @@ const MCPServices: React.FC = () => {
             name = name.zh_Hans || name.en_US || JSON.stringify(name);
           }
           const id = item.id || item.provider || (typeof item.name === 'string' ? item.name : '') || '';
+          
           return {
             id: id,
             name: name,
-            host: '', // Will be fetched on demand
-            status: item.is_valid ? 'authorized' : 'unconfigured',
+            server_url: item.server_url || '',
+            status: item.is_team_authorization ? 'authorized' : 'unconfigured',
             tools: item.tools?.length || 0,
-            updatedAt: '刚刚',
-            identifier: id,
+            updatedAt: formatTimestamp(item.updated_at),
+            identifier: item.server_identifier || id,
             icon: item.icon || 'LayoutGrid',
-            iconType: item.icon_type || 'icon',
+            iconType: item.icon_type || (item.icon?.startsWith('http') ? 'image' : 'icon'),
             iconBgColor: item.icon_background || 'bg-indigo-600',
-            rawTools: item.tools || []
+            rawTools: item.tools || [],
+            is_team_authorization: item.is_team_authorization
           };
         });
         setServices(mapped);
@@ -176,6 +162,8 @@ const MCPServices: React.FC = () => {
   };
 
   const renderServiceIcon = (service: any, containerClass: string, iconClass: string) => {
+    const isUrl = typeof service.icon === 'string' && (service.icon.startsWith('http') || service.icon.startsWith('/'));
+
     if (service.iconType === 'sys-icon') {
       return (
         <div className={`${containerClass} bg-gray-50 flex items-center justify-center overflow-hidden`}>
@@ -191,13 +179,14 @@ const MCPServices: React.FC = () => {
       );
     }
 
-    if (service.iconType === 'image') {
+    if (service.iconType === 'image' || isUrl) {
       const src = service.icon_url || service.icon;
       return (
         <img 
           src={src || undefined} 
           alt={service.name} 
           className={`${containerClass} object-cover border border-gray-100`} 
+          referrerPolicy="no-referrer"
         />
       );
     }
@@ -217,7 +206,8 @@ const MCPServices: React.FC = () => {
       ...data,
       status: 'authorized',
       tools: 0,
-      updatedAt: '刚刚'
+      updatedAt: '刚刚',
+      is_team_authorization: true
     };
     setServices([newService, ...services]);
   };
@@ -243,11 +233,12 @@ const MCPServices: React.FC = () => {
       const fullService = {
         ...service,
         name: nameStr,
-        host: typeof detail?.server_url === 'string' ? detail.server_url : (service.host || ''),
-        identifier: typeof detail?.server_identifier === 'string' ? detail.server_identifier : (service.identifier || ''),
-        icon: typeof detail?.icon === 'string' ? detail.icon : service.icon,
-        iconType: typeof detail?.icon_type === 'string' ? detail.icon_type : service.iconType,
-        iconBgColor: typeof detail?.icon_background === 'string' ? detail.icon_background : service.iconBgColor,
+        server_url: detail?.server_url || service.server_url || '',
+        identifier: detail?.server_identifier || service.identifier || '',
+        icon: detail?.icon || service.icon,
+        iconType: detail?.icon_type || (detail?.icon?.startsWith('http') ? 'image' : service.iconType),
+        iconBgColor: detail?.icon_background || service.iconBgColor,
+        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt
       };
       setEditingService(fullService);
       setIsModalOpen(true);
@@ -276,12 +267,13 @@ const MCPServices: React.FC = () => {
       fullService = {
         ...service,
         name: nameStr,
-        host: typeof detail?.server_url === 'string' ? detail.server_url : (service.host || ''),
-        identifier: typeof detail?.server_identifier === 'string' ? detail.server_identifier : (service.identifier || ''),
-        icon: typeof detail?.icon === 'string' ? detail.icon : service.icon,
-        iconType: typeof detail?.icon_type === 'string' ? detail.icon_type : service.iconType,
-        iconBgColor: typeof detail?.icon_background === 'string' ? detail.icon_background : service.iconBgColor,
-        is_team_authorization: detail?.is_team_authorization // Ensure this is mapped
+        server_url: detail?.server_url || service.server_url || '',
+        identifier: detail?.server_identifier || service.identifier || '',
+        icon: detail?.icon || service.icon,
+        iconType: detail?.icon_type || (detail?.icon?.startsWith('http') ? 'image' : service.iconType),
+        iconBgColor: detail?.icon_background || service.iconBgColor,
+        is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
+        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt
       };
       setSelectedService(fullService);
 
@@ -368,7 +360,7 @@ const MCPServices: React.FC = () => {
               <div className="flex-1 min-w-0 pr-4 pt-1">
                 <h3 className="font-bold text-gray-900 text-lg truncate leading-tight group-hover:text-indigo-600 transition-colors">{service.name}</h3>
                 <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
-                    <span className="text-[10px] text-gray-500 font-mono truncate max-w-[120px]">{service.identifier}</span>
+                    <span className="text-[10px] text-gray-500 font-mono truncate max-w-[120px]">{service.server_identifier || service.identifier}</span>
                 </div>
               </div>
             </div>
@@ -439,7 +431,7 @@ const MCPServices: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">{selectedService.host}</p>
+                  <p className="text-sm text-gray-500 mt-1">{selectedService.server_url}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -494,9 +486,9 @@ const MCPServices: React.FC = () => {
                       const descText = typeof tool.description === 'string' 
                         ? tool.description 
                         : (tool.description?.zh_Hans || tool.description?.en_US || JSON.stringify(tool.description) || '');
-                      const nameText = typeof tool.name === 'string'
-                        ? tool.name
-                        : (tool.name?.zh_Hans || tool.name?.en_US || JSON.stringify(tool.name) || '');
+                      const nameText = typeof tool.label === 'object' && tool.label !== null
+                        ? (tool.label.zh_Hans || tool.label.en_US || tool.name)
+                        : (typeof tool.name === 'string' ? tool.name : (tool.name?.zh_Hans || tool.name?.en_US || JSON.stringify(tool.name) || ''));
                       return (
                         <div 
                           key={index} 
@@ -545,7 +537,9 @@ const MCPServices: React.FC = () => {
             <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-indigo-500" />
-                {typeof selectedTool.name === 'string' ? selectedTool.name : (selectedTool.name?.zh_Hans || selectedTool.name?.en_US || JSON.stringify(selectedTool.name))}
+                {typeof selectedTool.label === 'object' && selectedTool.label !== null
+                  ? (selectedTool.label.zh_Hans || selectedTool.label.en_US || selectedTool.name)
+                  : (typeof selectedTool.name === 'string' ? selectedTool.name : (selectedTool.name?.zh_Hans || selectedTool.name?.en_US || JSON.stringify(selectedTool.name)))}
               </h3>
               <button onClick={() => setSelectedTool(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
@@ -568,11 +562,33 @@ const MCPServices: React.FC = () => {
                   <ShieldCheck className="w-4 h-4 text-gray-400" />
                   参数 (Parameters)
                 </h4>
-                <div className="bg-gray-900 rounded-xl p-5 overflow-x-auto shadow-inner">
-                  <pre className="text-xs text-gray-300 font-mono leading-relaxed">
-                    {JSON.stringify(selectedTool.parameters, null, 2)}
-                  </pre>
-                </div>
+                {Array.isArray(selectedTool.parameters) && selectedTool.parameters.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedTool.parameters.map((param: any, pIdx: number) => {
+                      const paramLabel = param.label?.zh_Hans || param.label?.en_US || param.name;
+                      const paramDesc = param.human_description?.zh_Hans || param.human_description?.en_US || '';
+                      return (
+                        <div key={pIdx} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-gray-900">{paramLabel}</span>
+                              <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded font-mono uppercase">{param.type}</span>
+                              {param.required && <span className="text-[10px] text-red-500 font-bold">必填</span>}
+                            </div>
+                            <code className="text-[10px] text-gray-400 font-mono">{param.name}</code>
+                          </div>
+                          {paramDesc && <p className="text-xs text-gray-500 leading-relaxed">{paramDesc}</p>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-gray-900 rounded-xl p-5 overflow-x-auto shadow-inner">
+                    <pre className="text-xs text-gray-300 font-mono leading-relaxed">
+                      {JSON.stringify(selectedTool.parameters, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
             </div>
           </div>

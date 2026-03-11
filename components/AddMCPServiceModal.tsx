@@ -20,9 +20,9 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
   const [activeTab, setActiveTab] = useState<'auth' | 'headers' | 'config'>('auth');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [formData, setFormData] = useState({
-    url: initialData?.host || '',
+    server_url: initialData?.server_url || '',
     name: initialData?.name || '',
-    identifier: initialData?.identifier || '',
+    server_identifier: initialData?.server_identifier || '',
     dynamicRegistration: initialData?.dynamicRegistration || false,
     clientId: initialData?.clientId || '',
     clientSecret: initialData?.clientSecret || '',
@@ -38,9 +38,9 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     if (isOpen) {
       if (initialData) {
         setFormData({
-          url: initialData.host || '',
+          server_url: initialData.server_url || '',
           name: initialData.name || '',
-          identifier: initialData.identifier || '',
+          server_identifier: initialData.server_identifier || '',
           dynamicRegistration: initialData.dynamicRegistration || false,
           clientId: initialData.clientId || '',
           clientSecret: initialData.clientSecret || '',
@@ -53,9 +53,9 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
         setHeaders(initialData.headers || []);
       } else {
         setFormData({
-          url: '',
+          server_url: '',
           name: '',
-          identifier: '',
+          server_identifier: '',
           dynamicRegistration: false,
           clientId: '',
           clientSecret: '',
@@ -70,7 +70,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     }
   }, [initialData, isOpen]);
 
-  const isFormValid = formData.url.trim() !== '' && formData.name.trim() !== '' && formData.identifier.trim() !== '';
+  const isFormValid = formData.server_url.trim() !== '' && formData.name.trim() !== '' && formData.server_identifier.trim() !== '';
 
   const addHeader = () => setHeaders([...headers, { key: '', value: '' }]);
   const updateHeader = (index: number, field: keyof Header, value: string) => {
@@ -115,7 +115,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2.5">服务端点 URL</label>
-              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="服务端点的 URL" value={formData.url} onChange={e => setFormData({...formData, url: e.target.value})} />
+              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="服务端点的 URL" value={formData.server_url} onChange={e => setFormData({...formData, server_url: e.target.value})} />
             </div>
             
             <div className="flex gap-4">
@@ -147,7 +147,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2.5">服务器标识符</label>
-              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="服务器唯一标识，例如 my-mcp-server" value={formData.identifier} onChange={e => setFormData({...formData, identifier: e.target.value})} />
+              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="服务器唯一标识，例如 my-mcp-server" value={formData.server_identifier} onChange={e => setFormData({...formData, server_identifier: e.target.value})} />
               <p className="text-xs text-gray-500 mt-2 leading-relaxed">工作空间内服务器的唯一标识。支持小写字母、数字、下划线和连字符，最多 24 个字符。</p>
             </div>
           </div>

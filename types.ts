@@ -813,14 +813,21 @@ export interface McpTool {
 
 export interface McpProvider {
   id: string;
+  author?: string;
   name: string;
-  server_url: string;
+  description?: TypeWithI18N;
   icon: string;
-  icon_type: string;
-  icon_background: string;
+  icon_dark?: string | null;
+  icon_type?: string;
+  icon_background?: string;
+  label?: TypeWithI18N;
+  type?: string;
+  is_team_authorization: boolean;
+  is_authed?: boolean;
+  allow_delete?: boolean;
+  server_url: string;
+  updated_at: number;
   server_identifier: string;
-  is_authed: boolean;
-  is_team_authorization?: boolean;
   tools?: any[];
 }
 
