@@ -347,10 +347,12 @@ const MCPServices: React.FC = () => {
 
             <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
                <div className="flex items-center gap-4">
-                 <div className="flex items-center gap-1.5 text-gray-500" title="工具数量">
-                    <Zap className="w-3.5 h-3.5" />
-                    <span className="text-xs font-medium">{service.tools}</span>
-                 </div>
+                 <Tooltip title="工具数量" arrow={false}>
+                   <div className="flex items-center gap-1.5 text-gray-500 cursor-help">
+                      <Zap className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">{service.tools}</span>
+                   </div>
+                 </Tooltip>
                  <div className="flex items-center gap-1.5 text-gray-400" title="更新时间">
                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                     <span className="text-xs">{service.updatedAt}</span>
@@ -405,7 +407,7 @@ const MCPServices: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-gray-900 text-xl">{selectedService.name}</h3>
-                    {selectedService.status === 'authorized' && (
+                    {selectedService.is_team_authorization && (
                       <span className="flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium border border-emerald-100">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 已授权
                       </span>
@@ -453,7 +455,7 @@ const MCPServices: React.FC = () => {
             {selectedService.status === 'authorized' ? (
               <div className="flex-grow overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-bold text-gray-900">{tools.length} 个工具已包含</h4>
+                  <h4 className="font-bold text-gray-900">{selectedService.rawTools?.length || 0} 个工具已包含</h4>
                   <button className="text-xs text-primary-600 font-medium flex items-center gap-1 hover:text-primary-700 transition-colors">
                     <Zap className="w-3 h-3" /> 更新
                   </button>
@@ -462,7 +464,7 @@ const MCPServices: React.FC = () => {
                   {loadingTools ? (
                     <p className="text-sm text-gray-400">加载中...</p>
                   ) : (
-                    tools.map((tool, index) => (
+                    (selectedService.rawTools || []).map((tool: any, index: number) => (
                       <div 
                         key={index} 
                         className="p-4 border border-gray-100 rounded-xl hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group"
@@ -475,6 +477,7 @@ const MCPServices: React.FC = () => {
                         <Tooltip 
                           title={tool.description} 
                           placement="left" 
+                          arrow={false}
                           overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' }}
                         >
                           <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{tool.description}</p>
