@@ -477,7 +477,7 @@ const MCPServices: React.FC = () => {
                           <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors" />
                         </div>
                         <Tooltip 
-                          title={tool.description} 
+                          title={typeof tool.description === 'string' ? tool.description : JSON.stringify(tool.description)} 
                           placement="left" 
                           arrow={false}
                           overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' }}
