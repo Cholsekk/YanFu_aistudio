@@ -348,7 +348,7 @@ const MCPServices: React.FC = () => {
             <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
                <div className="flex items-center gap-4">
                  <Tooltip title="工具数量" arrow={false}>
-                   <div className="flex items-center gap-1.5 text-gray-500 cursor-help">
+                   <div className="flex items-center gap-1.5 text-gray-500">
                       <Zap className="w-3.5 h-3.5" />
                       <span className="text-xs font-medium">{service.tools}</span>
                    </div>
@@ -452,7 +452,7 @@ const MCPServices: React.FC = () => {
               </div>
             </div>
             
-            {selectedService.status === 'authorized' ? (
+            {selectedService.is_team_authorization ? (
               <div className="flex-grow overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-bold text-gray-900">{selectedService.rawTools?.length || 0} 个工具已包含</h4>
