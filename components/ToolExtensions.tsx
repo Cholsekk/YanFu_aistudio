@@ -622,7 +622,7 @@ const ToolExtensions: React.FC = () => {
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'builtin' | 'custom' | 'mcp'>('builtin');
+  const [activeTab, setActiveTab] = useState<'builtin' | 'custom' | 'workflow' | 'mcp'>('builtin');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string>('全部');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -926,6 +926,8 @@ const ToolExtensions: React.FC = () => {
         matchesTab = tool.type === 'builtin';
       } else if (activeTab === 'custom') {
         matchesTab = tool.type === 'api' || tool.type === 'workflow';
+      } else if (activeTab === 'workflow') {
+        matchesTab = tool.type === 'workflow';
       } else if (activeTab === 'mcp') {
         matchesTab = tool.type === 'mcp';
       }
@@ -934,6 +936,11 @@ const ToolExtensions: React.FC = () => {
                            tool.description.zh_Hans.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesLabel = selectedLabel === '全部' || (tool.labels && tool.labels.includes(selectedLabel));
       
+      // Filter out 'model' type
+      if (tool.type === 'model') {
+        return false;
+      }
+
       return matchesTab && matchesSearch && matchesLabel;
     });
   }, [activeTab, searchQuery, selectedLabel, tools]);
@@ -969,6 +976,16 @@ const ToolExtensions: React.FC = () => {
             }`}
           >
             自定义工具
+          </button>
+          <button
+            onClick={() => setActiveTab('workflow')}
+            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'workflow'
+                ? 'bg-white text-primary-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            工作流
           </button>
           <button
             onClick={() => setActiveTab('mcp')}
