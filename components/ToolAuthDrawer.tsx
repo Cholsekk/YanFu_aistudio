@@ -1,26 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Collection, ToolExtension, WorkflowToolProviderResponse } from '../types';
-import { X, ExternalLink, ShieldCheck, Info } from 'lucide-react';
+import { Collection, ToolExtension, WorkflowToolProviderResponse, McpProvider, McpTool } from '../types';
+import { X, ExternalLink, ShieldCheck, Info, RefreshCw, Key } from 'lucide-react';
 import ToolParamDrawer from './ToolParamDrawer';
 import { getIcon, SYSTEM_ICONS } from '../constants';
 import * as LucideIcons from 'lucide-react';
+import { apiService } from '../services/apiService';
 
 interface ToolAuthDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   tool: Collection | null;
-  toolDetail: ToolExtension[] | WorkflowToolProviderResponse | null;
+  toolDetail: ToolExtension[] | WorkflowToolProviderResponse | McpProvider | null;
   onAuthorize: () => void;
   onEdit: () => void;
 }
 
 const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize, onEdit }) => {
   const [selectedSubTool, setSelectedSubTool] = useState<ToolExtension | null>(null);
+  const [mcpTools, setMcpTools] = useState<McpTool[]>([]);
+  const [isUpdatingMcpTools, setIsUpdatingMcpTools] = useState(false);
+  const [isAuthenticatingMcp, setIsAuthenticatingMcp] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (toolDetail && isMcpDetail(toolDetail)) {
+      // We could initially fetch tools if needed, but the API is for "update"
+      // Maybe we just show a button to fetch them.
+      setMcpTools([]);
+    }
+  }, [toolDetail]);
+
+  const handleUpdateMcpTools = async () => {
+    if (!toolDetail || !isMcpDetail(toolDetail)) return;
+    setIsUpdatingMcpTools(true);
+    try {
+      const tools = await apiService.updateMcpToolList(toolDetail.id);
+      setMcpTools(tools);
+    } catch (error) {
+      console.error('Failed to update MCP tools:', error);
+      alert('更新工具列表失败');
+    } finally {
+      setIsUpdatingMcpTools(false);
+    }
+  };
+
+  const handleAuthMcpProvider = async () => {
+    if (!toolDetail || !isMcpDetail(toolDetail)) return;
+    setIsAuthenticatingMcp(true);
+    try {
+      const response = await apiService.authMcpProvider(toolDetail.id);
+      if (response && (response.url || response.redirect_url)) {
+        window.location.href = response.url || response.redirect_url;
+      } else {
+        alert('认证成功');
+        // Ideally we would refresh the toolDetail here to update is_authed
+      }
+    } catch (error) {
+      console.error('Failed to authenticate MCP provider:', error);
+      alert('认证失败');
+    } finally {
+      setIsAuthenticatingMcp(false);
+    }
+  };
 
   const isWorkflowDetail = (detail: any): detail is WorkflowToolProviderResponse => {
     return detail && 'workflow_app_id' in detail;
+  };
+
+  const isMcpDetail = (detail: any): detail is McpProvider => {
+    return detail && 'server_url' in detail;
   };
 
   if (!isOpen || !tool) return null;
@@ -226,6 +275,83 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                     )}
                   </div>
                 </div>
+              ) : isMcpDetail(toolDetail) ? (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-medium text-gray-500 text-sm mb-3">服务器配置</h4>
+                    <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4 space-y-3">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-gray-400">服务器 URL</span>
+                        <span className="text-sm font-medium text-gray-900 break-all">{toolDetail.server_url}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-gray-400">服务器标识符</span>
+                        <span className="text-sm font-medium text-gray-900">{toolDetail.server_identifier}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-gray-400">认证状态</span>
+                        <span className={`text-sm font-medium ${toolDetail.is_authed ? 'text-green-600' : 'text-amber-600'}`}>
+                          {toolDetail.is_authed ? '已认证' : '未认证'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleUpdateMcpTools}
+                      disabled={isUpdatingMcpTools}
+                      className="flex-1 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isUpdatingMcpTools ? 'animate-spin' : ''}`} />
+                      更新工具列表
+                    </button>
+                    {!toolDetail.is_authed && (
+                      <button
+                        onClick={handleAuthMcpProvider}
+                        disabled={isAuthenticatingMcp}
+                        className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        <Key className="w-4 h-4" />
+                        {isAuthenticatingMcp ? '认证中...' : '去认证'}
+                      </button>
+                    )}
+                  </div>
+
+                  {mcpTools.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <h4 className="font-semibold text-gray-900">包含工具</h4>
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">
+                          {mcpTools.length}
+                        </span>
+                      </div>
+                      <div className="space-y-4">
+                        {mcpTools.map((mcpTool, index) => (
+                          <div key={index} className="rounded-xl border border-gray-200 p-4 bg-white">
+                            <div className="flex items-start justify-between mb-2">
+                              <h5 className="font-medium text-gray-900">{mcpTool.name}</h5>
+                            </div>
+                            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                              {mcpTool.description}
+                            </p>
+                            {mcpTool.inputSchema && (
+                              <div className="mt-4 pt-4 border-t border-gray-50">
+                                <div className="flex items-center gap-1.5 mb-3 text-xs font-medium text-gray-500">
+                                  <Info className="w-3.5 h-3.5" />
+                                  输入 Schema
+                                </div>
+                                <pre className="text-xs bg-gray-50 p-2 rounded overflow-x-auto text-gray-600">
+                                  {JSON.stringify(mcpTool.inputSchema, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-gray-400">
                   <div className="w-8 h-8 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin mb-3" />
@@ -272,6 +398,20 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                     ) : (
                       <p className="text-sm text-gray-400 italic">无参数配置</p>
                     )}
+                  </div>
+                </div>
+              ) : isMcpDetail(toolDetail) ? (
+                <div>
+                  <h4 className="font-medium text-gray-500 text-sm mb-3">服务器配置</h4>
+                  <div className="bg-gray-50/50 rounded-xl border border-gray-100 p-4 space-y-3">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-400">服务器 URL</span>
+                      <span className="text-sm font-medium text-gray-900 break-all">{toolDetail.server_url}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-400">服务器标识符</span>
+                      <span className="text-sm font-medium text-gray-900">{toolDetail.server_identifier}</span>
+                    </div>
                   </div>
                 </div>
               ) : Array.isArray(toolDetail) ? (

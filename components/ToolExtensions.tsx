@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential, WorkflowToolProviderRequest, WorkflowToolProviderResponse } from '../types';
+import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential, WorkflowToolProviderRequest, WorkflowToolProviderResponse, McpProvider } from '../types';
 import ToolAuthDrawer from './ToolAuthDrawer';
 import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
 import EditCustomToolModal from './EditCustomToolModal';
+import CreateMcpToolModal from './CreateMcpToolModal';
 import { apiService } from '../services/apiService';
 import { getIcon, SYSTEM_ICONS } from '../constants';
 import * as LucideIcons from 'lucide-react';
@@ -630,7 +631,7 @@ const ToolExtensions: React.FC = () => {
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Collection | null>(null);
-  const [toolDetail, setToolDetail] = useState<ToolExtension[] | WorkflowToolProviderResponse | null>(null);
+  const [toolDetail, setToolDetail] = useState<ToolExtension[] | WorkflowToolProviderResponse | McpProvider | null>(null);
 
   // Auth Settings Drawer state
   const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
@@ -639,6 +640,10 @@ const ToolExtensions: React.FC = () => {
 
   // Edit Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // MCP Modal state
+  const [isMcpModalOpen, setIsMcpModalOpen] = useState(false);
+  const [selectedMcpProvider, setSelectedMcpProvider] = useState<McpProvider | null>(null);
 
   // Fetch tools on mount
   useEffect(() => {
@@ -679,13 +684,15 @@ const ToolExtensions: React.FC = () => {
     setToolDetail(null);
     
     try {
-      let response: ToolExtension[] | WorkflowToolProviderResponse | null = null;
+      let response: ToolExtension[] | WorkflowToolProviderResponse | McpProvider | null = null;
       if (tool.type === 'builtin') {
         response = await apiService.fetchBuiltInToolList(tool.name);
       } else if (tool.type === 'api') {
         response = await apiService.fetchCustomToolList(tool.name);
       } else if (tool.type === 'workflow') {
         response = await apiService.fetchWorkflowToolDetail(tool.id);
+      } else if (tool.type === 'mcp') {
+        response = await apiService.fetchMcpProviderDetail(tool.id);
       }
       
       setToolDetail(response);
@@ -749,6 +756,17 @@ const ToolExtensions: React.FC = () => {
   const handleEditTool = async () => {
     if (!selectedTool) return;
     
+    if (selectedTool.type === 'mcp') {
+      try {
+        const detail = await apiService.fetchMcpProviderDetail(selectedTool.id);
+        setSelectedMcpProvider(detail);
+        setIsMcpModalOpen(true);
+      } catch (error) {
+        console.error('Failed to fetch MCP detail for editing:', error);
+      }
+      return;
+    }
+
     try {
       // Fetch labels as requested
       const labelsResponse = await apiService.fetchLabelList();
@@ -787,6 +805,8 @@ const ToolExtensions: React.FC = () => {
           workflow_tool_id: updatedTool.id
         };
         await apiService.saveWorkflowToolProvider(payload);
+      } else if (updatedTool.type === 'mcp') {
+        await apiService.updateMcpProvider(updatedTool);
       }
       
       // Refresh tool list
@@ -812,6 +832,8 @@ const ToolExtensions: React.FC = () => {
         await apiService.removeCustomCollection(selectedTool.name);
       } else if (selectedTool.type === 'workflow') {
         await apiService.deleteWorkflowTool(toolId);
+      } else if (selectedTool.type === 'mcp') {
+        await apiService.deleteMcpProvider(toolId);
       }
       
       // Refresh tool list
@@ -823,6 +845,30 @@ const ToolExtensions: React.FC = () => {
     } catch (error) {
       console.error('Failed to delete tool:', error);
       throw error;
+    }
+  };
+
+  const handleDeleteMcp = async (id: string) => {
+    try {
+      await apiService.deleteMcpProvider(id);
+      await fetchTools();
+      setIsDrawerOpen(false);
+      setSelectedTool(null);
+    } catch (error) {
+      console.error('Failed to delete MCP provider:', error);
+    }
+  };
+
+  const handleSaveMcp = async (data: any) => {
+    try {
+      if ('provider_id' in data) {
+        await apiService.updateMcpProvider(data);
+      } else {
+        await apiService.createMcpProvider(data);
+      }
+      await fetchTools();
+    } catch (error) {
+      console.error('Failed to save MCP provider:', error);
     }
   };
 
@@ -885,6 +931,18 @@ const ToolExtensions: React.FC = () => {
 
         {/* Search & Filter */}
         <div className="flex items-center gap-3 w-full md:w-auto">
+          {activeTab === 'custom' && (
+            <button
+              onClick={() => {
+                setSelectedMcpProvider(null);
+                setIsMcpModalOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm whitespace-nowrap"
+            >
+              <LucideIcons.Plus className="w-4 h-4" />
+              添加 MCP 工具
+            </button>
+          )}
           <div className="relative flex-grow md:flex-grow-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -1123,6 +1181,14 @@ const ToolExtensions: React.FC = () => {
         allLabels={allLabels}
         onSave={handleSaveTool}
         onDelete={handleDeleteTool}
+      />
+
+      <CreateMcpToolModal
+        isOpen={isMcpModalOpen}
+        onClose={() => setIsMcpModalOpen(false)}
+        provider={selectedMcpProvider}
+        onSave={handleSaveMcp}
+        onDelete={handleDeleteMcp}
       />
     </div>
   );

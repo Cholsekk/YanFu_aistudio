@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 const getBaseUrl = () => {
@@ -1005,6 +1005,44 @@ class ApiService {
     return this.request('/workspaces/current/tool-provider/workflow/delete', {
       method: 'POST',
       body: { workflow_tool_id: toolID } as any,
+    });
+  }
+
+  // --- MCP Tool Provider APIs ---
+
+  async fetchMcpProviderDetail(providerId: string): Promise<McpProvider> {
+    return this.request(`/workspaces/current/tool-provider/mcp/tools/${providerId}`);
+  }
+
+  async createMcpProvider(data: McpProviderRequest): Promise<McpProvider> {
+    return this.request('/workspaces/current/tool-provider/mcp', {
+      method: 'POST',
+      body: data as any,
+    });
+  }
+
+  async updateMcpProvider(data: McpProviderUpdateRequest): Promise<void> {
+    return this.request('/workspaces/current/tool-provider/mcp', {
+      method: 'PUT',
+      body: data as any,
+    });
+  }
+
+  async deleteMcpProvider(providerId: string): Promise<void> {
+    return this.request('/workspaces/current/tool-provider/mcp', {
+      method: 'DELETE',
+      body: { provider_id: providerId } as any,
+    });
+  }
+
+  async updateMcpToolList(providerId: string): Promise<McpTool[]> {
+    return this.request(`/workspaces/current/tool-provider/mcp/update/${providerId}`);
+  }
+
+  async authMcpProvider(providerId: string, authorizationCode?: string): Promise<any> {
+    return this.request('/workspaces/current/tool-provider/mcp/auth', {
+      method: 'POST',
+      body: { provider_id: providerId, authorization_code: authorizationCode } as any,
     });
   }
 

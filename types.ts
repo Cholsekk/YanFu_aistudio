@@ -797,6 +797,36 @@ export type Collection = {
   workflow_app_id?: string
 }
 
+export interface McpTool {
+  name: string;
+  description: string;
+  inputSchema: any;
+}
+
+export interface McpProvider {
+  id: string;
+  name: string;
+  server_url: string;
+  icon: string;
+  icon_type: string;
+  icon_background: string;
+  server_identifier: string;
+  is_authed: boolean;
+}
+
+export interface McpProviderRequest {
+  name: string;
+  server_url: string;
+  icon: string;
+  icon_type: string;
+  icon_background?: string;
+  server_identifier: string;
+}
+
+export interface McpProviderUpdateRequest extends McpProviderRequest {
+  provider_id: string;
+}
+
 export type ToolExtensionParameter = {
   name: string
   label: TypeWithI18N
