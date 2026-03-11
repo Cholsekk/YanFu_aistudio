@@ -622,7 +622,7 @@ const ToolExtensions: React.FC = () => {
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'builtin' | 'custom'>('builtin');
+  const [activeTab, setActiveTab] = useState<'builtin' | 'custom' | 'mcp'>('builtin');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string>('全部');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -645,22 +645,57 @@ const ToolExtensions: React.FC = () => {
   const [isMcpModalOpen, setIsMcpModalOpen] = useState(false);
   const [selectedMcpProvider, setSelectedMcpProvider] = useState<McpProvider | null>(null);
 
-  // Fetch tools on mount
+  // Fetch tools when tab changes
   useEffect(() => {
-    fetchTools();
-  }, []);
+    fetchTools(activeTab === 'custom' ? 'api' : activeTab);
+  }, [activeTab]);
 
-  const fetchTools = async () => {
+  const fetchTools = async (type?: string) => {
     setLoading(true);
     setError(null);
     try {
       const [toolsResponse, labelsResponse] = await Promise.all([
-        apiService.fetchCollectionList(),
+        apiService.fetchCollectionList(type),
         apiService.fetchLabelList()
       ]);
       
-      // Handle direct array response
-      setTools(toolsResponse);
+      // Map ToolProvider to Collection safely
+      const mappedTools: Collection[] = toolsResponse.map((item: any) => {
+        const name = item.provider || item.name || '';
+        
+        const label = typeof item.label === 'string' 
+          ? { zh_Hans: item.label, en_US: item.label } 
+          : { 
+              zh_Hans: item.label?.zh_Hans || item.label?.en_US || name, 
+              en_US: item.label?.en_US || item.label?.zh_Hans || name 
+            };
+          
+        const description = typeof item.description === 'string'
+          ? { zh_Hans: item.description, en_US: item.description }
+          : { 
+              zh_Hans: item.description?.zh_Hans || item.description?.en_US || '', 
+              en_US: item.description?.en_US || item.description?.zh_Hans || '' 
+            };
+
+        return {
+          ...item,
+          id: item.id || name,
+          name: name,
+          author: item.author || '',
+          description: description,
+          icon: item.icon || '',
+          label: label,
+          type: item.type,
+          team_credentials: item.team_credentials || {},
+          is_team_authorization: item.is_team_authorization || false,
+          allow_delete: item.allow_delete || false,
+          labels: item.labels || [],
+          is_authorized: item.is_valid !== undefined ? item.is_valid : item.is_authorized,
+          tools: item.tools || []
+        };
+      });
+
+      setTools(mappedTools);
 
       // Handle labels
       const labels = labelsResponse;
@@ -886,7 +921,15 @@ const ToolExtensions: React.FC = () => {
     if (!Array.isArray(tools)) return [];
     
     return tools.filter(tool => {
-      const matchesTab = activeTab === 'builtin' ? tool.type === 'builtin' : tool.type !== 'builtin';
+      let matchesTab = false;
+      if (activeTab === 'builtin') {
+        matchesTab = tool.type === 'builtin';
+      } else if (activeTab === 'custom') {
+        matchesTab = tool.type === 'api' || tool.type === 'workflow';
+      } else if (activeTab === 'mcp') {
+        matchesTab = tool.type === 'mcp';
+      }
+
       const matchesSearch = tool.label.zh_Hans.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            tool.description.zh_Hans.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesLabel = selectedLabel === '全部' || (tool.labels && tool.labels.includes(selectedLabel));
@@ -927,11 +970,21 @@ const ToolExtensions: React.FC = () => {
           >
             自定义工具
           </button>
+          <button
+            onClick={() => setActiveTab('mcp')}
+            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'mcp'
+                ? 'bg-white text-primary-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            MCP工具
+          </button>
         </div>
 
         {/* Search & Filter */}
         <div className="flex items-center gap-3 w-full md:w-auto">
-          {activeTab === 'custom' && (
+          {activeTab === 'mcp' && (
             <button
               onClick={() => {
                 setSelectedMcpProvider(null);
@@ -1044,7 +1097,7 @@ const ToolExtensions: React.FC = () => {
           </p>
           <div className="flex items-center gap-3">
             <button 
-              onClick={fetchTools}
+              onClick={() => fetchTools(activeTab === 'custom' ? 'api' : activeTab)}
               className="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors shadow-sm"
             >
               重试连接
@@ -1113,7 +1166,7 @@ const ToolExtensions: React.FC = () => {
                       return null;
                     })()}
                   </div>
-                  <div className={`w-2 h-2 rounded-full ${tool.is_team_authorization ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-gray-300'}`} title={tool.is_team_authorization ? '已授权' : '未授权'} />
+                  <div className={`w-2 h-2 rounded-full ${tool.is_authorized ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-gray-300'}`} title={tool.is_authorized ? '已授权' : '未授权'} />
                 </div>
                 
                 <div className="mb-3">
@@ -1125,23 +1178,31 @@ const ToolExtensions: React.FC = () => {
                   {tool.description.zh_Hans}
                 </p>
   
-                <div className="flex flex-wrap gap-2 mt-auto">
-                  {tool.labels && tool.labels.length > 0 ? (
-                    tool.labels.map(label => {
-                      const style = getTagStyle(label);
-                      return (
-                        <span 
-                          key={label} 
-                          className={`px-2 py-0.5 rounded text-[10px] font-medium border ${style.bg} ${style.text} ${style.border}`}
-                        >
-                          {LABEL_MAPPING[label] || label}
-                        </span>
-                      );
-                    })
-                  ) : (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-100">
-                      通用
-                    </span>
+                <div className="flex items-center justify-between mt-auto">
+                  <div className="flex flex-wrap gap-2">
+                    {tool.labels && tool.labels.length > 0 ? (
+                      tool.labels.map(label => {
+                        const style = getTagStyle(label);
+                        return (
+                          <span 
+                            key={label} 
+                            className={`px-2 py-0.5 rounded text-[10px] font-medium border ${style.bg} ${style.text} ${style.border}`}
+                          >
+                            {LABEL_MAPPING[label] || label}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-100">
+                        通用
+                      </span>
+                    )}
+                  </div>
+                  {tool.type === 'mcp' && tool.tools && (
+                    <div className="flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                      <Bot className="w-3 h-3" />
+                      {tool.tools.length} 个工具
+                    </div>
                   )}
                 </div>
               </div>

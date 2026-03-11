@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 const getBaseUrl = () => {
@@ -877,8 +877,9 @@ class ApiService {
   // --- Tool Extension APIs ---
 
   // 1. 工具集合管理
-  async fetchCollectionList(): Promise<Collection[]> {
-    return this.request('/workspaces/current/tool-providers');
+  async fetchCollectionList(type?: string): Promise<ToolProvider[]> {
+    const url = type ? `/workspaces/current/tool-providers?type=${type}` : '/workspaces/current/tool-providers';
+    return this.request(url);
   }
 
   async fetchBuiltInToolList(collectionName: string): Promise<ToolExtension[]> {

@@ -795,6 +795,14 @@ export type Collection = {
     sse_read_timeout?: number
   }
   workflow_app_id?: string
+  tools?: any[]
+}
+
+export interface ToolProvider {
+  provider: string;
+  type: string;
+  is_valid: boolean;
+  tools: any[];
 }
 
 export interface McpTool {
