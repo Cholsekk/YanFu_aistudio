@@ -149,15 +149,16 @@ const MCPServices: React.FC = () => {
       // We map it to the format expected by the UI without fetching details immediately
       if (data && data.length > 0) {
         const mapped = data.map((item: any) => {
-          const name = item.label?.zh_Hans || item.label?.en_US || item.name || item.provider;
+          const name = item.label?.zh_Hans || item.label?.en_US || item.name || item.provider || '';
+          const id = item.id || item.provider || item.name || '';
           return {
-            id: item.provider,
+            id: id,
             name: name,
             host: '', // Will be fetched on demand
             status: item.is_valid ? 'authorized' : 'unconfigured',
             tools: item.tools?.length || 0,
             updatedAt: '刚刚',
-            identifier: item.provider,
+            identifier: id,
             icon: item.icon || 'LayoutGrid',
             iconType: item.icon_type || 'icon',
             iconBgColor: item.icon_background || 'bg-indigo-600',
