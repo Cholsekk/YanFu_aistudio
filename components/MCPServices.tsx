@@ -257,9 +257,10 @@ const MCPServices: React.FC = () => {
       return;
     }
     
+    let fullService = service;
     try {
       const detail = await apiService.fetchMcpProviderDetail(service.id);
-      const fullService = {
+      fullService = {
         ...service,
         name: detail.name || service.name,
         host: detail.server_url,
@@ -267,6 +268,7 @@ const MCPServices: React.FC = () => {
         icon: detail.icon || service.icon,
         iconType: detail.icon_type || service.iconType,
         iconBgColor: detail.icon_background || service.iconBgColor,
+        is_team_authorization: detail.is_team_authorization // Ensure this is mapped
       };
       setSelectedService(fullService);
     } catch (error) {
@@ -274,7 +276,7 @@ const MCPServices: React.FC = () => {
       setSelectedService(service);
     }
 
-    if (service.status === 'authorized') {
+    if (fullService.is_team_authorization) {
       setLoadingTools(true);
       // 模拟请求
       await new Promise(resolve => setTimeout(resolve, 500));
