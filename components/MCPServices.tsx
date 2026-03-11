@@ -128,7 +128,7 @@ const MOCK_TOOLS = [
 ];
 
 const MCPServices: React.FC = () => {
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>(MOCK_MCP_SERVICES);
   const [selectedService, setSelectedService] = useState<any | null>(null);
   const [tools, setTools] = useState<any[]>([]);
   const [loadingTools, setLoadingTools] = useState(false);
@@ -146,42 +146,26 @@ const MCPServices: React.FC = () => {
     try {
       const data = await apiService.fetchCollectionList('mcp');
       // fetchCollectionList returns ToolProvider[] which has provider, type, is_valid, tools
-      // We need to map it to the format expected by the UI
-      const mapped = await Promise.all(data.map(async (item: any) => {
-        try {
-          // Fetch details to get icon, url, etc.
-          const detail = await apiService.fetchMcpProviderDetail(item.provider);
-          return {
-            id: detail.id,
-            name: detail.name,
-            host: detail.server_url,
-            status: item.is_valid ? 'authorized' : 'unconfigured',
-            tools: item.tools?.length || 0,
-            updatedAt: '刚刚',
-            identifier: detail.server_identifier,
-            icon: detail.icon || 'LayoutGrid',
-            iconType: detail.icon_type || 'icon',
-            iconBgColor: detail.icon_background || 'bg-indigo-600',
-            rawTools: item.tools || []
-          };
-        } catch (e) {
-          // Fallback if detail fetch fails
+      // We map it to the format expected by the UI without fetching details immediately
+      if (data && data.length > 0) {
+        const mapped = data.map((item: any) => {
+          const name = item.label?.zh_Hans || item.label?.en_US || item.name || item.provider;
           return {
             id: item.provider,
-            name: item.provider,
-            host: '',
+            name: name,
+            host: '', // Will be fetched on demand
             status: item.is_valid ? 'authorized' : 'unconfigured',
             tools: item.tools?.length || 0,
             updatedAt: '刚刚',
             identifier: item.provider,
-            icon: 'LayoutGrid',
-            iconType: 'icon',
-            iconBgColor: 'bg-indigo-600',
+            icon: item.icon || 'LayoutGrid',
+            iconType: item.icon_type || 'icon',
+            iconBgColor: item.icon_background || 'bg-indigo-600',
             rawTools: item.tools || []
           };
-        }
-      }));
-      setServices(mapped);
+        });
+        setServices(mapped);
+      }
     } catch (error) {
       console.error('Failed to fetch MCP services:', error);
     }
@@ -223,57 +207,47 @@ const MCPServices: React.FC = () => {
 
   // Removed menuRef and handleClickOutside logic
 
-  const handleAddService = async (data: any) => {
-    try {
-      const requestData: McpProviderRequest = {
-        name: data.name,
-        server_url: data.url,
-        icon: data.icon,
-        icon_type: data.iconType,
-        icon_background: data.iconBgColor,
-        server_identifier: data.identifier
-      };
-      await apiService.createMcpProvider(requestData);
-      fetchServices();
-    } catch (error) {
-      console.error('Failed to add MCP service:', error);
-    }
+  const handleAddService = (data: any) => {
+    const newService = {
+      id: Date.now().toString(),
+      ...data,
+      status: 'authorized',
+      tools: 0,
+      updatedAt: '刚刚'
+    };
+    setServices([newService, ...services]);
   };
 
-  const handleUpdateService = async (data: any) => {
-    if (!editingService) return;
-    try {
-      const requestData: McpProviderUpdateRequest = {
-        provider_id: editingService.id,
-        name: data.name,
-        server_url: data.url,
-        icon: data.icon,
-        icon_type: data.iconType,
-        icon_background: data.iconBgColor,
-        server_identifier: data.identifier
-      };
-      await apiService.updateMcpProvider(requestData);
-      setEditingService(null);
-      fetchServices();
-    } catch (error) {
-      console.error('Failed to update MCP service:', error);
-    }
+  const handleUpdateService = (data: any) => {
+    setServices(services.map(s => s.id === editingService?.id ? { ...s, ...data } : s));
+    setEditingService(null);
   };
 
-  const handleDeleteService = async (id: string) => {
-    try {
-      await apiService.deleteMcpProvider(id);
-      setMenuOpenId(null);
-      fetchServices();
-    } catch (error) {
-      console.error('Failed to delete MCP service:', error);
-    }
-  };
-
-  const handleEditClick = (service: any) => {
-    setEditingService(service);
-    setIsModalOpen(true);
+  const handleDeleteService = (id: string) => {
+    setServices(services.filter(s => s.id !== id));
     setMenuOpenId(null);
+  };
+
+  const handleEditClick = async (service: any) => {
+    setMenuOpenId(null);
+    try {
+      const detail = await apiService.fetchMcpProviderDetail(service.id);
+      const fullService = {
+        ...service,
+        name: detail.name || service.name,
+        host: detail.server_url,
+        identifier: detail.server_identifier,
+        icon: detail.icon || service.icon,
+        iconType: detail.icon_type || service.iconType,
+        iconBgColor: detail.icon_background || service.iconBgColor,
+      };
+      setEditingService(fullService);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Failed to fetch MCP details for edit:', error);
+      setEditingService(service);
+      setIsModalOpen(true);
+    }
   };
 
   const handleSelectService = async (service: any) => {
@@ -282,31 +256,31 @@ const MCPServices: React.FC = () => {
       return;
     }
     
-    setSelectedService(service);
+    try {
+      const detail = await apiService.fetchMcpProviderDetail(service.id);
+      const fullService = {
+        ...service,
+        name: detail.name || service.name,
+        host: detail.server_url,
+        identifier: detail.server_identifier,
+        icon: detail.icon || service.icon,
+        iconType: detail.icon_type || service.iconType,
+        iconBgColor: detail.icon_background || service.iconBgColor,
+      };
+      setSelectedService(fullService);
+    } catch (error) {
+      console.error('Failed to fetch MCP details:', error);
+      setSelectedService(service);
+    }
+
     if (service.status === 'authorized') {
       setLoadingTools(true);
-      try {
-        const toolsList = await apiService.updateMcpToolList(service.id);
-        setTools(toolsList);
-      } catch (error) {
-        console.error('Failed to fetch MCP tools:', error);
-        setTools(service.rawTools || []);
-      } finally {
-        setLoadingTools(false);
-      }
+      // 模拟请求
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setTools(MOCK_TOOLS);
+      setLoadingTools(false);
     } else {
       setTools([]);
-    }
-  };
-
-  const handleAuthService = async () => {
-    if (!selectedService) return;
-    try {
-      await apiService.authMcpProvider(selectedService.id);
-      fetchServices();
-      setSelectedService({ ...selectedService, status: 'authorized' });
-    } catch (error) {
-      console.error('Failed to authorize MCP service:', error);
     }
   };
 
@@ -479,22 +453,8 @@ const MCPServices: React.FC = () => {
               <div className="flex-grow overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-bold text-gray-900">{tools.length} 个工具已包含</h4>
-                  <button 
-                    onClick={async () => {
-                      setLoadingTools(true);
-                      try {
-                        const toolsList = await apiService.updateMcpToolList(selectedService.id);
-                        setTools(toolsList);
-                        fetchServices(); // Refresh tool count
-                      } catch (error) {
-                        console.error('Failed to refresh MCP tools:', error);
-                      } finally {
-                        setLoadingTools(false);
-                      }
-                    }}
-                    className="text-xs text-primary-600 font-medium flex items-center gap-1 hover:text-primary-700 transition-colors"
-                  >
-                    <Zap className={`w-3 h-3 ${loadingTools ? 'animate-spin' : ''}`} /> 更新
+                  <button className="text-xs text-primary-600 font-medium flex items-center gap-1 hover:text-primary-700 transition-colors">
+                    <Zap className="w-3 h-3" /> 更新
                   </button>
                 </div>
                 <div className="space-y-3">
@@ -525,10 +485,7 @@ const MCPServices: React.FC = () => {
               </div>
             ) : (
               <>
-                <button 
-                  onClick={handleAuthService}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold mb-8 shadow-lg shadow-indigo-200 transition-all"
-                >
+                <button className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold mb-8 shadow-lg shadow-indigo-200 transition-all">
                   授权
                 </button>
                 
