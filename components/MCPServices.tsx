@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal, Zap, Edit2, Trash2 } from 'lucide-react';
 import { Tooltip, message } from 'antd';
+import dayjs from 'dayjs';
 import MCPServiceModal from './AddMCPServiceModal';
 import { getIcon } from '../constants';
 import { apiService } from '../services/apiService';
@@ -14,7 +15,8 @@ const MOCK_MCP_SERVICES = [
     server_url: 'https://mcp.composio.dev/notion/abc',
     status: 'authorized',
     tools: 5,
-    updatedAt: '3分钟前',
+    updatedAt: '2026-03-12 11:35:00',
+    updated_at: 1741779300,
     server_identifier: 'composio-notion',
     clientId: '',
     clientSecret: '',
@@ -31,7 +33,8 @@ const MOCK_MCP_SERVICES = [
     server_url: 'https://actions.zapier.com/mcp/sse',
     status: 'authorized',
     tools: 5,
-    updatedAt: '3分钟前',
+    updatedAt: '2026-03-12 11:30:00',
+    updated_at: 1741779000,
     server_identifier: 'zapier-actions',
     clientId: '',
     clientSecret: '',
@@ -48,7 +51,8 @@ const MOCK_MCP_SERVICES = [
     server_url: 'https://mcp.gmail.com/sse',
     status: 'unconfigured',
     tools: 0,
-    updatedAt: '3分钟前',
+    updatedAt: '2026-03-12 11:25:00',
+    updated_at: 1741778700,
     server_identifier: 'gmail-mcp',
     clientId: '',
     clientSecret: '',
@@ -117,17 +121,6 @@ const MCPServices: React.FC = () => {
     fetchServices();
   }, []);
 
-  const formatTimestamp = (timestamp: number | undefined) => {
-    if (!timestamp) return '刚刚';
-    const date = new Date(timestamp * 1000);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-    if (diff < 60) return '刚刚';
-    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
-    return date.toLocaleDateString();
-  };
-
   const fetchServices = async () => {
     try {
       const data = await apiService.fetchCollectionList('mcp');
@@ -145,7 +138,8 @@ const MCPServices: React.FC = () => {
             server_url: item.server_url || '',
             status: item.is_team_authorization ? 'authorized' : 'unconfigured',
             tools: item.tools?.length || 0,
-            updatedAt: formatTimestamp(item.updated_at),
+            updatedAt: item.updated_at ? dayjs(item.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : '刚刚',
+            updated_at: item.updated_at,
             identifier: item.server_identifier || id,
             icon: item.icon || 'LayoutGrid',
             iconType: item.icon_type || (typeof item.icon === 'string' && item.icon.startsWith('http') ? 'image' : 'icon'),
@@ -202,6 +196,13 @@ const MCPServices: React.FC = () => {
 
   const handleAddService = async (data: any) => {
     try {
+      const headersObj: Record<string, string> = {};
+      if (data.headers && Array.isArray(data.headers)) {
+        data.headers.forEach((h: any) => {
+          if (h.key) headersObj[h.key] = h.value || '';
+        });
+      }
+
       const requestData: McpProviderRequest = {
         name: data.name,
         server_url: data.server_url,
@@ -209,12 +210,14 @@ const MCPServices: React.FC = () => {
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
-        dynamic_registration: data.dynamicRegistration,
-        client_id: data.clientId,
-        client_secret: data.clientSecret,
-        timeout: data.timeout,
-        sse_timeout: data.sseTimeout,
-        headers: data.headers,
+        extra: {
+          dynamic_registration: data.dynamicRegistration,
+          client_id: data.clientId,
+          client_secret: data.clientSecret,
+          timeout: data.timeout,
+          sse_timeout: data.sseTimeout,
+          headers: headersObj,
+        }
       };
       await apiService.createMcpProvider(requestData);
       message.success('添加成功');
@@ -228,6 +231,13 @@ const MCPServices: React.FC = () => {
   const handleUpdateService = async (data: any) => {
     if (!editingService) return;
     try {
+      const headersObj: Record<string, string> = {};
+      if (data.headers && Array.isArray(data.headers)) {
+        data.headers.forEach((h: any) => {
+          if (h.key) headersObj[h.key] = h.value || '';
+        });
+      }
+
       const requestData: McpProviderUpdateRequest = {
         provider_id: editingService.id,
         name: data.name,
@@ -236,12 +246,14 @@ const MCPServices: React.FC = () => {
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
-        dynamic_registration: data.dynamicRegistration,
-        client_id: data.clientId,
-        client_secret: data.clientSecret,
-        timeout: data.timeout,
-        sse_timeout: data.sseTimeout,
-        headers: data.headers,
+        extra: {
+          dynamic_registration: data.dynamicRegistration,
+          client_id: data.clientId,
+          client_secret: data.clientSecret,
+          timeout: data.timeout,
+          sse_timeout: data.sseTimeout,
+          headers: headersObj,
+        }
       };
       await apiService.updateMcpProvider(requestData);
       message.success('更新成功');
@@ -273,21 +285,23 @@ const MCPServices: React.FC = () => {
       if (typeof nameStr === 'object' && nameStr !== null) {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
-      const fullService = {
-        ...service,
-        name: nameStr,
-        server_url: detail?.server_url || service.server_url || '',
-        server_identifier: detail?.server_identifier || service.identifier || '',
-        icon: detail?.icon || service.icon,
-        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
-        iconBgColor: detail?.icon_background || service.iconBgColor,
-        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt,
-        dynamicRegistration: detail?.dynamic_registration,
-        clientId: detail?.client_id,
-        clientSecret: detail?.client_secret,
-        timeout: detail?.timeout,
-        sseTimeout: detail?.sse_timeout,
-        headers: detail?.headers
+        const extra = detail?.extra || {};
+        const fullService = {
+          ...service,
+          name: nameStr,
+          server_url: detail?.server_url || service.server_url || '',
+          server_identifier: detail?.server_identifier || service.identifier || '',
+          icon: detail?.icon || service.icon,
+          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+          iconBgColor: detail?.icon_background || service.iconBgColor,
+          updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
+          updated_at: detail?.updated_at || service.updated_at,
+          dynamicRegistration: extra.dynamic_registration ?? detail?.dynamic_registration,
+        clientId: extra.client_id ?? detail?.client_id,
+        clientSecret: extra.client_secret ?? detail?.client_secret,
+        timeout: extra.timeout ?? detail?.timeout,
+        sseTimeout: extra.sse_timeout ?? detail?.sse_timeout,
+        headers: extra.headers ? Object.entries(extra.headers).map(([key, value]) => ({ key, value: String(value) })) : (detail?.headers || [])
       };
       setEditingService(fullService);
       setIsModalOpen(true);
@@ -313,22 +327,24 @@ const MCPServices: React.FC = () => {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
 
-      fullService = {
-        ...service,
-        name: nameStr,
-        server_url: detail?.server_url || service.server_url || '',
-        identifier: detail?.server_identifier || service.identifier || '',
-        icon: detail?.icon || service.icon,
-        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
-        iconBgColor: detail?.icon_background || service.iconBgColor,
-        is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
-        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt,
-        dynamic_registration: detail?.dynamic_registration,
-        client_id: detail?.client_id,
-        client_secret: detail?.client_secret,
-        timeout: detail?.timeout,
-        sse_timeout: detail?.sse_timeout,
-        headers: detail?.headers
+        const extra = detail?.extra || {};
+        fullService = {
+          ...service,
+          name: nameStr,
+          server_url: detail?.server_url || service.server_url || '',
+          identifier: detail?.server_identifier || service.identifier || '',
+          icon: detail?.icon || service.icon,
+          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+          iconBgColor: detail?.icon_background || service.iconBgColor,
+          is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
+          updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
+          updated_at: detail?.updated_at || service.updated_at,
+          dynamic_registration: extra.dynamic_registration ?? detail?.dynamic_registration,
+        client_id: extra.client_id ?? detail?.client_id,
+        client_secret: extra.client_secret ?? detail?.client_secret,
+        timeout: extra.timeout ?? detail?.timeout,
+        sse_timeout: extra.sse_timeout ?? detail?.sse_timeout,
+        headers: extra.headers ? Object.entries(extra.headers).map(([key, value]) => ({ key, value: String(value) })) : (detail?.headers || [])
       };
       setSelectedService(fullService);
 
@@ -426,10 +442,12 @@ const MCPServices: React.FC = () => {
                     <Zap className="w-3.5 h-3.5" />
                     <span className="text-xs font-medium">{service.tools}</span>
                  </div>
-                 <div className="flex items-center gap-1.5 text-gray-400" title="更新时间">
-                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                    <span className="text-xs">{service.updatedAt}</span>
-                 </div>
+                  <Tooltip title={`更新时间: ${service.updatedAt}`} arrow={false}>
+                    <div className="flex items-center gap-1.5 text-gray-400">
+                      <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                      <span className="text-xs">{service.updatedAt}</span>
+                    </div>
+                  </Tooltip>
                </div>
                
                <div className="relative">

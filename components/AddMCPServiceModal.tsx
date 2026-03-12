@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, AlertTriangle, Pencil } from 'lucide-react';
 import Modal from './Modal';
 import IconPickerModal from './IconPickerModal';
-import { getIcon } from '../constants';
+import { getIcon, SYS_ICON_IDS } from '../constants';
 
 interface Header {
   key: string;
@@ -28,8 +28,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     clientSecret: initialData?.clientSecret || '',
     timeout: initialData?.timeout || 30,
     sseTimeout: initialData?.sseTimeout || 300,
-    icon: initialData?.icon || 'LayoutGrid',
-    iconType: initialData?.iconType || 'icon',
+    icon: initialData?.icon || SYS_ICON_IDS[0],
+    iconType: initialData?.iconType || 'sys-icon',
     iconBgColor: initialData?.iconBgColor || 'bg-indigo-600'
   });
   const [headers, setHeaders] = useState<Header[]>(initialData?.headers || []);
@@ -46,8 +46,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           clientSecret: initialData.clientSecret || '',
           timeout: initialData.timeout || 30,
           sseTimeout: initialData.sseTimeout || 300,
-          icon: initialData.icon || 'LayoutGrid',
-          iconType: initialData.iconType || 'icon',
+          icon: initialData.icon || SYS_ICON_IDS[0],
+          iconType: initialData.iconType || 'sys-icon',
           iconBgColor: initialData.iconBgColor || 'bg-indigo-600'
         });
         setHeaders(initialData.headers || []);
@@ -61,8 +61,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           clientSecret: '',
           timeout: 30,
           sseTimeout: 300,
-          icon: 'LayoutGrid',
-          iconType: 'icon',
+          icon: SYS_ICON_IDS[0],
+          iconType: 'sys-icon',
           iconBgColor: 'bg-indigo-600'
         });
         setHeaders([]);
