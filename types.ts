@@ -877,6 +877,7 @@ export interface McpProviderRequest {
   icon_background?: string;
   server_identifier: string;
   is_dynamic_registration?: boolean;
+  is_team_authorization?: boolean;
   authentication?: {
     client_id?: string
     client_secret?: string

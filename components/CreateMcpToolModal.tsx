@@ -109,6 +109,7 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
           icon_type: iconType,
           icon_background: iconBackground,
           is_dynamic_registration: isDynamicRegistration,
+          is_team_authorization: false,
           authentication: auth,
           configuration: config
         };
