@@ -331,20 +331,38 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                         {mcpTools.map((mcpTool, index) => (
                           <div key={index} className="rounded-xl border border-gray-200 p-4 bg-white">
                             <div className="flex items-start justify-between mb-2">
-                              <h5 className="font-medium text-gray-900">{mcpTool.name}</h5>
+                              <h5 className="font-medium text-gray-900">{mcpTool.label?.zh_Hans || mcpTool.name}</h5>
+                              <span className="text-xs font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                                {mcpTool.name}
+                              </span>
                             </div>
                             <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                              {mcpTool.description}
+                              {mcpTool.description?.zh_Hans || mcpTool.description?.en_US || ''}
                             </p>
-                            {mcpTool.inputSchema && (
+                            {mcpTool.parameters && mcpTool.parameters.length > 0 && (
                               <div className="mt-4 pt-4 border-t border-gray-50">
                                 <div className="flex items-center gap-1.5 mb-3 text-xs font-medium text-gray-500">
                                   <Info className="w-3.5 h-3.5" />
-                                  输入 Schema
+                                  参数列表
                                 </div>
-                                <pre className="text-xs bg-gray-50 p-2 rounded overflow-x-auto text-gray-600">
-                                  {JSON.stringify(mcpTool.inputSchema, null, 2)}
-                                </pre>
+                                <div className="space-y-2">
+                                  {mcpTool.parameters.map((param) => (
+                                    <div key={param.name} className="flex items-baseline gap-2 text-xs">
+                                      <span className="font-mono text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">
+                                        {param.name}
+                                      </span>
+                                      <span className="text-gray-400">
+                                        {param.type}
+                                      </span>
+                                      {param.required && (
+                                        <span className="text-red-500 scale-75 origin-left">*</span>
+                                      )}
+                                      <span className="text-gray-500 truncate flex-1">
+                                        - {param.human_description?.zh_Hans || param.label?.zh_Hans || param.name}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>

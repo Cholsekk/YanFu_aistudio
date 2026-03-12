@@ -801,30 +801,61 @@ export interface ToolProvider {
   tools: any[];
 }
 
-export interface McpTool {
+export interface McpToolParameter {
   name: string;
-  description: string;
-  inputSchema: any;
+  label: TypeWithI18N | null;
+  placeholder: string | null;
+  scope: string | null;
+  auto_generate: string | null;
+  template: string | null;
+  required: boolean;
+  default: any | null;
+  min: number | null;
+  max: number | null;
+  precision: number | null;
+  options: string[];
+  type: string;
+  human_description: TypeWithI18N | null;
+  form: string;
+  llm_description: string;
+  input_schema: any | null;
+}
+
+export interface McpTool {
+  author: string;
+  name: string;
+  label: TypeWithI18N;
+  description: TypeWithI18N;
+  parameters: McpToolParameter[];
+  labels: string[];
+  output_schema: any | null;
 }
 
 export interface McpProvider {
   id: string;
-  author?: string;
+  author: string;
   name: string;
-  description?: TypeWithI18N;
+  description: TypeWithI18N;
   icon: string;
-  icon_dark?: string | null;
-  icon_type?: string;
-  icon_background?: string;
-  label?: TypeWithI18N;
-  type?: string;
+  icon_dark: string | null;
+  label: TypeWithI18N;
+  type: string;
+  masked_credentials: any | null;
+  original_credentials: any | null;
   is_team_authorization: boolean;
-  is_authed?: boolean;
-  allow_delete?: boolean;
+  allow_delete: boolean;
+  plugin_id: string;
+  plugin_unique_identifier: string;
+  tools: McpTool[];
+  labels: string[];
   server_url: string;
   updated_at: number;
   server_identifier: string;
-  tools?: any[];
+  
+  // Keep these optional fields for UI/other API endpoints compatibility
+  icon_type?: string;
+  icon_background?: string;
+  is_authed?: boolean;
   is_dynamic_registration?: boolean;
   authentication?: {
     client_id?: string
