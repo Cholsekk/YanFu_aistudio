@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal, Zap, Edit2, Trash2 } from 'lucide-react';
-import { Tooltip } from 'antd';
+import { Tooltip, message } from 'antd';
 import MCPServiceModal from './AddMCPServiceModal';
 import { getIcon } from '../constants';
 import { apiService } from '../services/apiService';
@@ -148,7 +148,7 @@ const MCPServices: React.FC = () => {
             updatedAt: formatTimestamp(item.updated_at),
             identifier: item.server_identifier || id,
             icon: item.icon || 'LayoutGrid',
-            iconType: item.icon_type || (item.icon?.startsWith('http') ? 'image' : 'icon'),
+            iconType: item.icon_type || (typeof item.icon === 'string' && item.icon.startsWith('http') ? 'image' : 'icon'),
             iconBgColor: item.icon_background || 'bg-indigo-600',
             rawTools: item.tools || [],
             is_team_authorization: item.is_team_authorization
@@ -200,26 +200,69 @@ const MCPServices: React.FC = () => {
 
   // Removed menuRef and handleClickOutside logic
 
-  const handleAddService = (data: any) => {
-    const newService = {
-      id: Date.now().toString(),
-      ...data,
-      status: 'authorized',
-      tools: 0,
-      updatedAt: '刚刚',
-      is_team_authorization: true
-    };
-    setServices([newService, ...services]);
+  const handleAddService = async (data: any) => {
+    try {
+      const requestData: McpProviderRequest = {
+        name: data.name,
+        server_url: data.server_url,
+        icon: data.icon,
+        icon_type: data.iconType,
+        icon_background: data.iconBgColor,
+        server_identifier: data.server_identifier,
+        dynamic_registration: data.dynamicRegistration,
+        client_id: data.clientId,
+        client_secret: data.clientSecret,
+        timeout: data.timeout,
+        sse_timeout: data.sseTimeout,
+        headers: data.headers,
+      };
+      await apiService.createMcpProvider(requestData);
+      message.success('添加成功');
+      fetchServices();
+    } catch (error: any) {
+      console.error('Failed to add MCP service:', error);
+      message.error('添加失败: ' + (error.message || '未知错误'));
+    }
   };
 
-  const handleUpdateService = (data: any) => {
-    setServices(services.map(s => s.id === editingService?.id ? { ...s, ...data } : s));
-    setEditingService(null);
+  const handleUpdateService = async (data: any) => {
+    if (!editingService) return;
+    try {
+      const requestData: McpProviderUpdateRequest = {
+        provider_id: editingService.id,
+        name: data.name,
+        server_url: data.server_url,
+        icon: data.icon,
+        icon_type: data.iconType,
+        icon_background: data.iconBgColor,
+        server_identifier: data.server_identifier,
+        dynamic_registration: data.dynamicRegistration,
+        client_id: data.clientId,
+        client_secret: data.clientSecret,
+        timeout: data.timeout,
+        sse_timeout: data.sseTimeout,
+        headers: data.headers,
+      };
+      await apiService.updateMcpProvider(requestData);
+      message.success('更新成功');
+      setEditingService(null);
+      fetchServices();
+    } catch (error: any) {
+      console.error('Failed to update MCP service:', error);
+      message.error('更新失败: ' + (error.message || '未知错误'));
+    }
   };
 
-  const handleDeleteService = (id: string) => {
-    setServices(services.filter(s => s.id !== id));
-    setMenuOpenId(null);
+  const handleDeleteService = async (id: string) => {
+    try {
+      await apiService.deleteMcpProvider(id);
+      setServices(services.filter(s => s.id !== id));
+      setMenuOpenId(null);
+      message.success('删除成功');
+    } catch (error: any) {
+      console.error('Failed to delete MCP service:', error);
+      message.error('删除失败: ' + (error.message || '未知错误'));
+    }
   };
 
   const handleEditClick = async (service: any) => {
@@ -234,11 +277,17 @@ const MCPServices: React.FC = () => {
         ...service,
         name: nameStr,
         server_url: detail?.server_url || service.server_url || '',
-        identifier: detail?.server_identifier || service.identifier || '',
+        server_identifier: detail?.server_identifier || service.identifier || '',
         icon: detail?.icon || service.icon,
-        iconType: detail?.icon_type || (detail?.icon?.startsWith('http') ? 'image' : service.iconType),
+        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
         iconBgColor: detail?.icon_background || service.iconBgColor,
-        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt
+        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt,
+        dynamicRegistration: detail?.dynamic_registration,
+        clientId: detail?.client_id,
+        clientSecret: detail?.client_secret,
+        timeout: detail?.timeout,
+        sseTimeout: detail?.sse_timeout,
+        headers: detail?.headers
       };
       setEditingService(fullService);
       setIsModalOpen(true);
@@ -270,10 +319,16 @@ const MCPServices: React.FC = () => {
         server_url: detail?.server_url || service.server_url || '',
         identifier: detail?.server_identifier || service.identifier || '',
         icon: detail?.icon || service.icon,
-        iconType: detail?.icon_type || (detail?.icon?.startsWith('http') ? 'image' : service.iconType),
+        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
         iconBgColor: detail?.icon_background || service.iconBgColor,
         is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
-        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt
+        updatedAt: detail?.updated_at ? formatTimestamp(detail.updated_at) : service.updatedAt,
+        dynamic_registration: detail?.dynamic_registration,
+        client_id: detail?.client_id,
+        client_secret: detail?.client_secret,
+        timeout: detail?.timeout,
+        sse_timeout: detail?.sse_timeout,
+        headers: detail?.headers
       };
       setSelectedService(fullService);
 
