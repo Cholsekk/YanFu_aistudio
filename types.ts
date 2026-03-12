@@ -829,13 +829,16 @@ export interface McpProvider {
   updated_at: number;
   server_identifier: string;
   tools?: any[];
-  dynamic_registration?: boolean;
-  client_id?: string;
-  client_secret?: string;
-  timeout?: number;
-  sse_timeout?: number;
+  is_dynamic_registration?: boolean;
+  authentication?: {
+    client_id?: string;
+    client_secret?: string;
+  };
+  configuration?: {
+    timeout?: number;
+    sse_read_timeout?: number;
+  };
   headers?: { key: string; value: string }[];
-  extra?: Record<string, any>;
 }
 
 export interface McpProviderRequest {
@@ -845,7 +848,16 @@ export interface McpProviderRequest {
   icon_type: string;
   icon_background?: string;
   server_identifier: string;
-  extra?: Record<string, any>;
+  is_dynamic_registration?: boolean;
+  authentication?: {
+    client_id?: string;
+    client_secret?: string;
+  };
+  configuration?: {
+    timeout?: number;
+    sse_read_timeout?: number;
+  };
+  headers?: Record<string, string>;
 }
 
 export interface McpProviderUpdateRequest extends McpProviderRequest {

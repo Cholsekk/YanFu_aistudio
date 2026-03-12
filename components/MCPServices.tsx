@@ -203,23 +203,43 @@ const MCPServices: React.FC = () => {
         });
       }
 
-      const requestData: McpProviderRequest = {
+      const requestData: any = {
         name: data.name,
         server_url: data.server_url,
         icon: data.icon,
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
-        extra: {
-          dynamic_registration: data.dynamicRegistration,
+        is_dynamic_registration: data.dynamicRegistration,
+        authentication: {
           client_id: data.clientId,
           client_secret: data.clientSecret,
+        },
+        configuration: {
           timeout: data.timeout,
-          sse_timeout: data.sseTimeout,
-          headers: headersObj,
-        }
+          sse_read_timeout: data.sseTimeout,
+        },
+        headers: Object.keys(headersObj).length > 0 ? headersObj : undefined,
       };
-      await apiService.createMcpProvider(requestData);
+
+      // Filter out empty values and nested empty objects
+      Object.keys(requestData).forEach(key => {
+        if (requestData[key] === undefined || requestData[key] === null || requestData[key] === '') {
+          delete requestData[key];
+        } else if (typeof requestData[key] === 'object' && !Array.isArray(requestData[key])) {
+          const subObj = requestData[key];
+          Object.keys(subObj).forEach(subKey => {
+            if (subObj[subKey] === undefined || subObj[subKey] === null || subObj[subKey] === '') {
+              delete subObj[subKey];
+            }
+          });
+          if (Object.keys(subObj).length === 0) {
+            delete requestData[key];
+          }
+        }
+      });
+
+      await apiService.createMcpProvider(requestData as McpProviderRequest);
       message.success('添加成功');
       fetchServices();
     } catch (error: any) {
@@ -238,7 +258,7 @@ const MCPServices: React.FC = () => {
         });
       }
 
-      const requestData: McpProviderUpdateRequest = {
+      const requestData: any = {
         provider_id: editingService.id,
         name: data.name,
         server_url: data.server_url,
@@ -246,16 +266,36 @@ const MCPServices: React.FC = () => {
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
-        extra: {
-          dynamic_registration: data.dynamicRegistration,
+        is_dynamic_registration: data.dynamicRegistration,
+        authentication: {
           client_id: data.clientId,
           client_secret: data.clientSecret,
+        },
+        configuration: {
           timeout: data.timeout,
-          sse_timeout: data.sseTimeout,
-          headers: headersObj,
-        }
+          sse_read_timeout: data.sseTimeout,
+        },
+        headers: Object.keys(headersObj).length > 0 ? headersObj : undefined,
       };
-      await apiService.updateMcpProvider(requestData);
+
+      // Filter out empty values and nested empty objects
+      Object.keys(requestData).forEach(key => {
+        if (requestData[key] === undefined || requestData[key] === null || requestData[key] === '') {
+          delete requestData[key];
+        } else if (typeof requestData[key] === 'object' && !Array.isArray(requestData[key])) {
+          const subObj = requestData[key];
+          Object.keys(subObj).forEach(subKey => {
+            if (subObj[subKey] === undefined || subObj[subKey] === null || subObj[subKey] === '') {
+              delete subObj[subKey];
+            }
+          });
+          if (Object.keys(subObj).length === 0) {
+            delete requestData[key];
+          }
+        }
+      });
+
+      await apiService.updateMcpProvider(requestData as McpProviderUpdateRequest);
       message.success('更新成功');
       setEditingService(null);
       fetchServices();
@@ -285,23 +325,22 @@ const MCPServices: React.FC = () => {
       if (typeof nameStr === 'object' && nameStr !== null) {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
-        const extra = detail?.extra || {};
-        const fullService = {
-          ...service,
-          name: nameStr,
-          server_url: detail?.server_url || service.server_url || '',
-          server_identifier: detail?.server_identifier || service.identifier || '',
-          icon: detail?.icon || service.icon,
-          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
-          iconBgColor: detail?.icon_background || service.iconBgColor,
-          updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
-          updated_at: detail?.updated_at || service.updated_at,
-          dynamicRegistration: extra.dynamic_registration ?? detail?.dynamic_registration,
-        clientId: extra.client_id ?? detail?.client_id,
-        clientSecret: extra.client_secret ?? detail?.client_secret,
-        timeout: extra.timeout ?? detail?.timeout,
-        sseTimeout: extra.sse_timeout ?? detail?.sse_timeout,
-        headers: extra.headers ? Object.entries(extra.headers).map(([key, value]) => ({ key, value: String(value) })) : (detail?.headers || [])
+      const fullService = {
+        ...service,
+        name: nameStr,
+        server_url: detail?.server_url || service.server_url || '',
+        server_identifier: detail?.server_identifier || service.identifier || '',
+        icon: detail?.icon || service.icon,
+        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+        iconBgColor: detail?.icon_background || service.iconBgColor,
+        updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
+        updated_at: detail?.updated_at || service.updated_at,
+        dynamicRegistration: detail?.is_dynamic_registration,
+        clientId: detail?.authentication?.client_id,
+        clientSecret: detail?.authentication?.client_secret,
+        timeout: detail?.configuration?.timeout,
+        sseTimeout: detail?.configuration?.sse_read_timeout,
+        headers: detail?.headers || []
       };
       setEditingService(fullService);
       setIsModalOpen(true);
@@ -327,24 +366,21 @@ const MCPServices: React.FC = () => {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
 
-        const extra = detail?.extra || {};
-        fullService = {
-          ...service,
-          name: nameStr,
-          server_url: detail?.server_url || service.server_url || '',
-          identifier: detail?.server_identifier || service.identifier || '',
-          icon: detail?.icon || service.icon,
-          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
-          iconBgColor: detail?.icon_background || service.iconBgColor,
-          is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
-          updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
-          updated_at: detail?.updated_at || service.updated_at,
-          dynamic_registration: extra.dynamic_registration ?? detail?.dynamic_registration,
-        client_id: extra.client_id ?? detail?.client_id,
-        client_secret: extra.client_secret ?? detail?.client_secret,
-        timeout: extra.timeout ?? detail?.timeout,
-        sse_timeout: extra.sse_timeout ?? detail?.sse_timeout,
-        headers: extra.headers ? Object.entries(extra.headers).map(([key, value]) => ({ key, value: String(value) })) : (detail?.headers || [])
+      fullService = {
+        ...service,
+        name: nameStr,
+        server_url: detail?.server_url || service.server_url || '',
+        identifier: detail?.server_identifier || service.identifier || '',
+        icon: detail?.icon || service.icon,
+        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+        iconBgColor: detail?.icon_background || service.iconBgColor,
+        is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
+        updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
+        updated_at: detail?.updated_at || service.updated_at,
+        is_dynamic_registration: detail?.is_dynamic_registration,
+        authentication: detail?.authentication,
+        configuration: detail?.configuration,
+        headers: detail?.headers || []
       };
       setSelectedService(fullService);
 
