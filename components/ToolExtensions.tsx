@@ -745,9 +745,41 @@ const ToolExtensions: React.FC = () => {
     }, 300); // Wait for transition
   };
 
+  // MCP Auth Schema
+  const MCP_AUTH_SCHEMA: ToolCredential[] = [
+    {
+      name: 'client_id',
+      label: { zh_Hans: 'APP ID', en_US: 'APP ID' },
+      help: null,
+      placeholder: { zh_Hans: '请输入你的 APP ID', en_US: 'Please enter your APP ID' },
+      type: 'text-input',
+      required: true,
+      default: ''
+    },
+    {
+      name: 'client_secret',
+      label: { zh_Hans: 'APP Secret', en_US: 'APP Secret' },
+      help: null,
+      placeholder: { zh_Hans: '请输入你的 APP Secret', en_US: 'Please enter your APP Secret' },
+      type: 'secret-input',
+      required: true,
+      default: ''
+    }
+  ];
+
   const handleAuthorize = async () => {
     if (!selectedTool) return;
     
+    if (selectedTool.type === 'mcp') {
+      setAuthSchema(MCP_AUTH_SCHEMA);
+      setAuthValues({
+        client_id: selectedTool.authentication?.client_id || '',
+        client_secret: selectedTool.authentication?.client_secret || ''
+      });
+      setIsAuthSettingsOpen(true);
+      return;
+    }
+
     try {
       // Fetch schema and existing credentials
       const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(selectedTool.name);
@@ -774,7 +806,32 @@ const ToolExtensions: React.FC = () => {
     if (!selectedTool) return;
     
     try {
-      await apiService.updateBuiltInToolCredential(selectedTool.name, values);
+      if (selectedTool.type === 'mcp') {
+        // 1. Update MCP provider with new credentials
+        const detail = await apiService.fetchMcpProviderDetail(selectedTool.id);
+        await apiService.updateMcpProvider({
+          provider_id: selectedTool.id,
+          name: detail.name,
+          server_url: detail.server_url,
+          icon: detail.icon,
+          icon_type: detail.icon_type || 'sys-icon',
+          server_identifier: detail.server_identifier,
+          authentication: {
+            client_id: values.client_id,
+            client_secret: values.client_secret
+          }
+        });
+
+        // 2. Initiate OAuth redirect
+        const authResponse = await apiService.authMcpProvider(selectedTool.id);
+        if (authResponse && (authResponse.url || authResponse.redirect_url)) {
+          localStorage.setItem('mcp_auth_provider_id', selectedTool.id);
+          window.location.href = authResponse.url || authResponse.redirect_url;
+          return;
+        }
+      } else {
+        await apiService.updateBuiltInToolCredential(selectedTool.name, values);
+      }
       
       // Refresh tool list to show updated auth status
       await fetchTools();

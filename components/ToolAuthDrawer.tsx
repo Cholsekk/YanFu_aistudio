@@ -51,6 +51,8 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
     try {
       const response = await apiService.authMcpProvider(toolDetail.id);
       if (response && (response.url || response.redirect_url)) {
+        // Store provider ID for the callback page
+        localStorage.setItem('mcp_auth_provider_id', toolDetail.id);
         window.location.href = response.url || response.redirect_url;
       } else {
         alert('认证成功');
@@ -308,12 +310,11 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                     </button>
                     {!toolDetail.is_authed && (
                       <button
-                        onClick={handleAuthMcpProvider}
-                        disabled={isAuthenticatingMcp}
+                        onClick={onAuthorize}
                         className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <Key className="w-4 h-4" />
-                        {isAuthenticatingMcp ? '认证中...' : '去认证'}
+                        去认证
                       </button>
                     )}
                   </div>

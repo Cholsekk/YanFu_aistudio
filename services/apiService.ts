@@ -1040,10 +1040,14 @@ class ApiService {
     return this.request(`/workspaces/current/tool-provider/mcp/update/${providerId}`);
   }
 
-  async authMcpProvider(providerId: string, authorizationCode?: string): Promise<any> {
+  async authMcpProvider(providerId: string, authorizationCode?: string, redirectUri?: string): Promise<any> {
     return this.request('/workspaces/current/tool-provider/mcp/auth', {
       method: 'POST',
-      body: { provider_id: providerId, authorization_code: authorizationCode } as any,
+      body: { 
+        provider_id: providerId, 
+        authorization_code: authorizationCode,
+        redirect_uri: redirectUri || `${window.location.origin}/mcp-auth-callback`
+      } as any,
     });
   }
 

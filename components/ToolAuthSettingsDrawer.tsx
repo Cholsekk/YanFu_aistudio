@@ -8,6 +8,7 @@ interface ToolAuthSettingsDrawerProps {
   schema: ToolCredential[];
   initialValues: CredentialData;
   onSave: (values: CredentialData) => void;
+  isLoading?: boolean;
 }
 
 const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
@@ -16,6 +17,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
   schema,
   initialValues,
   onSave,
+  isLoading = false,
 }) => {
   const [values, setValues] = useState<CredentialData>(initialValues);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
@@ -37,7 +39,6 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
 
   const handleSave = () => {
     onSave(values);
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -52,41 +53,41 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
 
       {/* Drawer - higher z-index than the main drawer */}
       <div 
-        className="fixed top-0 right-0 h-full w-[520px] bg-gray-50 shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 tool-auth-settings-drawer"
+        className="fixed top-0 right-0 h-full w-[520px] bg-white shadow-2xl z-[90] transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-100 tool-auth-settings-drawer"
         onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
       >
         {/* Header */}
-        <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
+        <div className="bg-white px-8 py-6 border-b border-gray-100 flex items-center justify-between shrink-0">
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg">设置授权</h3>
+            <h3 className="font-bold text-gray-900 text-xl">设置授权</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+            className="p-2 hover:bg-gray-50 rounded-full transition-colors text-gray-400 hover:text-gray-600"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-8 space-y-8">
           <div className="text-sm text-gray-500 leading-relaxed">
             配置凭据后，工作区中的所有成员都可以在编排应用程序时使用此工具。
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             {Array.isArray(schema) && schema.map((field) => (
-              <div key={field.name} className="space-y-2">
-                <div className="flex items-center gap-1">
-                  <label className="block text-sm font-medium text-gray-700">
+              <div key={field.name} className="space-y-3">
+                <div className="flex items-center gap-1.5">
+                  <label className="block text-sm font-bold text-gray-900">
                     {field.label.zh_Hans}
                   </label>
-                  {field.required && <span className="text-red-500">*</span>}
+                  {field.required && <span className="text-red-500 font-bold">*</span>}
                   {field.help && (
-                    <div className="group relative ml-1 cursor-help">
-                      <HelpCircle className="w-3.5 h-3.5 text-gray-400" />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    <div className="group relative cursor-help">
+                      <HelpCircle className="w-4 h-4 text-gray-300 hover:text-gray-400 transition-colors" />
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
                         {field.help.zh_Hans}
                       </div>
                     </div>
@@ -103,17 +104,17 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                         value={values[field.name] || ''}
                         onChange={(e) => handleChange(field.name, e.target.value)}
                         placeholder={field.placeholder?.zh_Hans}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm pr-10"
+                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm pr-12 transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => toggleShowSecret(field.name)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       >
                         {showSecrets[field.name] ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className="w-5 h-5" />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-5 h-5" />
                         )}
                       </button>
                     </div>
@@ -125,7 +126,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                       value={values[field.name] || ''}
                       onChange={(e) => handleChange(field.name, e.target.value)}
                       placeholder={field.placeholder?.zh_Hans}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition-all"
                     />
                   )}
                 </div>
@@ -135,18 +136,25 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-white px-6 py-4 border-t border-gray-200 flex justify-end gap-3 shrink-0">
+        <div className="bg-white px-8 py-6 border-t border-gray-100 flex justify-end gap-4 shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            disabled={isLoading}
+            className="px-6 py-2.5 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
           >
             取消
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+            disabled={isLoading}
+            className="px-8 py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 flex items-center gap-2"
           >
-            保存
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                保存中...
+              </>
+            ) : '保存'}
           </button>
         </div>
       </div>

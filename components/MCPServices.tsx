@@ -3,9 +3,10 @@ import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal
 import { Tooltip, message } from 'antd';
 import dayjs from 'dayjs';
 import MCPServiceModal from './AddMCPServiceModal';
+import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
 import { getIcon } from '../constants';
 import { apiService } from '../services/apiService';
-import { McpProviderRequest, McpProviderUpdateRequest } from '../types';
+import { McpProviderRequest, McpProviderUpdateRequest, ToolCredential } from '../types';
 
 // Mock data for MCP Services
 const MOCK_MCP_SERVICES = [
@@ -116,6 +117,8 @@ const MCPServices: React.FC = () => {
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [drawerMenuOpen, setDrawerMenuOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<any | null>(null);
+  const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
+  const [isSavingAuth, setIsSavingAuth] = useState(false);
 
   useEffect(() => {
     fetchServices();
@@ -196,50 +199,21 @@ const MCPServices: React.FC = () => {
 
   const handleAddService = async (data: any) => {
     try {
-      const headersObj: Record<string, string> = {};
-      if (data.headers && Array.isArray(data.headers)) {
-        data.headers.forEach((h: any) => {
-          if (h.key) headersObj[h.key] = h.value || '';
-        });
-      }
+      const filteredHeaders = (data.headers || []).filter((h: any) => h.key && h.value);
 
-      const requestData: any = {
+      const requestData: McpProviderRequest = {
         name: data.name,
         server_url: data.server_url,
-        icon: String(data.icon),
+        icon: data.icon,
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
-        is_dynamic_registration: data.dynamicRegistration,
-        authentication: {
-          client_id: data.clientId,
-          client_secret: data.clientSecret,
-        },
-        configuration: {
-          timeout: data.timeout,
-          sse_read_timeout: data.sseTimeout,
-        },
-        headers: Object.keys(headersObj).length > 0 ? headersObj : undefined,
+        is_dynamic_registration: data.is_dynamic_registration,
+        authentication: data.authentication,
+        configuration: data.configuration,
+        headers: filteredHeaders,
       };
-
-      // Filter out empty values and nested empty objects
-      Object.keys(requestData).forEach(key => {
-        if (requestData[key] === undefined || requestData[key] === null || requestData[key] === '') {
-          delete requestData[key];
-        } else if (typeof requestData[key] === 'object' && !Array.isArray(requestData[key])) {
-          const subObj = requestData[key];
-          Object.keys(subObj).forEach(subKey => {
-            if (subObj[subKey] === undefined || subObj[subKey] === null || subObj[subKey] === '') {
-              delete subObj[subKey];
-            }
-          });
-          if (Object.keys(subObj).length === 0) {
-            delete requestData[key];
-          }
-        }
-      });
-
-      await apiService.createMcpProvider(requestData as McpProviderRequest);
+      await apiService.createMcpProvider(requestData);
       message.success('添加成功');
       fetchServices();
     } catch (error: any) {
@@ -251,51 +225,22 @@ const MCPServices: React.FC = () => {
   const handleUpdateService = async (data: any) => {
     if (!editingService) return;
     try {
-      const headersObj: Record<string, string> = {};
-      if (data.headers && Array.isArray(data.headers)) {
-        data.headers.forEach((h: any) => {
-          if (h.key) headersObj[h.key] = h.value || '';
-        });
-      }
+      const filteredHeaders = (data.headers || []).filter((h: any) => h.key && h.value);
 
-      const requestData: any = {
+      const requestData: McpProviderUpdateRequest = {
         provider_id: editingService.id,
         name: data.name,
         server_url: data.server_url,
-        icon: String(data.icon),
+        icon: data.icon,
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
-        is_dynamic_registration: data.dynamicRegistration,
-        authentication: {
-          client_id: data.clientId,
-          client_secret: data.clientSecret,
-        },
-        configuration: {
-          timeout: data.timeout,
-          sse_read_timeout: data.sseTimeout,
-        },
-        headers: Object.keys(headersObj).length > 0 ? headersObj : undefined,
+        is_dynamic_registration: data.is_dynamic_registration,
+        authentication: data.authentication,
+        configuration: data.configuration,
+        headers: filteredHeaders,
       };
-
-      // Filter out empty values and nested empty objects
-      Object.keys(requestData).forEach(key => {
-        if (requestData[key] === undefined || requestData[key] === null || requestData[key] === '') {
-          delete requestData[key];
-        } else if (typeof requestData[key] === 'object' && !Array.isArray(requestData[key])) {
-          const subObj = requestData[key];
-          Object.keys(subObj).forEach(subKey => {
-            if (subObj[subKey] === undefined || subObj[subKey] === null || subObj[subKey] === '') {
-              delete subObj[subKey];
-            }
-          });
-          if (Object.keys(subObj).length === 0) {
-            delete requestData[key];
-          }
-        }
-      });
-
-      await apiService.updateMcpProvider(requestData as McpProviderUpdateRequest);
+      await apiService.updateMcpProvider(requestData);
       message.success('更新成功');
       setEditingService(null);
       fetchServices();
@@ -325,23 +270,22 @@ const MCPServices: React.FC = () => {
       if (typeof nameStr === 'object' && nameStr !== null) {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
-      const fullService = {
-        ...service,
-        name: nameStr,
-        server_url: detail?.server_url || service.server_url || '',
-        server_identifier: detail?.server_identifier || service.identifier || '',
-        icon: detail?.icon || service.icon,
-        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
-        iconBgColor: detail?.icon_background || service.iconBgColor,
-        updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
-        updated_at: detail?.updated_at || service.updated_at,
-        dynamicRegistration: detail?.is_dynamic_registration,
-        clientId: detail?.authentication?.client_id,
-        clientSecret: detail?.authentication?.client_secret,
-        timeout: detail?.configuration?.timeout,
-        sseTimeout: detail?.configuration?.sse_read_timeout,
-        headers: detail?.headers || []
-      };
+        const extra = detail?.extra || {};
+        const fullService = {
+          ...service,
+          name: nameStr,
+          server_url: detail?.server_url || service.server_url || '',
+          server_identifier: detail?.server_identifier || service.identifier || '',
+          icon: detail?.icon || service.icon,
+          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+          iconBgColor: detail?.icon_background || service.iconBgColor,
+          updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
+          updated_at: detail?.updated_at || service.updated_at,
+          is_dynamic_registration: detail?.is_dynamic_registration,
+          authentication: detail?.authentication,
+          configuration: detail?.configuration,
+          headers: detail?.headers || []
+        };
       setEditingService(fullService);
       setIsModalOpen(true);
     } catch (error) {
@@ -366,22 +310,23 @@ const MCPServices: React.FC = () => {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
 
-      fullService = {
-        ...service,
-        name: nameStr,
-        server_url: detail?.server_url || service.server_url || '',
-        identifier: detail?.server_identifier || service.identifier || '',
-        icon: detail?.icon || service.icon,
-        iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
-        iconBgColor: detail?.icon_background || service.iconBgColor,
-        is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
-        updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
-        updated_at: detail?.updated_at || service.updated_at,
-        is_dynamic_registration: detail?.is_dynamic_registration,
-        authentication: detail?.authentication,
-        configuration: detail?.configuration,
-        headers: detail?.headers || []
-      };
+        const extra = detail?.extra || {};
+        fullService = {
+          ...service,
+          name: nameStr,
+          server_url: detail?.server_url || service.server_url || '',
+          identifier: detail?.server_identifier || service.identifier || '',
+          icon: detail?.icon || service.icon,
+          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+          iconBgColor: detail?.icon_background || service.iconBgColor,
+          is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
+          updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
+          updated_at: detail?.updated_at || service.updated_at,
+          is_dynamic_registration: detail?.is_dynamic_registration,
+          authentication: detail?.authentication,
+          configuration: detail?.configuration,
+          headers: detail?.headers || []
+        };
       setSelectedService(fullService);
 
       if (fullService.is_team_authorization) {
@@ -411,6 +356,97 @@ const MCPServices: React.FC = () => {
       }
     }
   };
+
+  const handleSaveAuthSettings = async (values: any) => {
+    if (!selectedService) return;
+    setIsSavingAuth(true);
+    try {
+      // 1. Update the provider with new credentials
+      const requestData: McpProviderUpdateRequest = {
+        provider_id: selectedService.id,
+        name: selectedService.name,
+        server_url: selectedService.server_url,
+        icon: selectedService.icon,
+        icon_type: selectedService.iconType,
+        server_identifier: selectedService.identifier || selectedService.server_identifier,
+        authentication: {
+          client_id: values.client_id,
+          client_secret: values.client_secret
+        }
+      };
+      await apiService.updateMcpProvider(requestData);
+      
+      // 2. Call the MCP auth interface
+      await apiService.authMcpProvider(selectedService.id);
+      
+      message.success('授权成功');
+      setIsAuthSettingsOpen(false);
+      
+      // 3. Seamlessly refresh the detail drawer state
+      // We fetch the latest detail to get the updated authorization status and tools
+      const detail = await apiService.fetchMcpProviderDetail(selectedService.id);
+      
+      let nameStr = detail?.name || selectedService.name;
+      if (typeof nameStr === 'object' && nameStr !== null) {
+        nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
+      }
+
+      const updatedService = {
+        ...selectedService,
+        name: nameStr,
+        is_team_authorization: detail?.is_team_authorization,
+        authentication: detail?.authentication,
+        tools: detail?.tools?.length || 0,
+        updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : selectedService.updatedAt,
+        updated_at: detail?.updated_at || selectedService.updated_at,
+      };
+      
+      // Update the selected service state - this triggers the "seamless" UI update in the drawer
+      setSelectedService(updatedService);
+      
+      // 4. Update tools list if authorized
+      if (detail?.is_team_authorization) {
+        setLoadingTools(true);
+        let fetchedTools = detail?.tools || [];
+        if (fetchedTools && !Array.isArray(fetchedTools)) {
+          fetchedTools = Object.values(fetchedTools);
+        }
+        setTools(fetchedTools);
+        setLoadingTools(false);
+      } else {
+        setTools([]);
+      }
+      
+      // 5. Refresh the main services list in the background
+      fetchServices();
+    } catch (error: any) {
+      console.error('Failed to authorize MCP service:', error);
+      message.error('授权失败: ' + (error.message || '未知错误'));
+    } finally {
+      setIsSavingAuth(false);
+    }
+  };
+
+  const mcpAuthSchema: ToolCredential[] = [
+    {
+      name: 'client_id',
+      label: { zh_Hans: 'APP ID', en_US: 'APP ID' },
+      help: { zh_Hans: '请输入你的飞书 app id', en_US: 'Enter your Feishu app id' },
+      placeholder: { zh_Hans: '请输入你的飞书 app id', en_US: 'Enter your Feishu app id' },
+      type: 'text-input',
+      required: true,
+      default: ''
+    },
+    {
+      name: 'client_secret',
+      label: { zh_Hans: 'APP Secret', en_US: 'APP Secret' },
+      help: null,
+      placeholder: { zh_Hans: '请输入你的飞书 app secret', en_US: 'Enter your Feishu app secret' },
+      type: 'secret-input',
+      required: true,
+      default: ''
+    }
+  ];
 
   return (
     <div className="flex flex-col gap-8 p-8 min-h-screen font-sans text-gray-900 bg-[#F9FAFB]">
@@ -624,7 +660,10 @@ const MCPServices: React.FC = () => {
               </div>
             ) : (
               <>
-                <button className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold mb-8 shadow-lg shadow-indigo-200 transition-all">
+                <button 
+                  onClick={() => setIsAuthSettingsOpen(true)}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold mb-8 shadow-lg shadow-indigo-200 transition-all"
+                >
                   授权
                 </button>
                 
@@ -638,6 +677,19 @@ const MCPServices: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* Auth Settings Drawer */}
+      <ToolAuthSettingsDrawer
+        isOpen={isAuthSettingsOpen}
+        onClose={() => setIsAuthSettingsOpen(false)}
+        schema={mcpAuthSchema}
+        initialValues={{
+          client_id: selectedService?.authentication?.client_id || '',
+          client_secret: selectedService?.authentication?.client_secret || ''
+        }}
+        onSave={handleSaveAuthSettings}
+        isLoading={isSavingAuth}
+      />
 
       {/* Tool Details Modal */}
       {selectedTool && (

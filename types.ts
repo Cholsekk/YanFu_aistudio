@@ -765,8 +765,8 @@ export type Collection = {
   name: string
   author: string
   description: TypeWithI18N
-  icon: string | Emoji
-  icon_dark?: string | Emoji
+  icon: string | { content: string; background: string }
+  icon_dark?: string | { content: string; background: string }
   label: TypeWithI18N
   type: CollectionType | string
   team_credentials: Record<string, any>
@@ -778,10 +778,6 @@ export type Collection = {
   server_url?: string
   updated_at?: number
   server_identifier?: string
-  timeout?: number
-  sse_read_timeout?: number
-  headers?: Record<string, string>
-  masked_headers?: Record<string, string>
   is_authorized?: boolean
   provider?: string
   credential_id?: string
@@ -831,14 +827,15 @@ export interface McpProvider {
   tools?: any[];
   is_dynamic_registration?: boolean;
   authentication?: {
-    client_id?: string;
-    client_secret?: string;
-  };
+    client_id?: string
+    client_secret?: string
+  }
   configuration?: {
-    timeout?: number;
-    sse_read_timeout?: number;
-  };
+    timeout?: number
+    sse_read_timeout?: number
+  }
   headers?: { key: string; value: string }[];
+  extra?: Record<string, any>;
 }
 
 export interface McpProviderRequest {
@@ -850,14 +847,15 @@ export interface McpProviderRequest {
   server_identifier: string;
   is_dynamic_registration?: boolean;
   authentication?: {
-    client_id?: string;
-    client_secret?: string;
-  };
+    client_id?: string
+    client_secret?: string
+  }
   configuration?: {
-    timeout?: number;
-    sse_read_timeout?: number;
-  };
-  headers?: Record<string, string>;
+    timeout?: number
+    sse_read_timeout?: number
+  }
+  headers?: { key: string; value: string }[];
+  extra?: Record<string, any>;
 }
 
 export interface McpProviderUpdateRequest extends McpProviderRequest {

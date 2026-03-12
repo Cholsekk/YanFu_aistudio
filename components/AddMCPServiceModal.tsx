@@ -23,11 +23,11 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     server_url: initialData?.server_url || '',
     name: initialData?.name || '',
     server_identifier: initialData?.server_identifier || '',
-    dynamicRegistration: initialData?.dynamicRegistration || false,
-    clientId: initialData?.clientId || '',
-    clientSecret: initialData?.clientSecret || '',
-    timeout: initialData?.timeout || 30,
-    sseTimeout: initialData?.sseTimeout || 300,
+    is_dynamic_registration: initialData?.is_dynamic_registration || false,
+    client_id: initialData?.authentication?.client_id || '',
+    client_secret: initialData?.authentication?.client_secret || '',
+    timeout: initialData?.configuration?.timeout || 30,
+    sse_read_timeout: initialData?.configuration?.sse_read_timeout || 300,
     icon: initialData?.icon || SYS_ICON_IDS[0],
     iconType: initialData?.iconType || 'sys-icon',
     iconBgColor: initialData?.iconBgColor || 'bg-indigo-600'
@@ -41,11 +41,11 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           server_url: initialData.server_url || '',
           name: initialData.name || '',
           server_identifier: initialData.server_identifier || '',
-          dynamicRegistration: initialData.dynamicRegistration || false,
-          clientId: initialData.clientId || '',
-          clientSecret: initialData.clientSecret || '',
-          timeout: initialData.timeout || 30,
-          sseTimeout: initialData.sseTimeout || 300,
+          is_dynamic_registration: initialData.is_dynamic_registration || false,
+          client_id: initialData.authentication?.client_id || '',
+          client_secret: initialData.authentication?.client_secret || '',
+          timeout: initialData.configuration?.timeout || 30,
+          sse_read_timeout: initialData.configuration?.sse_read_timeout || 300,
           icon: initialData.icon || SYS_ICON_IDS[0],
           iconType: initialData.iconType || 'sys-icon',
           iconBgColor: initialData.iconBgColor || 'bg-indigo-600'
@@ -56,11 +56,11 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           server_url: '',
           name: '',
           server_identifier: '',
-          dynamicRegistration: false,
-          clientId: '',
-          clientSecret: '',
+          is_dynamic_registration: false,
+          client_id: '',
+          client_secret: '',
           timeout: 30,
-          sseTimeout: 300,
+          sse_read_timeout: 300,
           icon: SYS_ICON_IDS[0],
           iconType: 'sys-icon',
           iconBgColor: 'bg-indigo-600'
@@ -82,7 +82,20 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
 
   const handleSubmit = () => {
     if (!isFormValid) return;
-    onAdd({ ...formData, headers });
+    const { is_dynamic_registration, client_id, client_secret, timeout, sse_read_timeout, ...rest } = formData;
+    onAdd({ 
+      ...rest, 
+      is_dynamic_registration,
+      authentication: {
+        client_id,
+        client_secret
+      },
+      configuration: {
+        timeout,
+        sse_read_timeout
+      },
+      headers 
+    });
     onClose();
   };
 
@@ -171,28 +184,28 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
               <div className="space-y-5">
                 <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-xl border border-indigo-100">
                   <span className="text-sm font-semibold text-indigo-900">使用动态客户端注册</span>
-                  <button onClick={() => setFormData({...formData, dynamicRegistration: !formData.dynamicRegistration})} className={`w-12 h-6 rounded-full transition-colors relative ${formData.dynamicRegistration ? 'bg-indigo-600' : 'bg-gray-300'}`}>
-                    <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.dynamicRegistration ? 'translate-x-6' : 'translate-x-0'}`} />
+                  <button onClick={() => setFormData({...formData, is_dynamic_registration: !formData.is_dynamic_registration})} className={`w-12 h-6 rounded-full transition-colors relative ${formData.is_dynamic_registration ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.is_dynamic_registration ? 'translate-x-6' : 'translate-x-0'}`} />
                   </button>
                 </div>
                 
-                {!formData.dynamicRegistration && (
+                {!formData.is_dynamic_registration && (
                   <div className="flex items-start gap-3 p-4 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-sm">
                     <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold mb-1">请将您的 OAuth 重定向 URL 配置为：</p>
-                      <code className="bg-amber-100 px-2 py-1 rounded text-xs font-mono break-all">https://cloud.dify.ai/console/api/mcp/oauth/callback</code>
+                      <code className="bg-amber-100 px-2 py-1 rounded text-xs font-mono break-all">{window.location.origin}/mcp-auth-callback</code>
                     </div>
                   </div>
                 )}
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">客户端 ID</label>
-                  <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="客户端 ID" value={formData.clientId} onChange={e => setFormData({...formData, clientId: e.target.value})} />
+                  <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="客户端 ID" value={formData.client_id} onChange={e => setFormData({...formData, client_id: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">客户端密钥</label>
-                  <input type="password" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="客户端密钥" value={formData.clientSecret} onChange={e => setFormData({...formData, clientSecret: e.target.value})} />
+                  <input type="password" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="客户端密钥" value={formData.client_secret} onChange={e => setFormData({...formData, client_secret: e.target.value})} />
                 </div>
               </div>
             )}
@@ -220,7 +233,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">SSE 读取超时时间 (秒)</label>
-                  <input type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" value={formData.sseTimeout} onChange={e => setFormData({...formData, sseTimeout: parseInt(e.target.value)})} />
+                  <input type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" value={formData.sse_read_timeout} onChange={e => setFormData({...formData, sse_read_timeout: parseInt(e.target.value)})} />
                 </div>
               </div>
             )}

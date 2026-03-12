@@ -28,11 +28,23 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const [isDynamicRegistration, setIsDynamicRegistration] = useState(false);
+  const [clientId, setClientId] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+  const [timeout, setTimeoutVal] = useState<number | undefined>(undefined);
+  const [sseReadTimeout, setSseReadTimeout] = useState<number | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState<'basic' | 'auth' | 'config'>('basic');
+
   useEffect(() => {
     if (provider && isOpen) {
       setName(provider.name || '');
       setServerUrl(provider.server_url || '');
       setServerIdentifier(provider.server_identifier || '');
+      setIsDynamicRegistration(provider.is_dynamic_registration || false);
+      setClientId(provider.authentication?.client_id || '');
+      setClientSecret(provider.authentication?.client_secret || '');
+      setTimeoutVal(provider.configuration?.timeout);
+      setSseReadTimeout(provider.configuration?.sse_read_timeout);
       
       let initialIcon: any = provider.icon;
       try {
@@ -71,6 +83,9 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
       const iconBackground = typeof icon === 'object' ? icon.background : '';
       const iconType = typeof icon === 'string' ? (icon.startsWith('http') ? 'image' : 'icon') : 'icon';
 
+      const auth = (clientId || clientSecret) ? { client_id: clientId, client_secret: clientSecret } : undefined;
+      const config = (timeout !== undefined || sseReadTimeout !== undefined) ? { timeout, sse_read_timeout: sseReadTimeout } : undefined;
+
       if (provider) {
         const updateData: McpProviderUpdateRequest = {
           provider_id: provider.id,
@@ -79,7 +94,10 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
           server_identifier: serverIdentifier,
           icon: iconStr,
           icon_type: iconType,
-          icon_background: iconBackground
+          icon_background: iconBackground,
+          is_dynamic_registration: isDynamicRegistration,
+          authentication: auth,
+          configuration: config
         };
         await onSave(updateData);
       } else {
@@ -89,7 +107,10 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
           server_identifier: serverIdentifier,
           icon: iconStr,
           icon_type: iconType,
-          icon_background: iconBackground
+          icon_background: iconBackground,
+          is_dynamic_registration: isDynamicRegistration,
+          authentication: auth,
+          configuration: config
         };
         await onSave(createData);
       }
@@ -158,86 +179,181 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
             </button>
           </div>
 
+          {/* Tabs */}
+          <div className="px-6 border-b border-gray-100 flex gap-6">
+            <button
+              onClick={() => setActiveTab('basic')}
+              className={`py-3 text-sm font-medium border-b-2 transition-all ${activeTab === 'basic' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              基本设置
+            </button>
+            <button
+              onClick={() => setActiveTab('auth')}
+              className={`py-3 text-sm font-medium border-b-2 transition-all ${activeTab === 'auth' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              认证
+            </button>
+            <button
+              onClick={() => setActiveTab('config')}
+              className={`py-3 text-sm font-medium border-b-2 transition-all ${activeTab === 'config' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              配置
+            </button>
+          </div>
+
           {/* Content */}
           <div className="flex-grow overflow-y-auto p-6 space-y-6">
-            {/* Icon & Name */}
-            <div className="flex gap-6 items-start">
-              <div 
-                onClick={() => setIsIconPickerOpen(true)}
-                className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all group relative overflow-hidden"
-              >
-                {typeof icon === 'string' ? (
-                  <img src={icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <div style={{ backgroundColor: icon.background }} className="w-full h-full flex items-center justify-center text-2xl text-white">
-                    {(LucideIcons as any)[icon.content] ? React.createElement((LucideIcons as any)[icon.content], { className: "w-8 h-8" }) : icon.content}
+            {activeTab === 'basic' && (
+              <>
+                {/* Icon & Name */}
+                <div className="flex gap-6 items-start">
+                  <div 
+                    onClick={() => setIsIconPickerOpen(true)}
+                    className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all group relative overflow-hidden"
+                  >
+                    {typeof icon === 'string' ? (
+                      <img src={icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div style={{ backgroundColor: icon.background }} className="w-full h-full flex items-center justify-center text-2xl text-white">
+                        {(LucideIcons as any)[icon.content] ? React.createElement((LucideIcons as any)[icon.content], { className: "w-8 h-8" }) : icon.content}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Edit2 className="w-5 h-5 text-white" />
+                    </div>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Edit2 className="w-5 h-5 text-white" />
+                  <div className="flex-grow space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                        名称 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="例如: Weather MCP Server"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex-grow space-y-4">
+
+                {/* Server URL */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
-                    名称 <span className="text-red-500">*</span>
+                    服务器 URL <span className="text-red-500">*</span>
+                    <div className="group relative">
+                      <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                        MCP 服务器的 HTTP/HTTPS 地址。
+                      </div>
+                    </div>
+                  </label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="url"
+                      value={serverUrl}
+                      onChange={(e) => setServerUrl(e.target.value)}
+                      placeholder="http://example.com"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Server Identifier */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                    服务器标识符 <span className="text-red-500">*</span>
+                    <div className="group relative">
+                      <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                      <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                        用于唯一标识该 MCP 服务器。
+                      </div>
+                    </div>
+                  </label>
+                  <div className="relative">
+                    <Server className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={serverIdentifier}
+                      onChange={(e) => setServerIdentifier(e.target.value)}
+                      placeholder="weather-server-01"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'auth' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900">动态注册</h4>
+                    <p className="text-xs text-gray-500 mt-0.5">启用后将支持 MCP 动态注册流程</p>
+                  </div>
+                  <button
+                    onClick={() => setIsDynamicRegistration(!isDynamicRegistration)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isDynamicRegistration ? 'bg-primary-600' : 'bg-gray-200'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDynamicRegistration ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Client ID</label>
+                    <input
+                      type="text"
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
+                      placeholder="输入 Client ID"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Client Secret</label>
+                    <input
+                      type="password"
+                      value={clientSecret}
+                      onChange={(e) => setClientSecret(e.target.value)}
+                      placeholder="输入 Client Secret"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'config' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                    超时时间 (秒)
                   </label>
                   <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="例如: Weather MCP Server"
+                    type="number"
+                    value={timeout || ''}
+                    onChange={(e) => setTimeoutVal(e.target.value ? Number(e.target.value) : undefined)}
+                    placeholder="默认超时时间"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
+                    SSE 读取超时 (秒)
+                  </label>
+                  <input
+                    type="number"
+                    value={sseReadTimeout || ''}
+                    onChange={(e) => setSseReadTimeout(e.target.value ? Number(e.target.value) : undefined)}
+                    placeholder="SSE 读取超时时间"
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Server URL */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
-                服务器 URL <span className="text-red-500">*</span>
-                <div className="group relative">
-                  <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                  <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                    MCP 服务器的 HTTP/HTTPS 地址。
-                  </div>
-                </div>
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="url"
-                  value={serverUrl}
-                  onChange={(e) => setServerUrl(e.target.value)}
-                  placeholder="http://example.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Server Identifier */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
-                服务器标识符 <span className="text-red-500">*</span>
-                <div className="group relative">
-                  <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                  <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                    用于唯一标识该 MCP 服务器。
-                  </div>
-                </div>
-              </label>
-              <div className="relative">
-                <Server className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={serverIdentifier}
-                  onChange={(e) => setServerIdentifier(e.target.value)}
-                  placeholder="weather-server-01"
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Footer */}
