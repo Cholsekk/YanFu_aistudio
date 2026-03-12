@@ -206,7 +206,7 @@ const MCPServices: React.FC = () => {
       const requestData: any = {
         name: data.name,
         server_url: data.server_url,
-        icon: data.icon,
+        icon: String(data.icon),
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
@@ -262,7 +262,7 @@ const MCPServices: React.FC = () => {
         provider_id: editingService.id,
         name: data.name,
         server_url: data.server_url,
-        icon: data.icon,
+        icon: String(data.icon),
         icon_type: data.iconType,
         icon_background: data.iconBgColor,
         server_identifier: data.server_identifier,
