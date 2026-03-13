@@ -308,15 +308,13 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                       <RefreshCw className={`w-4 h-4 ${isUpdatingMcpTools ? 'animate-spin' : ''}`} />
                       更新工具列表
                     </button>
-                    {!toolDetail.is_authed && (
-                      <button
-                        onClick={onAuthorize}
-                        className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        <Key className="w-4 h-4" />
-                        去认证
-                      </button>
-                    )}
+                    <button
+                      onClick={onAuthorize}
+                      className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <Key className="w-4 h-4" />
+                      {toolDetail.is_authed ? '更新授权' : '去认证'}
+                    </button>
                   </div>
 
                   {mcpTools.length > 0 && (

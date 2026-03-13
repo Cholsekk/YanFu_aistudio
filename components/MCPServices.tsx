@@ -617,11 +617,32 @@ const MCPServices: React.FC = () => {
               </div>
             </div>
             
-            {selectedService.is_team_authorization ? (
+            <div className="flex flex-col gap-4 mb-8">
+              <button 
+                onClick={() => setIsAuthSettingsOpen(true)}
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                {selectedService.is_team_authorization ? '更新授权' : '授权'}
+              </button>
+              
+              {!selectedService.is_team_authorization && (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-400 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
+                  <Info className="w-10 h-10 mb-3 opacity-30" />
+                  <p className="text-sm font-bold text-gray-700">需要授权</p>
+                  <p className="text-xs mt-1 text-gray-400">授权后，工具将显示在这里。</p>
+                </div>
+              )}
+            </div>
+            
+            {selectedService.is_team_authorization && (
               <div className="flex-grow overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-bold text-gray-900">{tools?.length || 0} 个工具已包含</h4>
-                  <button className="text-xs text-primary-600 font-medium flex items-center gap-1 hover:text-primary-700 transition-colors">
+                  <button 
+                    onClick={() => handleSelectService(selectedService)}
+                    className="text-xs text-primary-600 font-medium flex items-center gap-1 hover:text-primary-700 transition-colors"
+                  >
                     <Zap className="w-3 h-3" /> 更新
                   </button>
                 </div>
@@ -660,21 +681,6 @@ const MCPServices: React.FC = () => {
                   )}
                 </div>
               </div>
-            ) : (
-              <>
-                <button 
-                  onClick={() => setIsAuthSettingsOpen(true)}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold mb-8 shadow-lg shadow-indigo-200 transition-all"
-                >
-                  授权
-                </button>
-                
-                <div className="flex flex-col items-center justify-center py-20 text-gray-400 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
-                  <Info className="w-12 h-12 mb-4 opacity-30" />
-                  <p className="text-sm font-bold text-gray-700">需要授权</p>
-                  <p className="text-xs mt-2 text-gray-400">授权后，工具将显示在这里。</p>
-                </div>
-              </>
             )}
           </div>
         </>

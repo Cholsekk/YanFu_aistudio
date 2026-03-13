@@ -62,19 +62,36 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
 
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (activeTab === 'system') {
       onConfirm({ icon: selectedIcon, iconType: 'sys-icon' });
       onClose();
     } else if (uploadedImage) {
-      onConfirm({ icon: uploadedImage, iconType: 'image', iconUrl: uploadedImageUrl });
-      onClose();
+      if (uploadedImageUrl.startsWith('data:')) {
+        setIsUploading(true);
+        try {
+          const res = await fetch(uploadedImageUrl);
+          const blob = await res.blob();
+          const file = new File([blob], 'icon.png', { type: 'image/png' });
+          const uploadRes = await apiService.uploadFile(file);
+          onConfirm({ icon: uploadRes.id, iconType: 'image', iconUrl: uploadedImageUrl });
+        } catch (error) {
+          console.error('Failed to upload image', error);
+          onConfirm({ icon: uploadedImage, iconType: 'image', iconUrl: uploadedImageUrl });
+        } finally {
+          setIsUploading(false);
+          onClose();
+        }
+      } else {
+        onConfirm({ icon: uploadedImage, iconType: 'image', iconUrl: uploadedImageUrl });
+        onClose();
+      }
     } else {
       onClose();
     }
   };
 
-  const applyCrop = async () => {
+  const applyCrop = () => {
     if (!imgRef.current) return;
 
     const canvas = document.createElement('canvas');
@@ -105,27 +122,10 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
 
     const dataUrl = canvas.toDataURL('image/png');
     
-    setIsUploading(true);
+    setUploadedImage(dataUrl);
+    setUploadedImageUrl(dataUrl);
     setIsCropping(false);
     setTempImage(null);
-    
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], 'icon.png', { type: 'image/png' });
-      const uploadRes = await apiService.uploadFile(file);
-      
-      // We store the ID in uploadedImage, and the URL in a new state or just keep it simple
-      // Actually, we can just store the ID in uploadedImage and the dataUrl in a ref or another state
-      setUploadedImage(uploadRes.id);
-      setUploadedImageUrl(dataUrl);
-    } catch (error) {
-      console.error('Failed to upload image', error);
-      setUploadedImage(dataUrl);
-      setUploadedImageUrl(dataUrl);
-    } finally {
-      setIsUploading(false);
-    }
   };
 
   const cancelCrop = () => {
