@@ -380,13 +380,15 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
             <>
               {/* Custom Tool Actions */}
               <div className="flex gap-3">
-                <button 
-                  className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary-200 flex items-center justify-center gap-2"
-                  onClick={handleOpenInAppDev}
-                >
-                  在应用开发中打开
-                  <ExternalLink className="w-4 h-4" />
-                </button>
+                {tool.type === 'workflow' && (
+                  <button 
+                    className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary-200 flex items-center justify-center gap-2"
+                    onClick={handleOpenInAppDev}
+                  >
+                    在应用开发中打开
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                )}
                 <button 
                   className="flex-1 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
                   onClick={onEdit}
