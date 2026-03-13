@@ -363,23 +363,8 @@ const MCPServices: React.FC = () => {
     if (!selectedService) return;
     setIsSavingAuth(true);
     try {
-      // 1. Update the provider with new credentials
-      const requestData: McpProviderUpdateRequest = {
-        provider_id: selectedService.id,
-        name: selectedService.name,
-        server_url: selectedService.server_url,
-        icon: selectedService.icon,
-        icon_type: selectedService.iconType,
-        server_identifier: selectedService.identifier || selectedService.server_identifier,
-        authentication: {
-          client_id: values.client_id,
-          client_secret: values.client_secret
-        }
-      };
-      await apiService.updateMcpProvider(requestData);
-      
-      // 2. Call the MCP auth interface
-      await apiService.authMcpProvider(selectedService.id);
+      // 1. Call the MCP auth interface directly
+      await apiService.authMcpProvider(selectedService.id, values.authorization_code);
       
       message.success('授权成功');
       setIsAuthSettingsOpen(false);
@@ -433,21 +418,12 @@ const MCPServices: React.FC = () => {
     const serviceName = selectedService?.name || 'MCP';
     return [
       {
-        name: 'client_id',
-        label: { zh_Hans: '应用 ID', en_US: 'App ID' },
-        help: { zh_Hans: `请输入您的${serviceName} app id`, en_US: `Enter your ${serviceName} app id` },
-        placeholder: { zh_Hans: `请输入您的${serviceName} app id`, en_US: `Enter your ${serviceName} app id` },
-        type: 'text-input',
-        required: true,
-        default: ''
-      },
-      {
-        name: 'client_secret',
-        label: { zh_Hans: 'APP 秘密', en_US: 'App Secret' },
+        name: 'authorization_code',
+        label: { zh_Hans: 'OAuth 授权码', en_US: 'OAuth Authorization Code' },
         help: null,
-        placeholder: { zh_Hans: `请输入您的${serviceName} 应用程序秘密`, en_US: `Enter your ${serviceName} app secret` },
+        placeholder: { zh_Hans: `请输入您的${serviceName} OAuth 授权码`, en_US: `Enter your ${serviceName} OAuth authorization code` },
         type: 'secret-input',
-        required: true,
+        required: false,
         default: ''
       }
     ] as ToolCredential[];
@@ -695,8 +671,7 @@ const MCPServices: React.FC = () => {
         onClose={() => setIsAuthSettingsOpen(false)}
         schema={mcpAuthSchema}
         initialValues={{
-          client_id: selectedService?.authentication?.client_id || '',
-          client_secret: selectedService?.authentication?.client_secret || ''
+          authorization_code: selectedService?.authentication?.authorization_code || ''
         }}
         onSave={handleSaveAuthSettings}
         isLoading={isSavingAuth}
