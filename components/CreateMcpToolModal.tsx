@@ -4,6 +4,7 @@ import { McpProvider, McpProviderRequest, McpProviderUpdateRequest } from '../ty
 import { X, Info, Edit2, Globe, Server, Tag as TagIcon } from 'lucide-react';
 import IconPickerModal from './IconPickerModal';
 import Modal from './Modal';
+import { SYS_ICON_IDS } from '../constants';
 import * as LucideIcons from 'lucide-react';
 
 interface CreateMcpToolModalProps {
@@ -26,6 +27,7 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
   const [serverIdentifier, setServerIdentifier] = useState('');
   const [icon, setIcon] = useState<string | { content: string; background: string }>({ content: 'Globe', background: '#f0f9ff' });
   const [iconUrl, setIconUrl] = useState<string>('');
+  const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>('icon');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -63,6 +65,7 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
       }
       setIcon(initialIcon || { content: 'Globe', background: provider.icon_background || '#f0f9ff' });
       setIconUrl(provider.icon_url || '');
+      setIconType((provider as any).icon_type || 'icon');
     } else if (isOpen) {
       // Reset for new provider
       setName('');
@@ -85,7 +88,6 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
     try {
       const iconStr = typeof icon === 'string' ? icon : JSON.stringify(icon);
       const iconBackground = typeof icon === 'object' ? icon.background : '';
-      const iconType = typeof icon === 'string' ? (icon.startsWith('http') ? 'image' : 'icon') : 'icon';
 
       const auth = (clientId || clientSecret) ? { client_id: clientId, client_secret: clientSecret } : undefined;
       const config = (timeout !== undefined || sseReadTimeout !== undefined) ? { timeout, sse_read_timeout: sseReadTimeout } : undefined;
@@ -140,11 +142,12 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
   };
 
   const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
+    setIconType(data.iconType);
     if (data.iconType === 'icon') {
       setIcon({ content: data.icon, background: data.iconBgColor || '#f0f9ff' });
       setIconUrl('');
     } else if (data.iconType === 'sys-icon') {
-      setIcon(`/sys_icons/Component ${data.icon}.svg`);
+      setIcon(data.icon);
       setIconUrl('');
     } else {
       setIcon(data.icon);
@@ -153,11 +156,10 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
   };
 
   const getInitialIconValue = () => {
+    if (iconType === 'sys-icon') {
+      return { icon: icon as string, iconType: 'sys-icon' as const };
+    }
     if (typeof icon === 'string') {
-      if (icon.startsWith('/sys_icons/Component ')) {
-        const id = icon.replace('/sys_icons/Component ', '').replace('.svg', '');
-        return { icon: id, iconType: 'sys-icon' as const };
-      }
       return { icon, iconType: 'image' as const, iconUrl };
     }
     return { icon: icon.content, iconType: 'icon' as const, iconBgColor: icon.background };
@@ -238,7 +240,7 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
                   className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all group relative overflow-hidden"
                 >
                   {typeof icon === 'string' ? (
-                    <img src={iconUrl || icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={iconUrl || (iconType === 'sys-icon' ? `/sys_icons/Component ${icon}.svg` : icon) || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     <div style={{ backgroundColor: icon.background }} className="w-full h-full flex items-center justify-center text-2xl text-white">
                       {(LucideIcons as any)[icon.content] ? React.createElement((LucideIcons as any)[icon.content], { className: "w-8 h-8" }) : icon.content}

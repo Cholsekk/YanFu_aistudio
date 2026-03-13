@@ -33,7 +33,14 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     iconBgColor: initialData?.iconBgColor || 'bg-indigo-600',
     iconUrl: initialData?.icon_url || ''
   });
-  const [headers, setHeaders] = useState<Header[]>(initialData?.headers || []);
+  const [headers, setHeaders] = useState<Header[]>(() => {
+    if (Array.isArray(initialData?.headers)) {
+      return initialData.headers;
+    } else if (initialData?.headers && typeof initialData.headers === 'object') {
+      return Object.entries(initialData.headers).map(([key, value]) => ({ key, value: value as string }));
+    }
+    return [];
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -52,7 +59,13 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           iconBgColor: initialData.iconBgColor || 'bg-indigo-600',
           iconUrl: initialData.icon_url || ''
         });
-        setHeaders(initialData.headers || []);
+        if (Array.isArray(initialData.headers)) {
+          setHeaders(initialData.headers);
+        } else if (initialData.headers && typeof initialData.headers === 'object') {
+          setHeaders(Object.entries(initialData.headers).map(([key, value]) => ({ key, value: value as string })));
+        } else {
+          setHeaders([]);
+        }
       } else {
         setFormData({
           server_url: '',
@@ -86,6 +99,14 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
   const handleSubmit = () => {
     if (!isFormValid) return;
     const { is_dynamic_registration, client_id, client_secret, timeout, sse_read_timeout, ...rest } = formData;
+    
+    const headerObject = headers.reduce((acc, header) => {
+      if (header.key) {
+        acc[header.key] = header.value;
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
     onAdd({ 
       ...rest, 
       is_dynamic_registration,
@@ -97,7 +118,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
         timeout,
         sse_read_timeout
       },
-      headers 
+      headers: headerObject
     });
     onClose();
   };
