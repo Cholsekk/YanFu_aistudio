@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal, Zap, Edit2, Trash2 } from 'lucide-react';
 import { Tooltip, message } from 'antd';
 import dayjs from 'dayjs';
@@ -429,26 +429,29 @@ const MCPServices: React.FC = () => {
     }
   };
 
-  const mcpAuthSchema: ToolCredential[] = [
-    {
-      name: 'client_id',
-      label: { zh_Hans: 'APP ID', en_US: 'APP ID' },
-      help: { zh_Hans: '请输入你的飞书 app id', en_US: 'Enter your Feishu app id' },
-      placeholder: { zh_Hans: '请输入你的飞书 app id', en_US: 'Enter your Feishu app id' },
-      type: 'text-input',
-      required: true,
-      default: ''
-    },
-    {
-      name: 'client_secret',
-      label: { zh_Hans: 'APP Secret', en_US: 'APP Secret' },
-      help: null,
-      placeholder: { zh_Hans: '请输入你的飞书 app secret', en_US: 'Enter your Feishu app secret' },
-      type: 'secret-input',
-      required: true,
-      default: ''
-    }
-  ];
+  const mcpAuthSchema = useMemo(() => {
+    const serviceName = selectedService?.name || 'MCP';
+    return [
+      {
+        name: 'client_id',
+        label: { zh_Hans: '应用 ID', en_US: 'App ID' },
+        help: { zh_Hans: `请输入您的${serviceName} app id`, en_US: `Enter your ${serviceName} app id` },
+        placeholder: { zh_Hans: `请输入您的${serviceName} app id`, en_US: `Enter your ${serviceName} app id` },
+        type: 'text-input',
+        required: true,
+        default: ''
+      },
+      {
+        name: 'client_secret',
+        label: { zh_Hans: 'APP 秘密', en_US: 'App Secret' },
+        help: null,
+        placeholder: { zh_Hans: `请输入您的${serviceName} 应用程序秘密`, en_US: `Enter your ${serviceName} app secret` },
+        type: 'secret-input',
+        required: true,
+        default: ''
+      }
+    ] as ToolCredential[];
+  }, [selectedService?.name]);
 
   return (
     <div className="flex flex-col gap-8 p-8 min-h-screen font-sans text-gray-900 bg-[#F9FAFB]">
