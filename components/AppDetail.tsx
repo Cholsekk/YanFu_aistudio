@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { AppItem } from '../types';
+import { AppDevHubContext } from '../context/AppContext';
 import { 
   ChevronLeft, 
   Settings, 
@@ -13,6 +14,7 @@ import {
   Edit3
 } from 'lucide-react';
 import WorkflowEditor from './WorkflowEditor';
+import MonitoringPage from './MonitoringPage';
 
 interface AppDetailProps {
   app: AppItem;
@@ -80,6 +82,10 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
           <WorkflowEditor />
         </div>
       );
+    }
+
+    if (activeTab === 'monitor') {
+      return <MonitoringPage />;
     }
 
     return (
@@ -151,8 +157,10 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
       </div>
 
       {/* Content Section */}
-      <div className={`flex-grow bg-gray-50/30 overflow-hidden relative ${activeTab === 'orchestrate' && app.type === '工作流应用' ? 'p-0' : 'p-8 overflow-auto'}`}>
-        {renderContent()}
+      <div className={`flex-grow bg-white overflow-auto relative ${activeTab === 'orchestrate' && app.type === '工作流应用' ? 'p-0' : 'p-8'}`}>
+        <AppDevHubContext.Provider value={app}>
+          {renderContent()}
+        </AppDevHubContext.Provider>
       </div>
     </div>
   );
