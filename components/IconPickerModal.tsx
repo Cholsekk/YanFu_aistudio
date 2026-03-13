@@ -185,6 +185,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
       onClose={onClose} 
       title={isCropping ? "裁剪图片" : "选择图标"} 
       maxWidth="max-w-md"
+      zIndex="z-[2000]"
       footer={
         isCropping ? (
           <>

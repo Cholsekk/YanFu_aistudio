@@ -10,6 +10,7 @@ interface ModalProps {
   footer?: ReactNode;
   maxWidth?: string;
   bodyClassName?: string;
+  zIndex?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({ 
@@ -19,12 +20,13 @@ const Modal: React.FC<ModalProps> = ({
   children, 
   footer, 
   maxWidth = "max-w-2xl",
-  bodyClassName = "p-6 overflow-y-auto custom-scrollbar"
+  bodyClassName = "p-6 overflow-y-auto custom-scrollbar",
+  zIndex = "z-[1000]"
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className={`fixed inset-0 ${zIndex} flex items-center justify-center p-4`}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className={`bg-white rounded-2xl shadow-2xl w-full ${maxWidth} relative z-10 flex flex-col max-h-[90vh]`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
