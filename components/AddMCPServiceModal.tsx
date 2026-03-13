@@ -30,7 +30,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     sse_read_timeout: initialData?.configuration?.sse_read_timeout || 300,
     icon: initialData?.icon || SYS_ICON_IDS[0],
     iconType: initialData?.iconType || 'sys-icon',
-    iconBgColor: initialData?.iconBgColor || 'bg-indigo-600'
+    iconBgColor: initialData?.iconBgColor || 'bg-indigo-600',
+    iconUrl: initialData?.icon_url || ''
   });
   const [headers, setHeaders] = useState<Header[]>(initialData?.headers || []);
 
@@ -48,7 +49,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           sse_read_timeout: initialData.configuration?.sse_read_timeout || 300,
           icon: initialData.icon || SYS_ICON_IDS[0],
           iconType: initialData.iconType || 'sys-icon',
-          iconBgColor: initialData.iconBgColor || 'bg-indigo-600'
+          iconBgColor: initialData.iconBgColor || 'bg-indigo-600',
+          iconUrl: initialData.icon_url || ''
         });
         setHeaders(initialData.headers || []);
       } else {
@@ -63,7 +65,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           sse_read_timeout: 300,
           icon: SYS_ICON_IDS[0],
           iconType: 'sys-icon',
-          iconBgColor: 'bg-indigo-600'
+          iconBgColor: 'bg-indigo-600',
+          iconUrl: ''
         });
         setHeaders([]);
       }
@@ -99,8 +102,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     onClose();
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
-    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-indigo-600' });
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
+    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-indigo-600', iconUrl: data.iconUrl || '' });
   };
 
   return (
@@ -143,7 +146,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200 overflow-hidden relative group"
                 >
                   {formData.iconType === 'image' ? (
-                    <img src={formData.icon} alt="icon" className="w-full h-full object-cover" />
+                    <img src={formData.iconUrl || formData.icon} alt="icon" className="w-full h-full object-cover" />
                   ) : formData.iconType === 'sys-icon' ? (
                     <img src={`/sys_icons/Component ${formData.icon}.svg`} alt="icon" className="w-full h-full object-cover" />
                   ) : (

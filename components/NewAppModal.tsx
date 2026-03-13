@@ -23,6 +23,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     icon: 'MessageSquare',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
     iconBgColor: 'bg-primary-600',
+    iconUrl: '',
     builtIn: false
   });
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
@@ -37,6 +38,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         icon: initialData.icon,
         iconType: initialData.iconType,
         iconBgColor: initialData.iconBgColor || 'bg-primary-600',
+        iconUrl: initialData.icon_url || '',
         builtIn: initialData.builtIn || false
       });
     } else {
@@ -48,6 +50,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         icon: 'MessageSquare',
         iconType: 'icon',
         iconBgColor: 'bg-primary-600',
+        iconUrl: '',
         builtIn: false
       });
     }
@@ -83,8 +86,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     onClose();
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
-    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-primary-600' });
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
+    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-primary-600', iconUrl: data.iconUrl || '' });
   };
 
   return (
@@ -114,7 +117,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                 className="w-12 h-12 rounded-xl border border-gray-100 flex items-center justify-center flex-shrink-0 hover:border-primary-300 transition-colors overflow-hidden group relative"
               >
                 {formData.iconType === 'image' ? (
-                  <img src={formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
+                  <img src={formData.iconUrl || formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
                 ) : formData.iconType === 'sys-icon' ? (
                   <div className="w-full h-full bg-gray-50 flex items-center justify-center overflow-hidden">
                     <img 

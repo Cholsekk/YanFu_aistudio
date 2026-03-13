@@ -1,14 +1,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Modal from './Modal';
-import { Sparkles, Image as ImageIcon, Check, Upload, X, Crop, ZoomIn, ZoomOut } from 'lucide-react';
+import { Sparkles, Image as ImageIcon, Check, Upload, X, Crop, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
 import { SYS_ICON_IDS } from '../constants';
+import { apiService } from '../services/apiService';
 
 interface IconPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => void;
-  initialValue?: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string };
+  onConfirm: (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => void;
+  initialValue?: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string };
 }
 
 const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onConfirm, initialValue }) => {
@@ -17,6 +18,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
     initialValue?.iconType === 'sys-icon' ? initialValue.icon : SYS_ICON_IDS[0]
   );
   const [uploadedImage, setUploadedImage] = useState(initialValue?.iconType === 'image' ? initialValue.icon : '');
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(initialValue?.iconType === 'image' ? (initialValue.iconUrl || initialValue.icon) : '');
   
   // Cropping state
   const [isCropping, setIsCropping] = useState(false);
@@ -58,16 +60,21 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
     if (e.target) e.target.value = '';
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleConfirm = () => {
     if (activeTab === 'system') {
       onConfirm({ icon: selectedIcon, iconType: 'sys-icon' });
+      onClose();
     } else if (uploadedImage) {
-      onConfirm({ icon: uploadedImage, iconType: 'image' });
+      onConfirm({ icon: uploadedImage, iconType: 'image', iconUrl: uploadedImageUrl });
+      onClose();
+    } else {
+      onClose();
     }
-    onClose();
   };
 
-  const applyCrop = () => {
+  const applyCrop = async () => {
     if (!imgRef.current) return;
 
     const canvas = document.createElement('canvas');
@@ -86,16 +93,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
     const scaleX = naturalWidth / displayedWidth;
     const scaleY = naturalHeight / displayedHeight;
 
-    // The cropArea.size is relative to the displayed image *before* the zoom transform
-    // But since our UI implementation moves the selection box relative to the image,
-    // we need to account for how much of the "natural" image is actually inside that aperture.
-    
-    // Adjust coordinates for zoom: when zoomed in, the visible window covers less source pixels
     const sourceSize = (cropArea.size * scaleX) / zoom;
-    
-    // We also need to find the center of the current selection and project it back
-    // However, for simplicity with the current drag-box implementation, we'll use the box coordinates
-    // and divide by zoom because the box effectively "shrinks" its coverage on the source image.
     const sourceX = (cropArea.x * scaleX) + (cropArea.size * scaleX * (1 - 1/zoom) / 2);
     const sourceY = (cropArea.y * scaleY) + (cropArea.size * scaleY * (1 - 1/zoom) / 2);
 
@@ -105,9 +103,29 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
       0, 0, outputSize, outputSize
     );
 
-    setUploadedImage(canvas.toDataURL('image/png'));
+    const dataUrl = canvas.toDataURL('image/png');
+    
+    setIsUploading(true);
     setIsCropping(false);
     setTempImage(null);
+    
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], 'icon.png', { type: 'image/png' });
+      const uploadRes = await apiService.uploadFile(file);
+      
+      // We store the ID in uploadedImage, and the URL in a new state or just keep it simple
+      // Actually, we can just store the ID in uploadedImage and the dataUrl in a ref or another state
+      setUploadedImage(uploadRes.id);
+      setUploadedImageUrl(dataUrl);
+    } catch (error) {
+      console.error('Failed to upload image', error);
+      setUploadedImage(dataUrl);
+      setUploadedImageUrl(dataUrl);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const cancelCrop = () => {
@@ -180,11 +198,13 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
           </>
         ) : (
           <>
-            <button onClick={onClose} className="px-6 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200 transition-colors">取消</button>
+            <button onClick={onClose} disabled={isUploading} className="px-6 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200 transition-colors disabled:opacity-50">取消</button>
             <button 
               onClick={handleConfirm}
-              className="px-8 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-200"
+              disabled={isUploading}
+              className="px-8 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-200 disabled:opacity-50 flex items-center gap-2"
             >
+              {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               确认
             </button>
           </>
@@ -306,10 +326,13 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
             <div className="flex flex-col items-center gap-4">
               {uploadedImage ? (
                 <div className="relative group">
-                  <img src={uploadedImage} alt="Uploaded" className="w-24 h-24 rounded-xl object-cover border-2 border-primary-100" />
+                  <img src={uploadedImageUrl} alt="Uploaded" className="w-24 h-24 rounded-xl object-cover border-2 border-primary-100" />
                   <div className="absolute inset-0 bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl gap-2">
                     <button 
-                      onClick={() => setUploadedImage('')}
+                      onClick={() => {
+                        setUploadedImage('');
+                        setUploadedImageUrl('');
+                      }}
                       className="bg-black/20 hover:bg-black/40 text-white p-1.5 rounded-full transition-colors"
                       title="删除"
                     >
@@ -317,7 +340,7 @@ const IconPickerModal: React.FC<IconPickerModalProps> = ({ isOpen, onClose, onCo
                     </button>
                     <button 
                       onClick={() => {
-                        setTempImage(uploadedImage);
+                        setTempImage(uploadedImageUrl);
                         setIsCropping(true);
                         setZoom(1);
                       }}

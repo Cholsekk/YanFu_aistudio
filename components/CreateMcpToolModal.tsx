@@ -24,6 +24,7 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
   const [serverUrl, setServerUrl] = useState('');
   const [serverIdentifier, setServerIdentifier] = useState('');
   const [icon, setIcon] = useState<string | { content: string; background: string }>({ content: 'Globe', background: '#f0f9ff' });
+  const [iconUrl, setIconUrl] = useState<string>('');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -60,12 +61,14 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
         console.warn('Failed to parse icon JSON:', e);
       }
       setIcon(initialIcon || { content: 'Globe', background: provider.icon_background || '#f0f9ff' });
+      setIconUrl(provider.icon_url || '');
     } else if (isOpen) {
       // Reset for new provider
       setName('');
       setServerUrl('');
       setServerIdentifier('');
       setIcon({ content: 'Globe', background: '#f0f9ff' });
+      setIconUrl('');
     }
   }, [provider, isOpen]);
 
@@ -135,13 +138,16 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
     }
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
     if (data.iconType === 'icon') {
       setIcon({ content: data.icon, background: data.iconBgColor || '#f0f9ff' });
+      setIconUrl('');
     } else if (data.iconType === 'sys-icon') {
       setIcon(`/sys_icons/Component ${data.icon}.svg`);
+      setIconUrl('');
     } else {
       setIcon(data.icon);
+      setIconUrl(data.iconUrl || '');
     }
   };
 
@@ -151,7 +157,7 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
         const id = icon.replace('/sys_icons/Component ', '').replace('.svg', '');
         return { icon: id, iconType: 'sys-icon' as const };
       }
-      return { icon, iconType: 'image' as const };
+      return { icon, iconType: 'image' as const, iconUrl };
     }
     return { icon: icon.content, iconType: 'icon' as const, iconBgColor: icon.background };
   };
@@ -213,7 +219,7 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
                     className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all group relative overflow-hidden"
                   >
                     {typeof icon === 'string' ? (
-                      <img src={icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={iconUrl || icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <div style={{ backgroundColor: icon.background }} className="w-full h-full flex items-center justify-center text-2xl text-white">
                         {(LucideIcons as any)[icon.content] ? React.createElement((LucideIcons as any)[icon.content], { className: "w-8 h-8" }) : icon.content}

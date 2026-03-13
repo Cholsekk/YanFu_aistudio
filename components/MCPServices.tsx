@@ -147,6 +147,7 @@ const MCPServices: React.FC = () => {
             icon: item.icon || 'LayoutGrid',
             iconType: item.icon_type || (typeof item.icon === 'string' && item.icon.startsWith('http') ? 'image' : 'icon'),
             iconBgColor: item.icon_background || 'bg-indigo-600',
+            iconUrl: item.icon_url || '',
             rawTools: item.tools || [],
             is_team_authorization: item.is_team_authorization
           };
@@ -177,7 +178,7 @@ const MCPServices: React.FC = () => {
     }
 
     if (service.iconType === 'image' || isUrl) {
-      const src = service.icon_url || service.icon;
+      const src = service.iconUrl || service.icon_url || service.icon;
       return (
         <img 
           src={src || undefined} 
@@ -319,6 +320,7 @@ const MCPServices: React.FC = () => {
           icon: detail?.icon || service.icon,
           iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
           iconBgColor: detail?.icon_background || service.iconBgColor,
+          iconUrl: detail?.icon_url || service.iconUrl || '',
           is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped
           updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
           updated_at: detail?.updated_at || service.updated_at,

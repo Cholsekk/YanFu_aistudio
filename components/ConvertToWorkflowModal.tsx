@@ -21,6 +21,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
   const [icon, setIcon] = useState('MessageSquare');
   const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>('icon');
   const [iconBgColor, setIconBgColor] = useState('bg-primary-600');
+  const [iconUrl, setIconUrl] = useState('');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
       setIcon(app.icon);
       setIconType(app.iconType);
       setIconBgColor(app.iconBgColor || 'bg-primary-600');
+      setIconUrl(app.icon_url || '');
     }
   }, [app, isOpen]);
 
@@ -62,9 +64,10 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
     setShowDeleteConfirm(false);
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
     setIcon(data.icon);
     setIconType(data.iconType);
+    setIconUrl(data.iconUrl || '');
     if (data.iconBgColor) {
       setIconBgColor(data.iconBgColor);
     }
@@ -126,7 +129,7 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
               className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0 hover:border-primary-300 transition-colors overflow-hidden group relative"
             >
               {iconType === 'image' ? (
-                <img src={icon} alt="icon" className="w-full h-full object-cover" />
+                <img src={iconUrl || icon} alt="icon" className="w-full h-full object-cover" />
               ) : (
                 <div className={`w-full h-full ${iconBgColor} flex items-center justify-center text-white`}>
                   {getIcon(icon, "w-6 h-6")}

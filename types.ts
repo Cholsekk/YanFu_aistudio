@@ -767,6 +767,7 @@ export type Collection = {
   description: TypeWithI18N
   icon: string | { content: string; background: string }
   icon_dark?: string | { content: string; background: string }
+  icon_url?: string | null
   label: TypeWithI18N
   type: CollectionType | string
   team_credentials: Record<string, any>
@@ -838,6 +839,7 @@ export interface McpProvider {
   description: TypeWithI18N;
   icon: string;
   icon_dark: string | null;
+  icon_url?: string | null;
   label: TypeWithI18N;
   type: string;
   masked_credentials: any | null;

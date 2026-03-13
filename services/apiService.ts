@@ -68,11 +68,14 @@ class ApiService {
     }
 
     const headers = {
-      'Content-Type': 'application/json',
       'x-target-base-url': baseUrl, // Tell the proxy where to send the request
       ...this.getAuthHeader(),
       ...options.headers,
     } as Record<string, string>;
+
+    if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     try {
       const response = await fetch(url, { ...options, headers });
@@ -1095,6 +1098,17 @@ class ApiService {
         target_id: targetID,
         type,
       } as any,
+    });
+  }
+
+  // 8. 文件上传 (File Upload)
+  async uploadFile(file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return this.request('/files/upload', {
+      method: 'POST',
+      body: formData as any,
     });
   }
 }

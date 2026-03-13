@@ -62,6 +62,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
 
   // Icon state
   const [icon, setIcon] = useState<string | { content: string; background: string }>('');
+  const [iconUrl, setIconUrl] = useState<string>('');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   // Parameter forms state
@@ -90,6 +91,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
         console.warn('Failed to parse icon JSON:', e);
       }
       setIcon(initialIcon);
+      setIconUrl(tool.icon_url || '');
       
       // Initialize parameter forms
       const initialForms: Record<string, string> = {};
@@ -149,13 +151,16 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
     setShowSaveConfirm(true);
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
     if (data.iconType === 'icon') {
       setIcon({ content: data.icon, background: data.iconBgColor || '#f0f9ff' });
+      setIconUrl('');
     } else if (data.iconType === 'sys-icon') {
       setIcon(`/sys_icons/Component ${data.icon}.svg`);
+      setIconUrl('');
     } else {
       setIcon(data.icon);
+      setIconUrl(data.iconUrl || '');
     }
   };
 
@@ -171,7 +176,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
       if (isSysIconUrl(icon)) {
         return { icon: getSysIconId(icon), iconType: 'sys-icon' as const };
       }
-      return { icon, iconType: 'image' as const };
+      return { icon, iconType: 'image' as const, iconUrl };
     }
     return { icon: icon.content, iconType: 'icon' as const, iconBgColor: icon.background };
   };
@@ -240,7 +245,7 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
                 className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all group relative overflow-hidden"
               >
                 {typeof icon === 'string' ? (
-                  <img src={icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={iconUrl || icon || undefined} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <div style={{ backgroundColor: icon.background }} className="w-full h-full flex items-center justify-center text-xl text-white">
                     {(LucideIcons as any)[icon.content] ? React.createElement((LucideIcons as any)[icon.content], { className: "w-6 h-6" }) : icon.content}

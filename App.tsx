@@ -438,7 +438,6 @@ const App: React.FC = () => {
             mode: 'custom',
             icon: appData.icon,
             icon_type: appData.iconType || 'icon',
-            icon_url: appData.icon_url,
             url: appData.appUrl
           },
           app_id: appData.id,

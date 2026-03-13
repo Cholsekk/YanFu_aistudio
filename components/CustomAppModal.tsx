@@ -31,7 +31,8 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     description: '',
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600'
+    iconBgColor: 'bg-indigo-600',
+    iconUrl: ''
   });
 
   const [categories, setCategories] = useState<AppCategory[]>([]);
@@ -147,7 +148,8 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         description: initialData.description,
         icon: initialData.icon,
         iconType: initialData.iconType,
-        iconBgColor: initialData.iconBgColor || 'bg-indigo-600'
+        iconBgColor: initialData.iconBgColor || 'bg-indigo-600',
+        iconUrl: initialData.icon_url || ''
       });
     } else {
       setFormData(prev => ({
@@ -166,7 +168,8 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         description: '',
         icon: 'LayoutGrid',
         iconType: 'icon',
-        iconBgColor: 'bg-indigo-600'
+        iconBgColor: 'bg-indigo-600',
+        iconUrl: ''
       }));
     }
   }, [initialData, isOpen]);
@@ -186,7 +189,6 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
           mode: 'custom',
           icon: formData.icon,
           icon_type: formData.iconType,
-          icon_url: formData.iconType === 'image' ? formData.icon : undefined,
           url: formData.appUrl
         },
         app_id: initialData?.id,
@@ -235,8 +237,8 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     }
   };
 
-  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string }) => {
-    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-indigo-600' });
+  const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
+    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-indigo-600', iconUrl: data.iconUrl || '' });
   };
 
   const addMenuItem = () => {
@@ -284,7 +286,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
                 className="w-10 h-10 rounded-lg border border-gray-100 flex items-center justify-center flex-shrink-0 hover:border-primary-300 transition-colors overflow-hidden group relative"
               >
                 {formData.iconType === 'image' ? (
-                  <img src={formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
+                  <img src={formData.iconUrl || formData.icon || undefined} alt="icon" className="w-full h-full object-cover" />
                 ) : formData.iconType === 'sys-icon' ? (
                   <div className="w-full h-full bg-gray-50 flex items-center justify-center overflow-hidden">
                     <img 
