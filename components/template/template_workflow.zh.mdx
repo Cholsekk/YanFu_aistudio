@@ -1,2 +1,128 @@
-# Workflow (Chinese)
-Placeholder for workflow documentation.
+# 工作流编排对话型应用 API
+
+对话应用支持会话持久化，可将之前的聊天记录作为上下进行回答，可适用于聊天/客服 AI 等。
+
+## 基础 URL
+`{{API_BASE_URL}}`
+
+## 鉴权
+
+Service API 使用 `API-Key` 进行鉴权。
+**强烈建议开发者把 `API-Key` 放在后端存储，而非分享或者放在客户端存储，以免 `API-Key` 泄露，导致财产损失。**
+所有 API 请求都应在 `Authorization` HTTP Header 中包含您的 `API-Key`，如下所示：
+
+```javascript
+Authorization: Bearer {{API_KEY}}
+```
+
+---
+
+## 执行 workflow (POST /workflows/run)
+
+执行 workflow，没有已发布的 workflow，不可执行。
+
+### Request Body
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| `inputs` | object | 允许传入 App 定义的各变量值。 |
+| `response_mode` | string | `streaming` 流式模式（推荐），`blocking` 阻塞模式。 |
+| `user` | string | 用户标识，用于定义终端用户的身份。 |
+| `files` | array[object] | 文件列表，仅当模型支持 Vision 能力时可用。 |
+
+### Response
+
+当 `response_mode` 为 `blocking` 时，返回 CompletionResponse object。
+当 `response_mode` 为 `streaming`时，返回 ChunkCompletionResponse object 流式序列。
+
+### cURL 示例
+
+```bash
+curl -X POST '{{API_BASE_URL}}/workflows/run' \
+--header 'Authorization: Bearer {{API_KEY}}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "inputs": {},
+    "response_mode": "streaming",
+    "user": "abc-123"
+}'
+```
+
+---
+
+## 获取 workflow 执行情况 (GET /workflows/run/:workflow_id)
+
+根据 workflow 执行 ID 获取 workflow 任务当前执行结果。
+
+### Path
+- `workflow_id` (string) workflow 执行 ID
+
+### Response
+- `id` (string) workflow 执行 ID
+- `workflow_id` (string) 关联的 Workflow ID
+- `status` (string) 执行状态 `running` / `succeeded` / `failed` / `stopped`
+- `inputs` (json) 任务输入内容
+- `outputs` (json) 任务输出内容
+- `error` (string) 错误原因
+- `total_steps` (int) 任务执行总步数
+- `total_tokens` (int) 任务执行总 tokens
+- `created_at` (timestamp) 任务开始时间
+- `finished_at` (timestamp) 任务结束时间
+- `elapsed_time` (float) 耗时(s)
+
+---
+
+## 停止响应 (POST /workflows/tasks/:task_id/stop)
+
+仅支持流式模式。
+
+### Path
+- `task_id` (string) 任务 ID
+
+### Request Body
+- `user` (string) Required 用户标识。
+
+---
+
+## 上传文件 (POST /files/upload)
+
+上传文件并在发送消息时使用，可实现图文多模态理解。
+支持您的工作流程所支持的任何格式。
+*上传的文件仅供当前终端用户使用。*
+
+### Request Body
+该接口需使用 `multipart/form-data` 进行请求。
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| `file` | file | 要上传的文件。 |
+| `user` | string | 用户标识，必须和发送消息接口传入 user 保持一致。 |
+
+### cURL 示例
+
+```bash
+curl -X POST '{{API_BASE_URL}}/files/upload' \
+--header 'Authorization: Bearer {{API_KEY}}' \
+--form 'file=@"/path/to/file"'
+```
+
+---
+
+## 获取应用配置信息 (GET /parameters)
+
+用于进入页面一开始，获取功能开关、输入参数名称、类型及默认值等使用。
+
+### Query
+- `user` (string) 用户标识。
+
+---
+
+## 获取 workflow 日志 (GET /workflows/logs)
+
+倒序返回 workflow 日志。
+
+### Query
+- `keyword` (string) 关键字
+- `status` (string) 执行状态 succeeded/failed/stopped
+- `page` (int) 当前页码, 默认1.
+- `limit` (int) 每页条数, 默认20.

@@ -1,2 +1,211 @@
-# Chat (Chinese)
-Placeholder for chat documentation.
+# 对话型应用 API
+
+对话应用支持会话持久化，可将之前的聊天记录作为上下进行回答，可适用于聊天/客服 AI 等。
+
+## 基础 URL
+`{{API_BASE_URL}}`
+
+## 鉴权
+
+Service API 使用 `API-Key` 进行鉴权。
+**强烈建议开发者把 `API-Key` 放在后端存储，而非分享或者放在客户端存储，以免 `API-Key` 泄露，导致财产损失。**
+所有 API 请求都应在 `Authorization` HTTP Header 中包含您的 `API-Key`，如下所示：
+
+```javascript
+Authorization: Bearer {{API_KEY}}
+```
+
+---
+
+## 发送对话消息 (POST /chat-messages)
+
+创建会话消息。
+
+### Request Body
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| `query` | string | 用户输入/提问内容。 |
+| `inputs` | object | 允许传入 App 定义的各变量值。默认 `{}` |
+| `response_mode` | string | `streaming` 流式模式（推荐），`blocking` 阻塞模式。 |
+| `user` | string | 用户标识，用于定义终端用户的身份。 |
+| `conversation_id` | string | (选填)会话 ID，需要基于之前的聊天记录继续对话。 |
+| `files` | array[object] | 上传的文件。 |
+| `auto_generate_name` | bool | (选填)自动生成标题，默认 `true`。 |
+
+### Response
+
+当 `response_mode` 为 `blocking` 时，返回 ChatCompletionResponse object。
+当 `response_mode` 为 `streaming`时，返回 ChunkChatCompletionResponse object 流式序列。
+
+### cURL 示例
+
+```bash
+curl -X POST '{{API_BASE_URL}}/chat-messages' \
+-H 'Authorization: Bearer {{API_KEY}}' \
+-H 'Content-Type: application/json' \
+--data-raw '{
+    "inputs": { "name": "yanfu" },
+    "query": "What are the specs of the iPhone 13 Pro Max?",
+    "conversation_id": "101b4c97-fc2e-463c-90b1-5261a4cdcafb",
+    "response_mode": "streaming",
+    "user": "abc-123",
+    "files": [
+      {
+        "type": "image",
+        "transfer_method": "remote_url",
+        "url": "http://yanfu.sl.hn.cn:3090/logo/logo-site.png"
+      }
+    ]
+}'
+```
+
+---
+
+## 上传文件 (POST /files/upload)
+
+上传文件（目前仅支持图片）并在发送消息时使用，可实现图文多模态理解。
+支持 png, jpg, jpeg, webp, gif 格式。
+*上传的文件仅供当前终端用户使用。*
+
+### Request Body
+该接口需使用 `multipart/form-data` 进行请求。
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| `file` | file | 要上传的文件。 |
+| `user` | string | 用户标识，用于定义终端用户的身份，必须和发送消息接口传入 user 保持一致。 |
+
+### cURL 示例
+
+```bash
+curl -X POST '{{API_BASE_URL}}/files/upload' \
+--header 'Authorization: Bearer {{API_KEY}}' \
+--form 'file=@"/path/to/file"'
+```
+
+---
+
+## 停止响应 (POST /chat-messages/:task_id/stop)
+
+仅支持流式模式。
+
+### Path
+- `task_id` (string) 任务 ID，可在流式返回 Chunk 中获取
+
+### Request Body
+- `user` (string) Required
+  用户标识，用于定义终端用户的身份，必须和发送消息接口传入 user 保持一致。
+
+---
+
+## 消息反馈（点赞） (POST /messages/:message_id/feedbacks)
+
+消息终端用户反馈、点赞，方便应用开发者优化输出预期。
+
+### Path Params
+- `message_id` (string) 消息 ID
+
+### Request Body
+- `rating` (string) 点赞 like, 点踩 dislike, 撤销点赞 null
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+
+---
+
+## 获取下一轮建议问题列表 (GET /messages/{message_id}/suggested)
+
+获取下一轮建议问题列表。
+
+### Path Params
+- `message_id` (string) Message ID
+
+### Query
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+
+---
+
+## 获取会话历史消息 (GET /messages)
+
+滚动加载形式返回历史聊天记录，第一页返回最新 `limit` 条，即：倒序返回。
+
+### Query
+- `conversation_id` (string) 会话 ID
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+- `first_id` (string) 当前页第一条聊天记录的 ID，默认 null
+- `limit` (int) 一次请求返回多少条聊天记录，默认 20 条。
+
+---
+
+## 获取会话列表 (GET /conversations)
+
+获取当前用户的会话列表，默认返回最近的 20 条。
+
+### Query
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+- `last_id` (string) 当前页最后面一条记录的 ID，默认 null
+- `limit` (int) 一次请求返回多少条记录
+- `pinned` (bool) 只返回置顶 true，只返回非置顶 false
+
+---
+
+## 删除会话 (DELETE /conversations/:conversation_id)
+
+删除会话。
+
+### Path
+- `conversation_id` (string) 会话 ID
+
+### Request Body
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+
+---
+
+## 会话重命名 (POST /conversations/:conversation_id/name)
+
+对会话进行重命名，会话名称用于显示在支持多会话的客户端上。
+
+### Request Body
+- `name` (string) 名称，若 `auto_generate` 为 `true` 时，该参数可不传。
+- `auto_generate` (string) 自动生成标题，默认 false。
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+
+---
+
+## 语音转文字 (POST /audio-to-text)
+
+### Request Body
+该接口需使用 `multipart/form-data` 进行请求。
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| `file` | file | 语音文件。支持格式：`['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm']`，大小限制：15MB |
+| `user` | string | 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。 |
+
+---
+
+## 文字转语音 (POST /text-to-audio)
+
+文字转语音。
+
+### Request Body
+- `message_id` (str) Yanfu 生成的文本消息，那么直接传递生成的message-id 即可，后台会通过 message_id 查找相应的内容直接合成语音信息。如果同时传 message_id 和 text，优先使用 message_id。
+- `text` (str) 语音生成内容。如果没有传 message-id的话，则会使用这个字段的内容
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+
+---
+
+## 获取应用配置信息 (GET /parameters)
+
+用于进入页面一开始，获取功能开关、输入参数名称、类型及默认值等使用。
+
+### Query
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
+
+---
+
+## 获取应用 Meta 信息 (GET /meta)
+
+用于获取工具 icon。
+
+### Query
+- `user` (string) 用户标识，由开发者定义规则，需保证用户标识在应用内唯一。
