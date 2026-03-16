@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Activity, 
   Copy, 
@@ -25,6 +25,7 @@ import EmbedModal from './EmbedModal';
 import SettingsModal from './SettingsModal';
 import TimeRangeSelector from './TimeRangeSelector';
 import { useAppDevHub } from '../context/AppContext';
+import { monitoringService } from '../services/monitoringService';
 
 const data = [
   { name: '00:00', value: 0 },
@@ -95,12 +96,53 @@ const MonitoringPage = () => {
   const [apiCopied, setApiCopied] = useState(false);
   const [isServiceRunning, setIsServiceRunning] = useState(true);
   const [isApiRunning, setIsApiRunning] = useState(true);
+  const [metrics, setMetrics] = useState({
+    dailyMessages: 0,
+    dailyConversations: 0,
+    dailyEndUsers: 0,
+    tokenCosts: 0,
+    averageInteractions: 0,
+    tps: 0,
+    satisfactionRate: 0,
+  });
   const publicUrl = "http://192.168.1.201:3005/chat/OteKTo7RRG0OSva7";
   const apiUrl = "http://192.168.1.201:5005/v1";
 
+  const fetchData = async (start?: string, end?: string) => {
+    try {
+      const [messages, conversations, users, costs, interactions, tps, satisfaction] = await Promise.all([
+        monitoringService.getDailyMessages(app.id, start, end),
+        monitoringService.getDailyConversations(app.id, start, end),
+        monitoringService.getDailyEndUsers(app.id, start, end),
+        monitoringService.getTokenCosts(app.id, start, end),
+        monitoringService.getAverageSessionInteractions(app.id, start, end),
+        monitoringService.getTokensPerSecond(app.id, start, end),
+        monitoringService.getUserSatisfactionRate(app.id, start, end),
+      ]);
+      
+      setMetrics({
+        dailyMessages: messages.data.reduce((acc, curr) => acc + curr.message_count, 0),
+        dailyConversations: conversations.data.reduce((acc, curr) => acc + curr.conversation_count, 0),
+        dailyEndUsers: users.data.reduce((acc, curr) => acc + curr.terminal_count, 0),
+        tokenCosts: costs.data.reduce((acc, curr) => acc + curr.token_count, 0),
+        averageInteractions: interactions.data.reduce((acc, curr) => acc + (curr.interactions || 0), 0) / (interactions.data.length || 1),
+        tps: tps.data.reduce((acc, curr) => acc + (curr.tps || 0), 0) / (tps.data.length || 1),
+        satisfactionRate: satisfaction.data.reduce((acc, curr) => acc + (curr.rate || 0), 0) / (satisfaction.data.length || 1),
+      });
+    } catch (error) {
+      console.error('Failed to fetch metrics:', error);
+    }
+  };
+
+  useEffect(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    fetchData(start.toISOString().slice(0, 16).replace('T', ' '), end.toISOString().slice(0, 16).replace('T', ' '));
+  }, [app.id]);
+
   const handleRangeChange = (start: string, end: string) => {
-    console.log(`Triggering analysis APIs for app ${app.id} with: start=${start}, end=${end}`);
-    // TODO: Implement API calls here
+    fetchData(start, end);
   };
 
   const handleCopy = (text: string, setCopiedState: (val: boolean) => void) => {
@@ -208,13 +250,13 @@ const MonitoringPage = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <MetricCard title="全部会话数" value="0" chartData={data} colorClass="border-blue-500" tooltip="反映 AI 每天的会话总次数，提示词编排和调试的消息不计入。" />
-        <MetricCard title="活跃用户数" value="0" chartData={data} colorClass="border-purple-500" tooltip="与 AI 有效互动，即有一问一答以上的唯一用户数。提示词编排和调试的会话不计入。" />
-        <MetricCard title="平均会话互动数" value="0" chartData={data} colorClass="border-green-500" tooltip="反应每个会话用户的持续沟通次数，如果用户与 AI 问答了 10 轮，即为 10。该指标反映了用户粘性。仅在对话型应用提供。" />
-        <MetricCard title="Token 输出速度" value="0" unit="Token/秒" chartData={data} colorClass="border-orange-500" tooltip="衡量 LLM 的性能。统计 LLM 从请求开始到输出完毕这段期间的 Tokens 输出速度。" />
-        <MetricCard title="用户满意度" value="0" chartData={data} colorClass="border-red-500" tooltip="每 1000 条消息的点赞数。反应了用户对回答十分满意的比例。" />
-        <MetricCard title="费用消耗" value="0" unit="耗费 Tokens (~$0.0000)" chartData={data} colorClass="border-indigo-500" tooltip="反映每日该应用请求语言模型的 Tokens 花费，用于成本控制。" />
-        <MetricCard title="全部消息数" value="0" chartData={data} colorClass="border-pink-500" tooltip="反映 AI 每天的互动总次数，每回答用户一个问题算一条 Message。" />
+        <MetricCard title="全部会话数" value={metrics.dailyConversations} chartData={data} colorClass="border-blue-500" tooltip="反映 AI 每天的会话总次数，提示词编排和调试的消息不计入。" />
+        <MetricCard title="活跃用户数" value={metrics.dailyEndUsers} chartData={data} colorClass="border-purple-500" tooltip="与 AI 有效互动，即有一问一答以上的唯一用户数。提示词编排和调试的会话不计入。" />
+        <MetricCard title="平均会话互动数" value={metrics.averageInteractions.toFixed(1)} chartData={data} colorClass="border-green-500" tooltip="反应每个会话用户的持续沟通次数，如果用户与 AI 问答了 10 轮，即为 10。该指标反映了用户粘性。仅在对话型应用提供。" />
+        <MetricCard title="Token 输出速度" value={metrics.tps.toFixed(1)} unit="Token/秒" chartData={data} colorClass="border-orange-500" tooltip="衡量 LLM 的性能。统计 LLM 从请求开始到输出完毕这段期间的 Tokens 输出速度。" />
+        <MetricCard title="用户满意度" value={`${(metrics.satisfactionRate * 100).toFixed(1)}%`} chartData={data} colorClass="border-red-500" tooltip="每 1000 条消息的点赞数。反应了用户对回答十分满意的比例。" />
+        <MetricCard title="费用消耗" value={metrics.tokenCosts} unit="Tokens" chartData={data} colorClass="border-indigo-500" tooltip="反映每日该应用请求语言模型的 Tokens 花费，用于成本控制。" />
+        <MetricCard title="全部消息数" value={metrics.dailyMessages} chartData={data} colorClass="border-pink-500" tooltip="反映 AI 每天的互动总次数，每回答用户一个问题算一条 Message。" />
       </div>
     </div>
   );

@@ -357,7 +357,7 @@ export type WorkflowDailyConversationsResponse = {
 }
 
 export type AppStatisticsResponse = {
-  data: Array<{ date: string }>
+  data: Array<{ date: string; [key: string]: any }>
 }
 
 export type AppDailyEndUsersResponse = {
@@ -365,7 +365,7 @@ export type AppDailyEndUsersResponse = {
 }
 
 export type AppTokenCostsResponse = {
-  data: Array<{ date: string; token_count: number; total_price: number; currency: number }>
+  data: Array<{ date: string; token_count: number; total_price: number; currency: string }>
 }
 
 export type UpdateAppModelConfigResponse = { result: string }
