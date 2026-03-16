@@ -146,7 +146,7 @@ const MonitoringPage = () => {
         const dd = pad(date.getDate());
         const hh = pad(date.getHours());
         const min = pad(date.getMinutes());
-        return `${yyyy}-${mm}-${dd}%20${hh}:${min}`;
+        return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
     };
 
     fetchData(formatDate(start), formatDate(end));

@@ -40,7 +40,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ onRangeChange }) 
     const min = pad(date.getMinutes());
     
     // YYYY-MM-DD HH:mm
-    const formatted = `${yyyy}-${mm}-${dd}%20${hh}:${min}`;
+    const formatted = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
     return formatted;
   };
 
