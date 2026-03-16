@@ -1,15 +1,18 @@
 'use client'
 import React, { useContext, createContext, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { Copy, Key, Check } from 'lucide-react'
 import { message } from 'antd'
-import TemplateEn from './template/template.en.mdx'
-import TemplateZh from './template/template.zh.mdx'
-import TemplateAdvancedChatEn from './template/template_advanced_chat.en.mdx'
-import TemplateAdvancedChatZh from './template/template_advanced_chat.zh.mdx'
-import TemplateWorkflowEn from './template/template_workflow.en.mdx'
-import TemplateWorkflowZh from './template/template_workflow.zh.mdx'
-import TemplateChatEn from './template/template_chat.en.mdx'
-import TemplateChatZh from './template/template_chat.zh.mdx'
+
+// Raw imports
+import TemplateEn from './template/template.en.mdx?raw'
+import TemplateZh from './template/template.zh.mdx?raw'
+import TemplateAdvancedChatEn from './template/template_advanced_chat.en.mdx?raw'
+import TemplateAdvancedChatZh from './template/template_advanced_chat.zh.mdx?raw'
+import TemplateWorkflowEn from './template/template_workflow.en.mdx?raw'
+import TemplateWorkflowZh from './template/template_workflow.zh.mdx?raw'
+import TemplateChatEn from './template/template_chat.en.mdx?raw'
+import TemplateChatZh from './template/template_chat.zh.mdx?raw'
 
 // Mock context for now
 const I18nContext = createContext({ locale: 'zh-Hans' });
@@ -23,12 +26,6 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
   const [copied, setCopied] = useState(false)
 
   const apiUrl = appDetail?.api_base_url || "http://localhost:5005/v1"
-  const variables = appDetail?.model_config?.configs?.prompt_variables || []
-  const inputs = variables.reduce((res: any, variable: any) => {
-    res[variable.key] = variable.name || ''
-    return res
-  }, {})
-
   const isEn = locale === 'en-US';
 
   const handleCopy = (text: string) => {
@@ -37,6 +34,19 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
     message.success('已复制');
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const getTemplate = () => {
+    if (appDetail?.mode === 'chat' || appDetail?.mode === 'agent-chat') {
+      return isEn ? TemplateChatEn : TemplateChatZh;
+    }
+    if (appDetail?.mode === 'advanced-chat') {
+      return isEn ? TemplateAdvancedChatEn : TemplateAdvancedChatZh;
+    }
+    if (appDetail?.mode === 'workflow') {
+      return isEn ? TemplateWorkflowEn : TemplateWorkflowZh;
+    }
+    return isEn ? TemplateEn : TemplateZh;
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-8">
@@ -84,18 +94,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
 
         {/* Dynamic Endpoint Content */}
         <div className="border-t border-gray-200 pt-8">
-          {(appDetail?.mode === 'chat' || appDetail?.mode === 'agent-chat') && (
-            isEn ? <TemplateChatEn appDetail={appDetail} variables={variables} inputs={inputs} /> : <TemplateChatZh appDetail={appDetail} variables={variables} inputs={inputs} />
-          )}
-          {appDetail?.mode === 'advanced-chat' && (
-            isEn ? <TemplateAdvancedChatEn appDetail={appDetail} variables={variables} inputs={inputs} /> : <TemplateAdvancedChatZh appDetail={appDetail} variables={variables} inputs={inputs} />
-          )}
-          {appDetail?.mode === 'workflow' && (
-            isEn ? <TemplateWorkflowEn appDetail={appDetail} variables={variables} inputs={inputs} /> : <TemplateWorkflowZh appDetail={appDetail} variables={variables} inputs={inputs} />
-          )}
-          {appDetail?.mode === 'completion' && (
-            isEn ? <TemplateEn appDetail={appDetail} variables={variables} inputs={inputs} /> : <TemplateZh appDetail={appDetail} variables={variables} inputs={inputs} />
-          )}
+          <ReactMarkdown>{getTemplate()}</ReactMarkdown>
         </div>
       </article>
     </div>

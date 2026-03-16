@@ -14,6 +14,7 @@ import AppDetail from './components/AppDetail';
 import TokenConfigModal from './components/TokenConfigModal';
 import ConvertToWorkflowModal from './components/ConvertToWorkflowModal';
 import McpAuthCallback from './components/McpAuthCallback';
+import ApiDocPage from './components/ApiDocPage';
 import { APP_TYPES } from './constants';
 import { AppItem, AppMode, Tag, MenuItem } from './types';
 import { apiService } from './services/apiService';
@@ -968,6 +969,7 @@ const App: React.FC = () => {
     return (
     <Routes>
       <Route path="/mcp-auth-callback" element={<McpAuthCallback />} />
+      <Route path="/api-doc/:appId" element={<ApiDocPage />} />
       <Route path="*" element={
         <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
           <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
