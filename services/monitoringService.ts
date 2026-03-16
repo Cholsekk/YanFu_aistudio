@@ -8,6 +8,7 @@ import {
 } from '../types';
 
 const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
+const API_PREFIX = '/console/api';
 
 async function request<T>(path: string, params?: Record<string, string>): Promise<T> {
   const token = localStorage.getItem('console_token');
@@ -16,7 +17,7 @@ async function request<T>(path: string, params?: Record<string, string>): Promis
     throw new Error('Missing console_token');
   }
 
-  const url = new URL(`/api-proxy${path}`, window.location.origin);
+  const url = new URL(`/api-proxy${API_PREFIX}${path}`, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
   }
