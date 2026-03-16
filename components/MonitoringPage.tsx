@@ -10,8 +10,10 @@ import {
   Calendar,
   ChevronDown,
   LayoutGrid,
-  Check
+  Check,
+  AlertCircle
 } from 'lucide-react';
+import { message, Modal } from 'antd';
 import { 
   LineChart, 
   Line, 
@@ -177,6 +179,25 @@ const MonitoringPage = () => {
     setTimeout(() => setCopiedState(false), 2000);
   };
 
+  const handleRefreshUrl = () => {
+    Modal.confirm({
+      title: '重新生成',
+      content: '您是否要重新生成公开访问 URL？',
+      okText: '确认',
+      cancelText: '取消',
+      icon: <AlertCircle className="text-orange-500" />,
+      onOk: async () => {
+        try {
+          await monitoringService.updateAppSiteAccessToken(app.id);
+          message.success('已重新生成');
+          monitoringService.getAppDetail(app.id).then(setAppDetail);
+        } catch (err) {
+          message.error('重新生成失败');
+        }
+      }
+    });
+  };
+
   return (
     <div className="p-8 space-y-8">
       {/* Header */}
@@ -220,7 +241,10 @@ const MonitoringPage = () => {
               {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
               <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">复制</span>
             </button>
-            <button className="p-1.5 hover:bg-gray-200 rounded text-gray-500"><RefreshCw className="w-4 h-4" /></button>
+            <button className="p-1.5 hover:bg-gray-200 rounded text-gray-500 group relative" onClick={handleRefreshUrl}>
+              <RefreshCw className="w-4 h-4" />
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">重新生成</span>
+            </button>
           </div>
           <div className="flex gap-3 mt-4">
             <button onClick={() => setIsEmbedModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><LayoutGrid className="w-4 h-4" /> 嵌入</button>

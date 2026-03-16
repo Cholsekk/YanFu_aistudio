@@ -6,7 +6,8 @@ import {
   AppTokenCostsResponse,
   AppStatisticsResponse,
   AppDetailResponse,
-  App
+  App,
+  UpdateAppSiteCodeResponse
 } from '../types';
 
 const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
@@ -78,4 +79,7 @@ export const monitoringService = {
 
   updateAppSiteConfig: (appId: string, params: any) => 
     request<App>(`/apps/${appId}/site`, undefined, 'POST', params),
+
+  updateAppSiteAccessToken: (appId: string) =>
+    request<UpdateAppSiteCodeResponse>(`/apps/${appId}/site/access-token-reset`, undefined, 'POST'),
 };
