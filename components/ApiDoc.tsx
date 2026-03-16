@@ -1,8 +1,6 @@
 'use client'
-import React, { useContext, createContext, useState } from 'react'
+import React, { useContext, createContext } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { Copy, Key, Check } from 'lucide-react'
-import { message } from 'antd'
 
 // Raw imports
 import TemplateEn from './template/template.en.mdx?raw'
@@ -43,8 +41,8 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-8">
-      <article className="prose prose-xl max-w-none">
+    <div className="max-w-7xl mx-auto p-8 bg-white min-h-screen">
+      <article className="prose prose-zinc max-w-none prose-headings:font-bold prose-h1:text-4xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-zinc-600 prose-pre:bg-zinc-900 prose-pre:text-zinc-100 prose-code:text-zinc-800 prose-code:bg-zinc-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
         <ReactMarkdown>{getTemplate()}</ReactMarkdown>
       </article>
     </div>
