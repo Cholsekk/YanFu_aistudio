@@ -229,7 +229,17 @@ const MonitoringPage = () => {
         </div>
 
         <EmbedModal isOpen={isEmbedModalOpen} onClose={() => setIsEmbedModalOpen(false)} publicUrl={publicUrl} />
-        <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
+        {appDetail && (
+          <SettingsModal 
+            isOpen={isSettingsModalOpen} 
+            onClose={() => setIsSettingsModalOpen(false)} 
+            app={appDetail}
+            onUpdate={() => {
+              // Refresh app detail
+              monitoringService.getAppDetail(app.id).then(setAppDetail);
+            }}
+          />
+        )}
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">

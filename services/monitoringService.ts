@@ -5,13 +5,14 @@ import {
   AppDailyEndUsersResponse, 
   AppTokenCostsResponse,
   AppStatisticsResponse,
-  AppDetailResponse
+  AppDetailResponse,
+  App
 } from '../types';
 
 const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
 const API_PREFIX = '/console/api';
 
-async function request<T>(path: string, params?: Record<string, string>): Promise<T> {
+async function request<T>(path: string, params?: Record<string, string>, method: 'GET' | 'POST' = 'GET', body?: any): Promise<T> {
   const token = localStorage.getItem('console_token');
   if (!token) {
     window.alert('请配置 console_token');
@@ -19,16 +20,18 @@ async function request<T>(path: string, params?: Record<string, string>): Promis
   }
 
   const url = new URL(`/api-proxy${API_PREFIX}${path}`, window.location.origin);
-  if (params) {
+  if (params && method === 'GET') {
     Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
   }
 
   const response = await fetch(url.toString(), {
+    method,
     headers: {
       'x-target-base-url': API_BASE,
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
-    }
+    },
+    body: body ? JSON.stringify(body) : undefined
   });
 
   if (response.status === 401) {
@@ -37,7 +40,9 @@ async function request<T>(path: string, params?: Record<string, string>): Promis
   }
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
+    const errorBody = await response.text();
+    console.error('API Error Body:', errorBody);
+    throw new Error(`API Error: ${response.statusText} - ${errorBody}`);
   }
 
   return response.json();
@@ -70,4 +75,7 @@ export const monitoringService = {
 
   getAppDetail: (appId: string) => 
     request<AppDetailResponse>(`/apps/${appId}`),
+
+  updateAppSiteConfig: (appId: string, params: any) => 
+    request<App>(`/apps/${appId}/site`, undefined, 'POST', params),
 };

@@ -1,34 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ChevronRight, Settings, Shield, FileText, User, Globe, ChevronDown } from 'lucide-react';
 import Modal from './Modal';
 import IconPickerModal from './IconPickerModal';
 import { getIcon } from '../constants';
+import { monitoringService } from '../services/monitoringService';
+import { App } from '../types';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  app: App;
+  onUpdate: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, app, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
-  const [name, setName] = useState('智能制造智能体');
-  const [description, setDescription] = useState('');
-  const [useCustomIcon, setUseCustomIcon] = useState(false);
-  const [language, setLanguage] = useState('zh');
+  const [name, setName] = useState(app.name);
+  const [description, setDescription] = useState(app.description);
+  const [useCustomIcon, setUseCustomIcon] = useState(app.use_icon_as_answer_icon ?? true);
+  const [language, setLanguage] = useState(app.site.default_language || 'zh-Hans');
   const [showWorkflow, setShowWorkflow] = useState(true);
-  const [copyright, setCopyright] = useState('');
-  const [privacyPolicy, setPrivacyPolicy] = useState('');
-  const [disclaimer, setDisclaimer] = useState('');
+  const [copyright, setCopyright] = useState(app.site.copyright || '');
+  const [privacyPolicy, setPrivacyPolicy] = useState(app.site.privacy_policy || '');
+  const [customDisclaimer, setCustomDisclaimer] = useState(app.site.custom_disclaimer || '');
   
   // Icon state
-  const [icon, setIcon] = useState('Bot');
-  const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>('icon');
+  const [icon, setIcon] = useState(app.icon || 'Bot');
+  const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>(app.icon_type || 'icon');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
   const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
     setIcon(data.icon);
     setIconType(data.iconType);
     setIsIconPickerOpen(false);
+  };
+
+  const handleSave = async () => {
+    try {
+      await monitoringService.updateAppSiteConfig(app.id, {
+        title: name,
+        description,
+        use_icon_as_answer_icon: useCustomIcon,
+        default_language: language,
+        copyright,
+        privacy_policy: privacyPolicy,
+        custom_disclaimer: customDisclaimer,
+        icon,
+        icon_type: iconType
+      });
+      onUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Failed to update app config:', error);
+    }
   };
 
   return (
@@ -90,8 +114,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => setLanguage(e.target.value)}
                     className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 pr-8"
                   >
-                    <option value="zh">简体中文</option>
-                    <option value="en">English</option>
+                    <option value="zh-Hans">简体中文</option>
+                    <option value="en-US">English</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
@@ -109,7 +133,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-900">自定义免责声明</label>
-                <textarea value={disclaimer} onChange={(e) => setDisclaimer(e.target.value)} placeholder="请输入免责声明" className="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl h-20 focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm" />
+                <textarea value={customDisclaimer} onChange={(e) => setCustomDisclaimer(e.target.value)} placeholder="请输入免责声明" className="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl h-20 focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm" />
               </div>
             </div>
           )}
@@ -119,7 +143,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       {/* Footer */}
       <div className="flex justify-end gap-2 p-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
         <button onClick={onClose} className="px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">取消</button>
-        <button onClick={onClose} className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md shadow-blue-200 transition-all">保存</button>
+        <button onClick={handleSave} className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md shadow-blue-200 transition-all">保存</button>
       </div>
       
       <IconPickerModal 

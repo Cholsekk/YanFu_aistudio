@@ -236,22 +236,60 @@ export type CredentialData = Record<string, string>;
 export type AppMode = 'chat' | 'agent-chat' | 'workflow' | 'completion' | 'custom' | 'advanced-chat';
 
 export type App = {
+  /** App ID */
   id: string
+  /** Name */
   name: string
+  /** Description */
   description: string
+
+  /**
+   * Icon Type
+   * @default 'emoji'
+  */
+  icon_type: AppIconType | null
+  /** Icon, stores file ID if icon_type is 'image' */
+  icon: string
+  /** Icon Background, only available when icon_type is null or 'emoji' */
+  icon_background: string | null
+  /** Icon URL, only available when icon_type is 'image' */
+  icon_url: string | null
+  /** Whether to use app icon as answer icon */
+  use_icon_as_answer_icon: boolean
+
+  /** Mode */
   mode: AppMode
+  /** Enable web app */
   enable_site: boolean
+  /** Enable web API */
   enable_api: boolean
+  built_in: boolean
+  /** API requests per minute, default is 60 */
   api_rpm: number
+  /** API requests per hour, default is 3600 */
   api_rph: number
+  /** Whether it's a demo app */
   is_demo: boolean
-  model_config: AppModelConfig
-  providers: Array<{ provider: string; token_is_set: boolean }>
+  /** Model configuration */
+  model_config: ModelConfig
+  app_model_config: ModelConfig
+  /** Timestamp of creation */
+  created_at: number
+  /** Web Application Configuration */
   site: SiteConfig
-  created_at: string
+  /** api site url */
+  api_base_url: string
+  tags: Tag[]
+  workflow?: {
+    id: string
+    created_at: number
+    created_by?: string
+    updated_at: number
+    updated_by?: string
+  }
 }
 
-export type AppModelConfig = {
+export type ModelConfig = {
   provider: string
   model_id: string
   configs: {
@@ -290,6 +328,9 @@ export type SiteConfig = {
   theme: string
   customize_token_strategy: 'must' | 'allow' | 'not_allow'
   prompt_public: boolean
+  copyright?: string
+  privacy_policy?: string
+  custom_disclaimer?: string
 }
 
 export enum DSLImportMode {
@@ -333,7 +374,7 @@ export interface AppTemplate {
   name: string;
   description: string;
   mode: AppMode;
-  model_config: AppModelConfig;
+  model_config: ModelConfig;
 }
 
 export type AppTemplatesResponse = {
