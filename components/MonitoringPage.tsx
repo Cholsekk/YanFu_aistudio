@@ -186,6 +186,7 @@ const MonitoringPage = () => {
       okText: '确认',
       cancelText: '取消',
       icon: <AlertCircle className="text-orange-500" />,
+      centered: true,
       onOk: async () => {
         try {
           await monitoringService.updateAppSiteAccessToken(app.id);
@@ -239,11 +240,11 @@ const MonitoringPage = () => {
             <code className="text-sm text-gray-700 flex-1 truncate">{publicUrl}</code>
             <button className="p-1.5 hover:bg-gray-200 rounded relative group" onClick={() => handleCopy(publicUrl, setCopied)}>
               {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
-              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">复制</span>
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">复制</span>
             </button>
             <button className="p-1.5 hover:bg-gray-200 rounded text-gray-500 group relative" onClick={handleRefreshUrl}>
               <RefreshCw className="w-4 h-4" />
-              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">重新生成</span>
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">重新生成</span>
             </button>
           </div>
           <div className="flex gap-3 mt-4">
@@ -293,12 +294,12 @@ const MonitoringPage = () => {
             <code className="text-sm text-gray-700 flex-1 truncate">{apiUrl}</code>
             <button className="p-1.5 hover:bg-gray-200 rounded relative group" onClick={() => handleCopy(apiUrl, setApiCopied)}>
               {apiCopied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
-              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">复制</span>
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">复制</span>
             </button>
           </div>
           <div className="flex gap-3 mt-4">
             <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><Key className="w-4 h-4" /> API 密钥</button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><FileText className="w-4 h-4" /> 查阅 API 文档</button>
+            <button onClick={() => window.location.href = `/api-doc/${app.id}`} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><FileText className="w-4 h-4" /> 查阅 API 文档</button>
           </div>
         </div>
       </div>
