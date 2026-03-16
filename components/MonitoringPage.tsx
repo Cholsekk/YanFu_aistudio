@@ -25,6 +25,7 @@ import {
 } from 'recharts';
 import EmbedModal from './EmbedModal';
 import SettingsModal from './SettingsModal';
+import ApiKeyModal from './ApiKeyModal';
 import TimeRangeSelector from './TimeRangeSelector';
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
@@ -94,6 +95,7 @@ const MonitoringPage = () => {
   const app = useAppDevHub();
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [apiCopied, setApiCopied] = useState(false);
   const [isServiceRunning, setIsServiceRunning] = useState(true);
@@ -254,6 +256,7 @@ const MonitoringPage = () => {
         </div>
 
         <EmbedModal isOpen={isEmbedModalOpen} onClose={() => setIsEmbedModalOpen(false)} publicUrl={publicUrl} />
+        <ApiKeyModal isOpen={isApiKeyModalOpen} onClose={() => setIsApiKeyModalOpen(false)} appId={app.id} />
         {appDetail && (
           <SettingsModal 
             isOpen={isSettingsModalOpen} 
@@ -298,7 +301,7 @@ const MonitoringPage = () => {
             </button>
           </div>
           <div className="flex gap-3 mt-4">
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><Key className="w-4 h-4" /> API 密钥</button>
+            <button onClick={() => setIsApiKeyModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><Key className="w-4 h-4" /> API 密钥</button>
             <button onClick={() => window.location.href = `/api-doc/${app.id}`} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><FileText className="w-4 h-4" /> 查阅 API 文档</button>
           </div>
         </div>

@@ -7,13 +7,15 @@ import {
   AppStatisticsResponse,
   AppDetailResponse,
   App,
-  UpdateAppSiteCodeResponse
+  UpdateAppSiteCodeResponse,
+  CreateApiKeyResponse,
+  ApiKeysListResponse
 } from '../types';
 
 const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
 const API_PREFIX = '/console/api';
 
-async function request<T>(path: string, params?: Record<string, string>, method: 'GET' | 'POST' = 'GET', body?: any): Promise<T> {
+async function request<T>(path: string, params?: Record<string, string>, method: 'GET' | 'POST' | 'DELETE' = 'GET', body?: any): Promise<T> {
   const token = localStorage.getItem('console_token');
   if (!token) {
     window.alert('请配置 console_token');
@@ -82,4 +84,13 @@ export const monitoringService = {
 
   updateAppSiteAccessToken: (appId: string) =>
     request<UpdateAppSiteCodeResponse>(`/apps/${appId}/site/access-token-reset`, undefined, 'POST'),
+
+  createApiKey: (appId: string) =>
+    request<CreateApiKeyResponse>(`/apps/${appId}/api-keys`, undefined, 'POST'),
+
+  getApiKeys: (appId: string) =>
+    request<ApiKeysListResponse>(`/apps/${appId}/api-keys`),
+
+  deleteApiKey: (appId: string, keyId: string) =>
+    request<any>(`/apps/${appId}/api-keys/${keyId}`, undefined, 'DELETE'),
 };

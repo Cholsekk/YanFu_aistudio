@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 const getBaseUrl = () => {
@@ -801,6 +801,25 @@ class ApiService {
     return this.request(`/apps/${appID}`, {
       method: 'PUT',
       body: data as any
+    });
+  }
+
+  async createApiKey(appId: string): Promise<CreateApiKeyResponse> {
+    return this.request(`/apps/${appId}/api-keys`, {
+      method: 'POST',
+      body: JSON.stringify({})
+    });
+  }
+
+  async getApiKeys(appId: string): Promise<ApiKeysListResponse> {
+    return this.request(`/apps/${appId}/api-keys`, {
+      method: 'GET'
+    });
+  }
+
+  async deleteApiKey(appId: string, keyId: string): Promise<any> {
+    return this.request(`/apps/${appId}/api-keys/${keyId}`, {
+      method: 'DELETE'
     });
   }
 
