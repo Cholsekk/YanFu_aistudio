@@ -105,8 +105,23 @@ const MonitoringPage = () => {
     tps: 0,
     satisfactionRate: 0,
   });
-  const publicUrl = "http://192.168.1.201:3005/chat/OteKTo7RRG0OSva7";
-  const apiUrl = "http://192.168.1.201:5005/v1";
+  const [appDetail, setAppDetail] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAppDetail = async () => {
+      try {
+        const detail = await monitoringService.getAppDetail(app.id);
+        setAppDetail(detail);
+      } catch (error) {
+        console.error('Failed to fetch app detail:', error);
+      }
+    };
+    fetchAppDetail();
+  }, [app.id]);
+
+  const appMode = appDetail ? ((appDetail.mode !== 'completion' && appDetail.mode !== 'workflow') ? 'chat' : appDetail.mode) : 'chat';
+  const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.code}` : "";
+  const apiUrl = appDetail?.api_base_url || "";
 
   const fetchData = async (start?: string, end?: string) => {
     try {

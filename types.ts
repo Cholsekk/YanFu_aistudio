@@ -312,7 +312,7 @@ export type AppListResponse = {
   total: number
 }
 
-export type AppDetailResponse = App
+export type AppDetailResponse = App;
 
 export type DSLImportResponse = {
   id: string

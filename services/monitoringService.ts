@@ -4,7 +4,8 @@ import {
   WorkflowDailyConversationsResponse, 
   AppDailyEndUsersResponse, 
   AppTokenCostsResponse,
-  AppStatisticsResponse
+  AppStatisticsResponse,
+  AppDetailResponse
 } from '../types';
 
 const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
@@ -66,4 +67,7 @@ export const monitoringService = {
 
   getUserSatisfactionRate: (appId: string, start?: string, end?: string) => 
     request<AppStatisticsResponse>(`/apps/${appId}/statistics/user-satisfaction-rate`, { start: start || '', end: end || '' }),
+
+  getAppDetail: (appId: string) => 
+    request<AppDetailResponse>(`/apps/${appId}`),
 };
