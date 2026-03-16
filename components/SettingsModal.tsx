@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronRight, Settings, Shield, FileText, User, Globe, ChevronDown } from 'lucide-react';
+import { message } from 'antd';
 import Modal from './Modal';
 import IconPickerModal from './IconPickerModal';
 import { getIcon } from '../constants';
@@ -48,10 +49,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, app, onU
         icon,
         icon_type: iconType
       });
+      message.success('已更新');
       onUpdate();
       onClose();
     } catch (error) {
       console.error('Failed to update app config:', error);
+      message.error('更新失败');
     }
   };
 
@@ -83,9 +86,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, app, onU
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setIsIconPickerOpen(true)}
-                    className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100 hover:bg-blue-100 transition-colors"
+                    className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-100 hover:bg-blue-100 transition-colors overflow-hidden"
                   >
-                    {getIcon(icon, "w-6 h-6")}
+                    {iconType === 'image' ? (
+                      <img src={icon} alt="Icon" className="w-full h-full object-cover" />
+                    ) : iconType === 'sys-icon' ? (
+                      <img src={`/sys_icons/Component ${icon}.svg`} alt="Icon" className="w-full h-full object-cover" onError={(e) => (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg'} />
+                    ) : (
+                      getIcon(icon, "w-6 h-6")
+                    )}
                   </button>
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="flex-1 p-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
@@ -102,7 +111,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, app, onU
                   <p className="text-[10px] text-gray-500 mt-0.5">是否使用 WebApp 图标替换分享的应用界面中的 🤖</p>
                 </div>
                 <button onClick={() => setUseCustomIcon(!useCustomIcon)} className={`w-10 h-5 rounded-full transition-colors ${useCustomIcon ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                  <div className={`w-3.5 h-3.5 bg-white rounded-full transition-transform ${useCustomIcon ? 'translate-x-5.5' : 'translate-x-1'}`} />
+                  <div className={`w-3.5 h-3.5 bg-white rounded-full transition-transform duration-200 ${useCustomIcon ? 'translate-x-5' : 'translate-x-1'}`} />
                 </button>
               </div>
 
