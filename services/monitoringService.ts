@@ -48,6 +48,10 @@ async function request<T>(path: string, params?: Record<string, string>, method:
     throw new Error(`API Error: ${response.statusText} - ${errorBody}`);
   }
 
+  if (response.status === 204) {
+    return {} as T;
+  }
+
   return response.json();
 }
 
