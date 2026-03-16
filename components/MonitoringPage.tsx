@@ -138,7 +138,18 @@ const MonitoringPage = () => {
     const end = new Date();
     const start = new Date();
     start.setHours(0, 0, 0, 0);
-    fetchData(start.toISOString().slice(0, 16).replace('T', ' '), end.toISOString().slice(0, 16).replace('T', ' '));
+    
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const formatDate = (date: Date) => {
+        const yyyy = date.getFullYear();
+        const mm = pad(date.getMonth() + 1);
+        const dd = pad(date.getDate());
+        const hh = pad(date.getHours());
+        const min = pad(date.getMinutes());
+        return `${yyyy}-${mm}-${dd}%20${hh}:${min}`;
+    };
+
+    fetchData(formatDate(start), formatDate(end));
   }, [app.id]);
 
   const handleRangeChange = (start: string, end: string) => {

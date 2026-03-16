@@ -32,7 +32,16 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ onRangeChange }) 
   }, []);
 
   const formatDate = (date: Date) => {
-    return date.toISOString().slice(0, 16).replace('T', ' ');
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const mm = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const min = pad(date.getMinutes());
+    
+    // YYYY-MM-DD HH:mm
+    const formatted = `${yyyy}-${mm}-${dd}%20${hh}:${min}`;
+    return formatted;
   };
 
   const handleSelect = (option: typeof TIME_OPTIONS[0]) => {
