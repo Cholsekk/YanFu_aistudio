@@ -16,10 +16,11 @@ const TIME_OPTIONS = [
 
 interface TimeRangeSelectorProps {
   onRangeChange: (start: string, end: string, period: string | number) => void;
+  defaultPeriodValue?: string | number;
 }
 
-const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ onRangeChange }) => {
-  const [selected, setSelected] = useState(TIME_OPTIONS[0]);
+const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({ onRangeChange, defaultPeriodValue = 0 }) => {
+  const [selected, setSelected] = useState(TIME_OPTIONS.find(o => o.value === defaultPeriodValue) || TIME_OPTIONS[0]);
 
   const formatDate = (date: Date) => {
     const pad = (n: number) => n.toString().padStart(2, '0');

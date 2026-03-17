@@ -73,7 +73,7 @@ const LogsPage: React.FC = () => {
     keyword: '',
     sort_by: 'created_at',
     direction: 'desc',
-    period: 'all',
+    period: 7,
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,12 +142,22 @@ const LogsPage: React.FC = () => {
     }
   };
 
-  const fetchAnnotations = async (query: LogQuery) => {
+  const fetchAnnotations = async (query: LogQuery & { period: string | number }) => {
     if (!app?.id) return;
     setLoading(true);
     try {
+      const apiQuery: any = {
+        ...query,
+        annotated: true,
+        ...(query.period !== 'all' && typeof query.period === 'number'
+          ? {
+            start: dayjs().subtract(query.period, 'day').startOf('day').format('YYYY-MM-DD HH:mm'),
+            end: dayjs().endOf('day').format('YYYY-MM-DD HH:mm'),
+          }
+          : {}),
+      };
       // For now, we use the same getLogs but with a filter or mock
-      const response = await monitoringService.getLogs(app.id, { ...query, annotated: true });
+      const response = await monitoringService.getLogs(app.id, apiQuery);
       if (response && response.data) {
         // Filter for annotated items if the API doesn't support it yet
         const annotatedData = response.data.filter(item => item.annotated || item.id.startsWith('mock-ann'));
@@ -188,9 +198,34 @@ const LogsPage: React.FC = () => {
     if (!app?.id) return;
     setMessagesLoading(true);
     try {
-      const response = await monitoringService.getConversationMessages(app.id, conversationId);
+      const isChatMode = app.mode !== 'completion';
+      let response;
+      
+      // Fetch detail as well
+      if (isChatMode) {
+        monitoringService.getChatConversationDetail(app.id, conversationId).then(detail => {
+          if (detail) setSelectedLog(prev => prev ? { ...prev, ...detail } as any : null);
+        });
+      } else {
+        monitoringService.getCompletionConversationDetail(app.id, conversationId).then(detail => {
+          if (detail) setSelectedLog(prev => prev ? { ...prev, ...detail } as any : null);
+        });
+      }
+
+      if (isChatMode) {
+        response = await monitoringService.getChatMessages(app.id, {
+          conversation_id: conversationId,
+          limit: 100
+        });
+      } else {
+        // For completion mode, we might still use getConversationMessages or a similar logic
+        // But the PDF says fetchChatMessages is for chat. 
+        // Let's stick to getConversationMessages for completion if it's different.
+        response = await monitoringService.getConversationMessages(app.id, conversationId);
+      }
+
       if (response && response.data) {
-        setMessages(response.data);
+        setMessages(response.data as any);
       } else {
         setMessages([]);
       }
@@ -199,6 +234,40 @@ const LogsPage: React.FC = () => {
       setMessages([]);
     } finally {
       setMessagesLoading(false);
+    }
+  };
+
+  const handleFeedback = async (messageId: string, rating: 'like' | 'dislike' | null) => {
+    if (!app?.id) return;
+    try {
+      await monitoringService.updateLogMessageFeedbacks(app.id, {
+        message_id: messageId,
+        rating
+      });
+      message.success('反馈成功');
+      // Update local state
+      setMessages(prev => prev.map(m => 
+        m.id === messageId ? { ...m, feedback: { rating } } : m
+      ));
+    } catch (error) {
+      console.error('Failed to update feedback:', error);
+      message.error('反馈失败');
+    }
+  };
+
+  const handleUpdateAnnotation = async (messageId: string, content: string) => {
+    if (!app?.id) return;
+    try {
+      await monitoringService.updateLogMessageAnnotations(app.id, {
+        message_id: messageId,
+        content
+      });
+      message.success('标注成功');
+      // Update local state if needed
+      fetchMessages(selectedLog?.id || '');
+    } catch (error) {
+      console.error('Failed to update annotation:', error);
+      message.error('标注失败');
     }
   };
 
@@ -356,10 +425,13 @@ const LogsPage: React.FC = () => {
         <div className="flex items-center gap-3">
           {activeTab === 'logs' && (
             <>
-              <TimeRangeSelector onRangeChange={(start, end, period) => {
-                setFilters(prev => ({ ...prev, start, end, period, page: 1 }));
-                setCurrentPage(1);
-              }} />
+              <TimeRangeSelector 
+                defaultPeriodValue={7}
+                onRangeChange={(start, end, period) => {
+                  setFilters(prev => ({ ...prev, start, end, period, page: 1 }));
+                  setCurrentPage(1);
+                }} 
+              />
               
               <Dropdown
                 trigger={['click']}
@@ -670,12 +742,54 @@ const LogsPage: React.FC = () => {
                         {/* Message Footer */}
                         <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <button className="text-gray-400 hover:text-emerald-500 transition-colors">
+                            <button 
+                              onClick={() => handleFeedback(msg.id, msg.feedback?.rating === 'like' ? null : 'like')}
+                              className={`flex items-center gap-1 transition-colors ${msg.feedback?.rating === 'like' ? 'text-emerald-500' : 'text-gray-400 hover:text-emerald-500'}`}
+                            >
                               <span className="text-xs">👍 有用</span>
                             </button>
-                            <button className="text-gray-400 hover:text-red-500 transition-colors">
+                            <button 
+                              onClick={() => handleFeedback(msg.id, msg.feedback?.rating === 'dislike' ? null : 'dislike')}
+                              className={`flex items-center gap-1 transition-colors ${msg.feedback?.rating === 'dislike' ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
+                            >
                               <span className="text-xs">👎 没用</span>
                             </button>
+                            
+                            <Dropdown
+                              trigger={['click']}
+                              dropdownRender={() => (
+                                <div className="bg-white p-4 rounded-xl shadow-xl border border-gray-100 w-80">
+                                  <div className="text-sm font-bold text-gray-900 mb-2">修改标注回复</div>
+                                  <Input.TextArea 
+                                    defaultValue={(msg as any).annotation?.content || ''}
+                                    placeholder="输入标注内容"
+                                    autoSize={{ minRows: 3 }}
+                                    className="mb-3 text-sm"
+                                    onPressEnter={(e) => {
+                                      handleUpdateAnnotation(msg.id, (e.target as HTMLTextAreaElement).value);
+                                    }}
+                                  />
+                                  <div className="flex justify-end gap-2">
+                                    <Button size="small" className="text-xs">取消</Button>
+                                    <Button 
+                                      size="small" 
+                                      type="primary" 
+                                      className="text-xs"
+                                      onClick={(e) => {
+                                        const textarea = (e.currentTarget.parentElement?.previousElementSibling as HTMLTextAreaElement);
+                                        handleUpdateAnnotation(msg.id, textarea.value);
+                                      }}
+                                    >
+                                      保存
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            >
+                              <button className="text-gray-400 hover:text-blue-500 transition-colors">
+                                <span className="text-xs">📝 标注</span>
+                              </button>
+                            </Dropdown>
                           </div>
                           <span className="text-[10px] text-gray-300 font-mono">
                             {dayjs(msg.created_at).format('HH:mm:ss')}

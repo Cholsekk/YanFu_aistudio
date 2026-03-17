@@ -14,7 +14,15 @@ import {
   LogQuery,
   MessageListResponse,
   ChatConversationsResponse,
-  CompletionConversationsResponse
+  CompletionConversationsResponse,
+  ChatConversationFullDetailResponse,
+  CompletionConversationFullDetailResponse,
+  ChatMessagesResponse,
+  ChatMessagesRequest,
+  LogMessageFeedbacksRequest,
+  LogMessageFeedbacksResponse,
+  LogMessageAnnotationsRequest,
+  LogMessageAnnotationsResponse
 } from '../types';
 
 const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
@@ -364,6 +372,21 @@ export const monitoringService = {
 
   getCompletionConversations: (appId: string, params: any) =>
     request<CompletionConversationsResponse>(`/apps/${appId}/completion-conversations`, params),
+
+  getChatConversationDetail: (appId: string, conversationId: string) =>
+    request<ChatConversationFullDetailResponse>(`/apps/${appId}/chat-conversations/${conversationId}`),
+
+  getCompletionConversationDetail: (appId: string, conversationId: string) =>
+    request<CompletionConversationFullDetailResponse>(`/apps/${appId}/completion-conversations/${conversationId}`),
+
+  getChatMessages: (appId: string, params: ChatMessagesRequest) =>
+    request<ChatMessagesResponse>(`/apps/${appId}/chat-messages`, params as any),
+
+  updateLogMessageFeedbacks: (appId: string, body: LogMessageFeedbacksRequest) =>
+    request<LogMessageFeedbacksResponse>(`/apps/${appId}/feedbacks`, undefined, 'POST', body),
+
+  updateLogMessageAnnotations: (appId: string, body: LogMessageAnnotationsRequest) =>
+    request<LogMessageAnnotationsResponse>(`/apps/${appId}/annotations`, undefined, 'POST', body),
 
   getConversationMessages: async (appId: string, conversationId: string) => {
     try {
