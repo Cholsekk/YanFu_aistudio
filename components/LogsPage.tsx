@@ -15,6 +15,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
+  Target,
+  Cpu,
+  Settings,
+  Info,
   ArrowUp,
   ArrowDown,
   Edit3,
@@ -32,7 +36,10 @@ import {
   Checkbox,
   message,
   Table,
-  Pagination
+  Pagination,
+  Modal,
+  Slider,
+  Tooltip
 } from 'antd';
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
@@ -56,6 +63,12 @@ const LogsPage: React.FC = () => {
   const app = useAppDevHub();
   const [activeTab, setActiveTab] = useState<'logs' | 'annotations'>('logs');
   const [isAddAnnotationOpen, setIsAddAnnotationOpen] = useState(false);
+  const [isAnnotationSettingsOpen, setIsAnnotationSettingsOpen] = useState(false);
+  const [annotationReplyEnabled, setAnnotationReplyEnabled] = useState(false);
+  const [annotationSettings, setAnnotationSettings] = useState({
+    scoreThreshold: 0.9,
+    embeddingModel: 'bge-m3:latest'
+  });
   const [annotationForm, setAnnotationForm] = useState({
     question: '',
     answer: '',
@@ -289,11 +302,20 @@ const LogsPage: React.FC = () => {
     }
   };
 
-  const handleRemoveAnnotation = async (messageId: string) => {
+  const handleRemoveAnnotation = async (annotationId: string) => {
     if (!app?.id) return;
     try {
-      await monitoringService.deleteLogMessageAnnotation(app.id, messageId);
+      await monitoringService.deleteLogMessageAnnotation(app.id, annotationId);
       message.success('移除标注成功');
+      
+      // Update local state for immediate feedback
+      setLogs(prev => prev.map(log => 
+        log.id === selectedLog?.id ? { ...log, annotated: false } : log
+      ));
+      if (selectedLog) {
+        setSelectedLog({ ...selectedLog, annotated: false });
+      }
+
       // Refresh logs list to update table highlight
       if (activeTab === 'logs') {
         fetchLogs({ ...filters, page: currentPage, limit: pageSize });
@@ -391,13 +413,35 @@ const LogsPage: React.FC = () => {
       ),
     },
     {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date: string) => (
-        <span className="text-gray-400 text-xs">
-          {dayjs(date).format('YYYY-MM-DD HH:mm:ss')}
-        </span>
+      title: '操作',
+      key: 'actions',
+      width: 120,
+      render: (record: LogItem) => (
+        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+          <button 
+            onClick={() => {
+              setSelectedLog(record);
+              setIsDetailOpen(true);
+              fetchMessages(record.id);
+            }}
+            className="text-gray-400 hover:text-primary-600 transition-colors"
+          >
+            <Edit3 className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => {
+              message.success('删除成功');
+              if (activeTab === 'logs') {
+                setLogs(prev => prev.filter(l => l.id !== record.id));
+              } else {
+                setAnnotations(prev => prev.filter(l => l.id !== record.id));
+              }
+            }}
+            className="text-gray-400 hover:text-red-500 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -414,6 +458,51 @@ const LogsPage: React.FC = () => {
       setIsAddAnnotationOpen(false);
       setAnnotationForm({ question: '', answer: '', addNext: false });
     }
+    // Refresh annotations if on that tab
+    if (activeTab === 'annotations') {
+      fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
+    }
+  };
+
+  const handleExportCSV = () => {
+    const dataToExport = activeTab === 'logs' ? logs : annotations;
+    if (dataToExport.length === 0) {
+      message.warning('没有数据可导出');
+      return;
+    }
+
+    // CSV headers: question, answer
+    const headers = ['question', 'answer'];
+    const rows = dataToExport.map(item => [
+      item.summary || '', // Using summary as question for now
+      item.annotated ? '已标注' : '未标注'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `annotations_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
+    link.click();
+  };
+
+  const handleExportJSONL = () => {
+    const dataToExport = activeTab === 'logs' ? logs : annotations;
+    if (dataToExport.length === 0) {
+      message.warning('没有数据可导出');
+      return;
+    }
+
+    const jsonlContent = dataToExport.map(item => JSON.stringify(item)).join('\n');
+    const blob = new Blob([jsonlContent], { type: 'application/x-jsonlines' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `annotations_${dayjs().format('YYYYMMDD_HHmmss')}.jsonl`;
+    link.click();
   };
 
   const menuItems: MenuProps['items'] = [
@@ -427,8 +516,16 @@ const LogsPage: React.FC = () => {
       label: '批量导出',
       icon: <Download className="w-4 h-4" />,
       children: [
-        { key: 'export-csv', label: '导出为 CSV' },
-        { key: 'export-json', label: '导出为 JSON' },
+        { 
+          key: 'export-csv', 
+          label: '导出为 CSV',
+          onClick: handleExportCSV
+        },
+        { 
+          key: 'export-jsonl', 
+          label: '导出为 JSONL',
+          onClick: handleExportJSONL
+        },
       ]
     },
   ];
@@ -549,13 +646,27 @@ const LogsPage: React.FC = () => {
             <div className="flex items-center gap-5">
               <div className="flex items-center gap-2.5 px-3 py-1.5 bg-gray-50 rounded-lg">
                 <span className="text-sm font-medium text-gray-600">标注回复</span>
-                <Switch size="small" defaultChecked className="bg-gray-300" />
+                <Switch 
+                  size="small" 
+                  checked={annotationReplyEnabled} 
+                  onChange={(checked) => {
+                    if (checked) {
+                      setIsAnnotationSettingsOpen(true);
+                    } else {
+                      setAnnotationReplyEnabled(false);
+                    }
+                  }}
+                  className={annotationReplyEnabled ? 'bg-primary-500' : 'bg-gray-300'} 
+                />
               </div>
               <Button 
                 type="primary" 
                 icon={<Plus className="w-4 h-4" />}
-                className="flex items-center gap-2 h-9 rounded-xl font-medium shadow-sm shadow-primary-500/20"
-                onClick={() => setIsAddAnnotationOpen(true)}
+                className="flex items-center gap-2 h-10 rounded-xl font-semibold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                onClick={() => {
+                  setAnnotationForm({ question: '', answer: '', addNext: false });
+                  setIsAddAnnotationOpen(true);
+                }}
               >
                 添加标注
               </Button>
@@ -639,67 +750,287 @@ const LogsPage: React.FC = () => {
 
       {/* Add Annotation Drawer */}
       <Drawer
-        title="添加标注回复"
+        title={
+          <div className="py-2">
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1.5 tracking-tight">添加标注回复</div>
+            <div className="text-xs text-gray-400 font-medium">为应用配置高质量的预设回复</div>
+          </div>
+        }
         placement="right"
         onClose={() => setIsAddAnnotationOpen(false)}
         open={isAddAnnotationOpen}
-        size="large"
+        size={560}
+        closable={false}
         extra={
-          <button onClick={() => setIsAddAnnotationOpen(false)} className="text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
+          <button 
+            onClick={() => setIsAddAnnotationOpen(false)}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-400" />
           </button>
         }
-        closable={false}
+        className="custom-drawer"
+        styles={{
+          header: { borderBottom: '1px solid #f3f4f6', padding: '24px 32px' },
+          body: { padding: '32px' },
+          footer: { borderTop: '1px solid #f3f4f6', padding: '20px 32px' }
+        }}
         footer={
-          <div className="flex items-center justify-between px-2 py-2">
+          <div className="flex items-center justify-between">
             <Checkbox 
-              checked={annotationForm.addNext} 
-              onChange={e => setAnnotationForm({ ...annotationForm, addNext: e.target.checked })}
-              className="text-sm text-gray-500"
+              checked={annotationForm.addNext}
+              onChange={(e) => setAnnotationForm({ ...annotationForm, addNext: e.target.checked })}
+              className="text-gray-500 text-sm font-bold"
             >
-              添加下一个标注回复
+              继续添加下一个
             </Checkbox>
-            <div className="flex gap-3">
-              <Button onClick={() => setIsAddAnnotationOpen(false)} className="rounded-lg">取消</Button>
-              <Button type="primary" onClick={handleAddAnnotation} className="rounded-lg">添加</Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => setIsAddAnnotationOpen(false)} 
+                className="rounded-xl h-12 px-8 border-gray-200 text-gray-600 font-bold hover:text-primary-600 hover:border-primary-200 transition-all"
+              >
+                取消
+              </Button>
+              <Button 
+                type="primary" 
+                onClick={handleAddAnnotation} 
+                className="rounded-xl h-12 px-10 font-bold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                确认添加
+              </Button>
             </div>
           </div>
         }
       >
-        <div className="space-y-8">
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-              <User className="w-4 h-4 text-blue-500" />
+        <div className="space-y-10">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100/50 flex gap-4">
+            <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+              <Info className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="flex-grow">
-              <div className="text-sm font-bold text-gray-900 mb-2">提问</div>
-              <Input.TextArea 
-                placeholder="输入提问" 
-                autoSize={{ minRows: 3 }}
-                className="border-none bg-gray-50 hover:bg-gray-100 focus:bg-white rounded-xl p-3 text-sm"
-                value={annotationForm.question}
-                onChange={e => setAnnotationForm({ ...annotationForm, question: e.target.value })}
-              />
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-blue-900">什么是标注回复？</p>
+              <p className="text-[11px] text-blue-700/80 leading-relaxed">
+                标注回复可以帮助 AI 更好地理解特定场景下的用户意图。当用户提问与标注问题相似度较高时，将优先使用标注回复。
+              </p>
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 text-emerald-500" />
-            </div>
-            <div className="flex-grow">
-              <div className="text-sm font-bold text-gray-900 mb-2">回复</div>
+          <div className="space-y-8">
+            <div className="group">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center group-focus-within:bg-primary-50 transition-all duration-300">
+                  <User className="w-4 h-4 text-gray-400 group-focus-within:text-primary-600" />
+                </div>
+                <span className="text-sm font-bold text-gray-900">用户提问</span>
+                <span className="text-[10px] text-gray-400 font-bold ml-auto bg-gray-50 px-2 py-0.5 rounded-full uppercase tracking-wider">必填</span>
+              </div>
               <Input.TextArea 
-                placeholder="输入回复" 
-                autoSize={{ minRows: 3 }}
-                className="border-none bg-gray-50 hover:bg-gray-100 focus:bg-white rounded-xl p-3 text-sm"
+                placeholder="输入用户可能提出的问题，例如：如何重置密码？"
+                value={annotationForm.question}
+                onChange={(e) => setAnnotationForm({ ...annotationForm, question: e.target.value })}
+                autoSize={{ minRows: 4, maxRows: 8 }}
+                className="rounded-2xl bg-gray-50/50 border-none focus:bg-white focus:ring-4 focus:ring-primary-500/5 transition-all p-5 text-sm leading-relaxed"
+              />
+            </div>
+
+            <div className="group">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center group-focus-within:bg-emerald-50 transition-all duration-300">
+                  <Bot className="w-4 h-4 text-gray-400 group-focus-within:text-emerald-600" />
+                </div>
+                <span className="text-sm font-bold text-gray-900">机器回复</span>
+                <span className="text-[10px] text-gray-400 font-bold ml-auto bg-gray-50 px-2 py-0.5 rounded-full uppercase tracking-wider">必填</span>
+              </div>
+              <Input.TextArea 
+                placeholder="输入 AI 应该给出的标准回复内容..."
                 value={annotationForm.answer}
-                onChange={e => setAnnotationForm({ ...annotationForm, answer: e.target.value })}
+                onChange={(e) => setAnnotationForm({ ...annotationForm, answer: e.target.value })}
+                autoSize={{ minRows: 8, maxRows: 16 }}
+                className="rounded-2xl bg-gray-50/50 border-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all p-5 text-sm leading-relaxed"
               />
             </div>
           </div>
         </div>
       </Drawer>
+
+      {/* Annotation Settings Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3 py-1">
+            <div className="w-11 h-11 rounded-2xl bg-primary-50 flex items-center justify-center">
+              <Settings className="w-6 h-6 text-primary-600" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-gray-900 leading-none mb-1.5">标注回复初始设置</div>
+              <div className="text-xs text-gray-400 font-normal">配置标注匹配的精度与模型</div>
+            </div>
+          </div>
+        }
+        open={isAnnotationSettingsOpen}
+        onCancel={() => setIsAnnotationSettingsOpen(false)}
+        width={560}
+        centered
+        styles={{
+          header: { borderBottom: '1px solid #f3f4f6', padding: '24px 32px' },
+          body: { padding: '32px' },
+          footer: { borderTop: '1px solid #f3f4f6', padding: '20px 32px' }
+        }}
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <Button 
+              onClick={() => setIsAnnotationSettingsOpen(false)} 
+              className="rounded-xl h-11 px-8 border-gray-200 text-gray-600 font-medium hover:text-primary-600 hover:border-primary-200"
+            >
+              取消
+            </Button>
+            <Button 
+              type="primary" 
+              onClick={() => {
+                setAnnotationReplyEnabled(true);
+                setIsAnnotationSettingsOpen(false);
+                message.success('已开启标注回复');
+              }} 
+              className="rounded-xl h-11 px-10 font-bold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/20"
+            >
+              保存并启用
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-10">
+          <section>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-orange-500" />
+                </div>
+                <span className="text-sm font-bold text-gray-900">分数阈值</span>
+                <Tooltip title="用于设置标注回复的匹配相似度阈值。">
+                  <div className="w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center text-[10px] text-gray-400 cursor-help hover:bg-gray-50 transition-colors">?</div>
+                </Tooltip>
+              </div>
+              <div className="px-3 py-1 bg-primary-50 rounded-lg border border-primary-100">
+                <span className="text-sm font-bold text-primary-600 font-mono">{annotationSettings.scoreThreshold.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div className="px-2">
+              <Slider 
+                min={0.8} 
+                max={1.0} 
+                step={0.01}
+                value={annotationSettings.scoreThreshold}
+                onChange={(value) => setAnnotationSettings({ ...annotationSettings, scoreThreshold: value })}
+                tooltip={{ open: false }}
+                className="custom-slider"
+              />
+              <div className="flex justify-between mt-4">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-emerald-600 mb-0.5">0.8</span>
+                  <span className="text-[10px] text-gray-400">容易匹配</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-xs font-bold text-primary-600 mb-0.5">1.0</span>
+                  <span className="text-[10px] text-gray-400">精准匹配</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <Cpu className="w-4 h-4 text-blue-500" />
+              </div>
+              <span className="text-sm font-bold text-gray-900">Embedding 模型</span>
+              <Tooltip title="标注文本向量化模型，切换模型会重新嵌入，产生额外费用消耗">
+                <div className="w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center text-[10px] text-gray-400 cursor-help hover:bg-gray-50 transition-colors">?</div>
+              </Tooltip>
+            </div>
+            <Select
+              className="w-full h-12 custom-select"
+              value={annotationSettings.embeddingModel}
+              onChange={(value) => setAnnotationSettings({ ...annotationSettings, embeddingModel: value })}
+              labelRender={(props) => {
+                const { value } = props;
+                if (value === 'bge-m3:latest') {
+                  return (
+                    <div className="flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900">bge-m3:latest</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm text-gray-900">{value}</span>
+                  </div>
+                );
+              }}
+              popupRender={(menu) => (
+                <div className="p-2">
+                  <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input 
+                      type="text" 
+                      placeholder="搜索模型名称..." 
+                      className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm outline-none focus:bg-white focus:border-primary-500/20 transition-all"
+                    />
+                  </div>
+                  <div className="max-h-72 overflow-auto custom-scrollbar">
+                    <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ollama</div>
+                    <div className="px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 rounded-xl cursor-pointer transition-colors group" onClick={() => setAnnotationSettings({ ...annotationSettings, embeddingModel: 'bge-m3:latest' })}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-white transition-colors">
+                          <Bot className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900">bge-m3:latest</span>
+                          <span className="text-[10px] text-gray-400">High performance embedding</span>
+                        </div>
+                      </div>
+                      {annotationSettings.embeddingModel === 'bge-m3:latest' && <div className="w-5 h-5 rounded-full bg-primary-50 flex items-center justify-center"><Check className="w-3 h-3 text-primary-600" /></div>}
+                    </div>
+                    
+                    <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-4">智谱 AI</div>
+                    <div className="px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 rounded-xl cursor-pointer transition-colors group" onClick={() => setAnnotationSettings({ ...annotationSettings, embeddingModel: 'text_embedding' })}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                          <RefreshCw className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900">text_embedding</span>
+                          <span className="text-[10px] text-gray-400">Zhipu AI standard model</span>
+                        </div>
+                      </div>
+                      {annotationSettings.embeddingModel === 'text_embedding' && <div className="w-5 h-5 rounded-full bg-primary-50 flex items-center justify-center"><Check className="w-3 h-3 text-primary-600" /></div>}
+                    </div>
+                    <div className="px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 rounded-xl cursor-pointer transition-colors group" onClick={() => setAnnotationSettings({ ...annotationSettings, embeddingModel: 'embedding-2' })}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                          <RefreshCw className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900">embedding-2</span>
+                          <span className="text-[10px] text-gray-400">Enhanced version 2</span>
+                        </div>
+                      </div>
+                      {annotationSettings.embeddingModel === 'embedding-2' && <div className="w-5 h-5 rounded-full bg-primary-50 flex items-center justify-center"><Check className="w-3 h-3 text-primary-600" /></div>}
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <button className="w-full py-2 text-xs text-primary-600 font-bold hover:bg-primary-50 rounded-lg transition-all flex items-center justify-center gap-1.5">
+                      <Settings className="w-3.5 h-3.5" />
+                      模型管理与设置
+                    </button>
+                  </div>
+                </div>
+              )}
+            />
+          </section>
+        </div>
+      </Modal>
 
       {/* Log Detail Drawer */}
       <Drawer
@@ -822,7 +1153,7 @@ const LogsPage: React.FC = () => {
                                       <div className="text-sm font-bold text-gray-900">编辑标注回复</div>
                                       {annotation && (
                                         <button 
-                                          onClick={() => handleRemoveAnnotation(msg.id)}
+                                          onClick={() => handleRemoveAnnotation(annotation.id)}
                                           className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 rounded-lg transition-colors"
                                         >
                                           <Trash2 className="w-3 h-3" />
