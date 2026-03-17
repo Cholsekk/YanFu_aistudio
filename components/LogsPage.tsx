@@ -679,7 +679,11 @@ const LogsPage: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
                 <Bot className="w-4 h-4 text-primary-500" />
-                <span className="text-xs font-medium text-gray-700">{selectedLog?.model_config.model || 'deepseek-r1:14b'}</span>
+                <span className="text-xs font-medium text-gray-700">
+                  {typeof selectedLog?.model_config.model === 'object' && selectedLog?.model_config.model !== null
+                    ? (selectedLog?.model_config.model as any).name 
+                    : (selectedLog?.model_config.model || 'deepseek-r1:14b')}
+                </span>
                 <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold rounded uppercase">Chat</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">

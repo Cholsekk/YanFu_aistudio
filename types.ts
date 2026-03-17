@@ -850,7 +850,7 @@ export interface LogItem {
     dislike: number;
   };
   model_config: {
-    model: string | null;
+    model: string | { name: string; [key: string]: any } | null;
     pre_prompt: string;
   };
 }
