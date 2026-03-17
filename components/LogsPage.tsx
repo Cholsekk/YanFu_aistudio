@@ -267,8 +267,22 @@ const LogsPage: React.FC = () => {
         answer
       });
       message.success('标注成功');
-      // Update local state if needed
+      // Update local state for immediate feedback
+      setLogs(prev => prev.map(log => 
+        log.id === selectedLog?.id ? { ...log, annotated: true } : log
+      ));
+      // Update selected log if it's the one being annotated
+      if (selectedLog) {
+        setSelectedLog({ ...selectedLog, annotated: true });
+      }
+      
       fetchMessages(selectedLog?.id || '');
+      // Refresh logs list to update table highlight from server
+      if (activeTab === 'logs') {
+        fetchLogs({ ...filters, page: currentPage, limit: pageSize });
+      } else {
+        fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
+      }
     } catch (error) {
       console.error('Failed to update annotation:', error);
       message.error('标注失败');
@@ -280,6 +294,12 @@ const LogsPage: React.FC = () => {
     try {
       await monitoringService.deleteLogMessageAnnotation(app.id, messageId);
       message.success('移除标注成功');
+      // Refresh logs list to update table highlight
+      if (activeTab === 'logs') {
+        fetchLogs({ ...filters, page: currentPage, limit: pageSize });
+      } else {
+        fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
+      }
       fetchMessages(selectedLog?.id || '');
     } catch (error) {
       console.error('Failed to remove annotation:', error);
