@@ -1,4 +1,29 @@
 
+import type { 
+  Edge as ReactFlowEdge,
+  Node as ReactFlowNode,
+  Viewport,
+  XYPosition } from 'reactflow'
+
+// 以下类型由于路径不存在，暂时定义为 any，请根据实际情况补充
+export enum TransferMethod {
+  all = 'all',
+  local_file = 'local_file',
+  remote_url = 'remote_url',
+}
+
+export type VisionFile = {
+  id?: string
+  type: string
+  transfer_method: TransferMethod
+  url: string
+  upload_file_id: string
+  belongs_to?: string
+}
+type Edge = any
+type Node = any
+type Metadata = any
+
 export type Tag = {
   id: string
   name: string
@@ -801,6 +826,85 @@ export type Emoji = {
   content: string
 }
 
+export interface LogItem {
+  id: string;
+  status: string;
+  from_source: string;
+  from_end_user_id: string | null;
+  from_end_user_session_id: string | null;
+  from_account_id: string | null;
+  from_account_name: string | null;
+  name: string;
+  summary: string;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+  annotated: boolean;
+  message_count: number;
+  user_feedback_stats: {
+    like: number;
+    dislike: number;
+  };
+  admin_feedback_stats: {
+    like: number;
+    dislike: number;
+  };
+  model_config: {
+    model: string | null;
+    pre_prompt: string;
+  };
+}
+
+export interface LogListResponse {
+  page: number;
+  limit: number;
+  total: number;
+  has_more: boolean;
+  data: LogItem[];
+}
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  inputs: Record<string, any>;
+  query: string;
+  answer: string;
+  message_files: any[];
+  feedback: {
+    rating: 'like' | 'dislike' | null;
+  } | null;
+  created_at: string;
+  agent_thoughts: {
+    id: string;
+    message_id: string;
+    position: number;
+    thought: string;
+    tool: string;
+    tool_input: string;
+    created_at: string;
+    observation: string;
+  }[];
+}
+
+export interface MessageListResponse {
+  limit: number;
+  has_more: boolean;
+  data: Message[];
+}
+
+export interface LogQuery {
+  page: number;
+  limit: number;
+  start?: string;
+  end?: string;
+  keyword?: string;
+  status?: string;
+  annotated?: boolean;
+  sort_by?: string;
+  direction?: 'asc' | 'desc';
+  period?: string | number;
+}
+
 export type Collection = {
   id: string
   name: string
@@ -1110,4 +1214,486 @@ export enum MCPAuthMethod {
   authentication = 'authentication',
   headers = 'headers',
   configurations = 'configurations',
+}
+
+// --- 日志与标注相关类型 (补充) ---
+
+/**
+ * 对话信息
+ */
+export type Conversation = {
+  id: string
+  key: string
+  conversationId: string
+  question: string
+  answer: string
+  userRate: number
+  adminRate: number
+}
+
+/**
+ * 对话列表响应
+ */
+export type ConversationListResponse = {
+  logs: Conversation[]
+}
+
+/**
+ * 获取日志方法
+ */
+export const fetchLogs = (url: string) =>
+  fetch(url).then<ConversationListResponse>(r => r.json())
+
+/**
+ * 补全参数常量
+ */
+export const CompletionParams = ['temperature', 'top_p', 'presence_penalty', 'max_token', 'stop', 'frequency_penalty'] as const
+
+/**
+ * 补全参数类型
+ */
+export type CompletionParamType = typeof CompletionParams[number]
+
+/**
+ * 补全参数详细配置
+ */
+export type CompletionParamsType = {
+  max_tokens: number
+  temperature: number
+  top_p: number
+  stop: string[]
+  presence_penalty: number
+  frequency_penalty: number
+}
+
+/**
+ * 日志模型配置
+ */
+export type LogModelConfig = {
+  name: string
+  provider: string
+  completion_params: CompletionParamsType
+}
+
+/**
+ * 模型配置详情
+ */
+export type ModelConfigDetail = {
+  introduction: string
+  prompt_template: string
+  prompt_variables: Array<{
+    key: string
+    name: string
+    description: string
+    type: string | number
+    default: string
+    options: string[]
+  }>
+  completion_params: CompletionParamsType
+}
+
+/**
+ * 日志标注信息
+ */
+export type LogAnnotation = {
+  id: string
+  content: string
+  account: {
+    id: string
+    name: string
+    email: string
+  }
+  created_at: number
+}
+
+/**
+ * 标注信息
+ */
+export type Annotation = {
+  id: string
+  authorName: string
+  logAnnotation?: LogAnnotation
+  created_at?: number
+}
+
+/**
+ * 消息内容详情
+ */
+export type MessageContent = {
+  id: string
+  conversation_id: string
+  query: string
+  inputs: Record<string, any>
+  message: { role: string; text: string; files?: VisionFile[] }[]
+  message_tokens: number
+  answer_tokens: number
+  answer: string
+  provider_response_latency: number
+  created_at: number
+  annotation: LogAnnotation
+  annotation_hit_history: {
+    annotation_id: string
+    annotation_create_account: {
+      id: string
+      name: string
+      email: string
+    }
+    created_at: number
+  }
+  feedbacks: Array<{
+    rating: 'like' | 'dislike' | null
+    content: string | null
+    from_source?: 'admin' | 'user'
+    from_end_user_id?: string
+  }>
+  message_files: VisionFile[]
+  metadata: Metadata
+  agent_thoughts: any[] 
+  workflow_run_id: string
+  parent_message_id: string | null
+}
+
+/**
+ * 补全对话概览详情
+ */
+export type CompletionConversationGeneralDetail = {
+  id: string
+  status: 'normal' | 'finished'
+  from_source: 'api' | 'console'
+  from_end_user_id: string
+  from_end_user_session_id: string
+  from_account_id: string
+  read_at: Date
+  created_at: number
+  updated_at: number
+  annotation: Annotation
+  user_feedback_stats: {
+    like: number
+    dislike: number
+  }
+  admin_feedback_stats: {
+    like: number
+    dislike: number
+  }
+  model_config: {
+    provider: string
+    model_id: string
+    configs: Pick<ModelConfigDetail, 'prompt_template'>
+  }
+  message: Pick<MessageContent, 'inputs' | 'query' | 'answer' | 'message'>
+}
+
+/**
+ * 补全对话完整详情响应
+ */
+export type CompletionConversationFullDetailResponse = {
+  id: string
+  status: 'normal' | 'finished'
+  from_source: 'api' | 'console'
+  from_end_user_id: string
+  from_account_id: string
+  // read_at: Date
+  created_at: number
+  model_config: {
+    provider: string
+    model_id: string
+    configs: ModelConfigDetail
+  }
+  message: MessageContent
+}
+
+/**
+ * 补全对话列表响应
+ */
+export type CompletionConversationsResponse = {
+  data: Array<CompletionConversationGeneralDetail>
+  has_more: boolean
+  limit: number
+  total: number
+  page: number
+}
+
+/**
+ * 补全对话列表请求
+ */
+export type CompletionConversationsRequest = {
+  keyword: string
+  start: string
+  end: string
+  annotation_status: string
+  page: number
+  limit: number 
+}
+
+/**
+ * 聊天对话概览详情
+ */
+export type ChatConversationGeneralDetail = Omit<CompletionConversationGeneralDetail, 'message' | 'annotation'> & {
+  summary: string
+  message_count: number
+  annotated: boolean
+}
+
+/**
+ * 聊天对话列表响应
+ */
+export type ChatConversationsResponse = {
+  data: Array<ChatConversationGeneralDetail>
+  has_more: boolean
+  limit: number
+  total: number
+  page: number
+}
+
+/**
+ * 聊天对话列表请求
+ */
+export type ChatConversationsRequest = CompletionConversationsRequest & { message_count: number }
+
+/**
+ * 聊天对话完整详情响应
+ */
+export type ChatConversationFullDetailResponse = Omit<CompletionConversationGeneralDetail, 'message' | 'model_config'> & {
+  message_count: number
+  model_config: {
+    provider: string
+    model_id: string
+    configs: ModelConfigDetail
+    model: LogModelConfig
+  }
+}
+
+/**
+ * 聊天消息列表请求
+ */
+export type ChatMessagesRequest = {
+  conversation_id: string
+  first_id?: string
+  limit: number
+}
+
+/**
+ * 聊天消息
+ */
+export type ChatMessage = MessageContent
+
+/**
+ * 聊天消息列表响应
+ */
+export type ChatMessagesResponse = {
+  data: Array<ChatMessage>
+  has_more: boolean
+  limit: number
+}
+
+/**
+ * 消息评分常量
+ */
+export const MessageRatings = ['like', 'dislike', null] as const
+
+/**
+ * 消息评分类型
+ */
+export type MessageRating = typeof MessageRatings[number]
+
+/**
+ * 日志消息反馈请求
+ */
+export type LogMessageFeedbacksRequest = {
+  message_id: string
+  rating: MessageRating
+  content?: string
+}
+
+/**
+ * 日志消息反馈响应
+ */
+export type LogMessageFeedbacksResponse = {
+  result: 'success' | 'error'
+}
+
+/**
+ * 日志消息标注请求
+ */
+export type LogMessageAnnotationsRequest = Omit<LogMessageFeedbacksRequest, 'rating'>
+
+/**
+ * 日志消息标注响应
+ */
+export type LogMessageAnnotationsResponse = LogMessageFeedbacksResponse
+
+/**
+ * 标注数量响应
+ */
+export type AnnotationsCountResponse = {
+  count: number
+}
+
+/**
+ * 工作流运行详情
+ */
+export type WorkflowRunDetail = {
+  id: string
+  version: string
+  status: 'running' | 'succeeded' | 'failed' | 'stopped'
+  error?: string
+  elapsed_time: number
+  total_tokens: number
+  total_price: number
+  currency: string
+  total_steps: number
+  finished_at: number
+}
+
+/**
+ * 账户信息
+ */
+export type AccountInfo = {
+  id: string
+  name: string
+  email: string
+}
+
+/**
+ * 终端用户信息
+ */
+export type EndUserInfo = {
+  id: string
+  type: 'browser' | 'service_api'
+  is_anonymous: boolean
+  session_id: string
+}
+
+/**
+ * 工作流应用日志详情
+ */
+export type WorkflowAppLogDetail = {
+  id: string
+  workflow_run: WorkflowRunDetail
+  created_from: 'service-api' | 'web-app' | 'explore'
+  created_by_role: 'account' | 'end_user'
+  created_by_account?: AccountInfo
+  created_by_end_user?: EndUserInfo
+  created_at: number
+  read_at?: number
+}
+
+/**
+ * 工作流日志列表响应
+ */
+export type WorkflowLogsResponse = {
+  data: Array<WorkflowAppLogDetail>
+  has_more: boolean
+  limit: number
+  total: number
+  page: number
+}
+
+/**
+ * 工作流日志列表请求
+ */
+export type WorkflowLogsRequest = {
+  keyword: string
+  status: string
+  page: number
+  limit: number 
+}
+
+/**
+ * 工作流运行详情响应
+ */
+export type WorkflowRunDetailResponse = {
+  id: string
+  sequence_number: number
+  version: string
+  graph: {
+    nodes: Node[]
+    edges: Edge[]
+    viewport?: Viewport
+  }
+  inputs: string
+  status: 'running' | 'succeeded' | 'failed' | 'stopped'
+  outputs?: string
+  error?: string
+  elapsed_time?: number
+  total_tokens?: number
+  total_steps: number
+  created_by_role: 'account' | 'end_user'
+  created_by_account?: AccountInfo
+  created_by_end_user?: EndUserInfo
+  created_at: number
+  finished_at: number
+  exceptions_count?: number
+}
+
+/**
+ * 智能体日志元数据
+ */
+export type AgentLogMeta = {
+  status: string
+  executor: string
+  start_time: string
+  elapsed_time: number
+  total_tokens: number
+  agent_mode: string
+  iterations: number
+  error?: string
+}
+
+/**
+ * 工具调用详情
+ */
+export type ToolCall = {
+  status: string
+  error?: string | null
+  time_cost?: number
+  tool_icon: any
+  tool_input?: any
+  tool_output?: any
+  tool_name?: string
+  tool_label?: any
+  tool_parameters?: any
+}
+
+/**
+ * 智能体迭代详情
+ */
+export type AgentIteration = {
+  created_at: string
+  files: string[]
+  thought: string
+  tokens: number
+  tool_calls: ToolCall[]
+  tool_raw: {
+    inputs: string
+    outputs: string
+  }
+}
+
+/**
+ * 智能体日志文件
+ */
+export type AgentLogFile = {
+  id: string
+  type: string
+  url: string
+  name: string
+  belongs_to: string
+}
+
+/**
+ * 智能体日志详情请求
+ */
+export type AgentLogDetailRequest = {
+  conversation_id: string
+  message_id: string
+}
+
+/**
+ * 智能体日志详情响应
+ */
+export type AgentLogDetailResponse = {
+  meta: AgentLogMeta
+  iterations: AgentIteration[]
+  files: AgentLogFile[]
 }

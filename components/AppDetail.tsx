@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import WorkflowEditor from './WorkflowEditor';
 import MonitoringPage from './MonitoringPage';
+import LogsPage from './LogsPage';
 
 interface AppDetailProps {
   app: AppItem;
@@ -86,6 +87,10 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
 
     if (activeTab === 'monitor') {
       return <MonitoringPage />;
+    }
+
+    if (activeTab === 'logs') {
+      return <LogsPage />;
     }
 
     return (

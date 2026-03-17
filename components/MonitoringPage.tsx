@@ -171,7 +171,7 @@ const MonitoringPage = () => {
     fetchData(formatDate(start), formatDate(end));
   }, [app.id]);
 
-  const handleRangeChange = (start: string, end: string) => {
+  const handleRangeChange = (start: string, end: string, period: string | number) => {
     fetchData(start, end);
   };
 

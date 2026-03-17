@@ -119,10 +119,28 @@ const MCPServices: React.FC = () => {
   const [selectedTool, setSelectedTool] = useState<any | null>(null);
   const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
   const [isSavingAuth, setIsSavingAuth] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchServices();
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchServices();
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
+
+  const filteredServices = useMemo(() => {
+    if (!searchQuery.trim()) return services;
+    const query = searchQuery.toLowerCase();
+    return services.filter(s => 
+      s.name.toLowerCase().includes(query) || 
+      (s.server_identifier || s.identifier || '').toLowerCase().includes(query) ||
+      s.server_url.toLowerCase().includes(query)
+    );
+  }, [services, searchQuery]);
 
   const fetchServices = async () => {
     try {
@@ -434,12 +452,32 @@ const MCPServices: React.FC = () => {
       {/* Subtle Background Pattern */}
       <div className="fixed inset-0 z-[-1] pointer-events-none opacity-[0.4]" style={{ backgroundImage: 'radial-gradient(#E5E7EB 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
       
-      <div className="relative flex justify-between items-end border-b border-gray-200/80 pb-6">
+      <div className="relative flex flex-col md:flex-row md:items-end justify-between border-b border-gray-200/80 pb-6 gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-gray-900">MCP 服务</h2>
           <p className="text-sm text-gray-500 mt-2 max-w-2xl leading-relaxed">
             管理和配置您的 MCP 服务连接，扩展应用能力。已连接的服务将自动同步工具。
           </p>
+        </div>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-grow md:w-72">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="搜索服务名称或标识符..." 
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={handleRefresh}
+            className={`p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm ${isRefreshing ? 'animate-spin' : ''}`}
+            title="刷新列表"
+          >
+            <Zap className={`w-4 h-4 ${isRefreshing ? 'text-indigo-500' : ''}`} />
+          </button>
         </div>
       </div>
 
@@ -450,19 +488,21 @@ const MCPServices: React.FC = () => {
 
       <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Add Service Card (Always First) */}
-        <div 
-          className="group relative bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[220px]"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-indigo-100 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-300">
-            <Plus className="w-6 h-6 text-indigo-500 group-hover:text-white transition-colors" />
+        {!searchQuery && (
+          <div 
+            className="group relative bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[220px]"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-indigo-100 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-300">
+              <Plus className="w-6 h-6 text-indigo-500 group-hover:text-white transition-colors" />
+            </div>
+            <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">添加新服务</span>
+            <p className="text-xs text-indigo-400 mt-2 text-center px-4 leading-relaxed">连接新的 MCP 服务器以扩展工具集</p>
           </div>
-          <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">添加新服务</span>
-          <p className="text-xs text-indigo-400 mt-2 text-center px-4 leading-relaxed">连接新的 MCP 服务器以扩展工具集</p>
-        </div>
+        )}
 
         {/* Service Cards */}
-        {services.map(service => (
+        {filteredServices.map(service => (
           <div 
             key={service.id}
             className={`group relative bg-white rounded-2xl border border-gray-100 p-5 flex flex-col cursor-pointer shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out overflow-hidden ${menuOpenId === service.id ? 'z-50 ring-2 ring-indigo-500/20' : ''}`}
@@ -472,11 +512,15 @@ const MCPServices: React.FC = () => {
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
             {/* Status Indicator */}
-            <div className="absolute top-5 right-5 flex items-center gap-2">
-                <span className={`relative flex h-2.5 w-2.5`}>
-                  {service.status === 'authorized' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
-                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${service.status === 'authorized' ? 'bg-emerald-500' : 'bg-amber-400'}`}></span>
-                </span>
+            <div className="absolute top-5 right-5">
+                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
+                  service.status === 'authorized' 
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                    : 'bg-amber-50 text-amber-600 border-amber-100'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${service.status === 'authorized' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                  {service.status === 'authorized' ? '已授权' : '待配置'}
+                </div>
             </div>
 
             <div className="flex items-start gap-4 mb-5">
@@ -525,6 +569,22 @@ const MCPServices: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {filteredServices.length === 0 && searchQuery && (
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+            <Search className="w-8 h-8 text-gray-300" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">未找到相关服务</h3>
+          <p className="text-sm text-gray-500 mt-1">尝试调整搜索关键词</p>
+          <button 
+            onClick={() => setSearchQuery('')}
+            className="mt-6 text-sm font-bold text-indigo-600 hover:text-indigo-700"
+          >
+            清除搜索
+          </button>
+        </div>
+      )}
 
       {/* Modal */}
       <MCPServiceModal 
@@ -639,18 +699,28 @@ const MCPServices: React.FC = () => {
                       return (
                         <div 
                           key={index} 
-                          className="p-4 border border-gray-100 rounded-xl hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group"
+                          className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/5 transition-all cursor-pointer group relative overflow-hidden"
                           onClick={() => setSelectedTool(tool)}
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <h5 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors">{nameText}</h5>
-                            <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors" />
+                          <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <h5 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors">{nameText}</h5>
+                              {tool.parameters?.length > 0 && (
+                                <span className="text-[10px] bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded border border-gray-100 font-mono">
+                                  {tool.parameters.length} params
+                                </span>
+                              )}
+                            </div>
+                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
+                              <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+                            </div>
                           </div>
                           <Tooltip 
                             title={descText} 
                             placement="left" 
                             arrow={false}
-                            overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5' }}
+                            overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5', borderRadius: '12px', padding: '12px' }}
                           >
                             <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{descText}</p>
                           </Tooltip>
@@ -680,63 +750,120 @@ const MCPServices: React.FC = () => {
       {/* Tool Details Modal */}
       {selectedTool && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4" onClick={() => setSelectedTool(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-indigo-500" />
-                {typeof selectedTool.label === 'object' && selectedTool.label !== null
-                  ? (selectedTool.label.zh_Hans || selectedTool.label.en_US || selectedTool.name)
-                  : (typeof selectedTool.name === 'string' ? selectedTool.name : (selectedTool.name?.zh_Hans || selectedTool.name?.en_US || JSON.stringify(selectedTool.name)))}
-              </h3>
-              <button onClick={() => setSelectedTool(null)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                    {typeof selectedTool.label === 'object' && selectedTool.label !== null
+                      ? (selectedTool.label.zh_Hans || selectedTool.label.en_US || selectedTool.name)
+                      : (typeof selectedTool.name === 'string' ? selectedTool.name : (selectedTool.name?.zh_Hans || selectedTool.name?.en_US || JSON.stringify(selectedTool.name)))}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <code className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-mono">{selectedTool.name}</code>
+                    <span className="text-[10px] text-gray-400">•</span>
+                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">MCP Tool</span>
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setSelectedTool(null)} className="p-2.5 hover:bg-gray-100 rounded-full transition-all text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="mb-8">
-                <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Info className="w-4 h-4 text-gray-400" />
-                  描述
-                </h4>
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  {typeof selectedTool.description === 'string' 
-                    ? selectedTool.description 
-                    : (selectedTool.description?.zh_Hans || selectedTool.description?.en_US || JSON.stringify(selectedTool.description) || '')}
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-gray-400" />
-                  参数 (Parameters)
-                </h4>
-                {Array.isArray(selectedTool.parameters) && selectedTool.parameters.length > 0 ? (
-                  <div className="space-y-4">
-                    {selectedTool.parameters.map((param: any, pIdx: number) => {
-                      const paramLabel = param.label?.zh_Hans || param.label?.en_US || param.name;
-                      const paramDesc = param.human_description?.zh_Hans || param.human_description?.en_US || '';
-                      return (
-                        <div key={pIdx} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-gray-900">{paramLabel}</span>
-                              <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded font-mono uppercase">{param.type}</span>
-                              {param.required && <span className="text-[10px] text-red-500 font-bold">必填</span>}
+            
+            <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: Description */}
+                <div className="lg:col-span-1 space-y-6">
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <Info className="w-3.5 h-3.5" />
+                      描述
+                    </h4>
+                    <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap bg-indigo-50/30 p-5 rounded-2xl border border-indigo-100/50">
+                      {typeof selectedTool.description === 'string' 
+                        ? selectedTool.description 
+                        : (selectedTool.description?.zh_Hans || selectedTool.description?.en_US || JSON.stringify(selectedTool.description) || '无描述')}
+                    </div>
+                  </div>
+
+                  <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">元数据</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">参数数量</span>
+                        <span className="text-xs font-bold text-gray-900">{selectedTool.parameters?.length || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">所属服务</span>
+                        <span className="text-xs font-bold text-indigo-600">{selectedService?.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Parameters */}
+                <div className="lg:col-span-2">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    参数详情 (Parameters)
+                  </h4>
+                  
+                  {Array.isArray(selectedTool.parameters) && selectedTool.parameters.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {selectedTool.parameters.map((param: any, pIdx: number) => {
+                        const paramLabel = param.label?.zh_Hans || param.label?.en_US || param.name;
+                        const paramDesc = param.human_description?.zh_Hans || param.human_description?.en_US || '';
+                        return (
+                          <div key={pIdx} className="group bg-white p-5 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-gray-900">{paramLabel}</span>
+                                  {param.required && (
+                                    <span className="text-[10px] bg-red-50 text-red-500 px-2 py-0.5 rounded-md font-bold border border-red-100">必填</span>
+                                  )}
+                                </div>
+                                <code className="text-[10px] text-gray-400 font-mono block">{param.name}</code>
+                              </div>
+                              <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider border border-indigo-100">{param.type}</span>
                             </div>
-                            <code className="text-[10px] text-gray-400 font-mono">{param.name}</code>
+                            {paramDesc && (
+                              <p className="text-xs text-gray-500 leading-relaxed bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+                                {paramDesc}
+                              </p>
+                            )}
                           </div>
-                          {paramDesc && <p className="text-xs text-gray-500 leading-relaxed">{paramDesc}</p>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="bg-gray-900 rounded-xl p-5 overflow-x-auto shadow-inner">
-                    <pre className="text-xs text-gray-300 font-mono leading-relaxed">
-                      {JSON.stringify(selectedTool.parameters, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-900 rounded-2xl p-6 overflow-x-auto shadow-2xl border border-gray-800">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span className="text-[10px] text-gray-500 font-mono ml-2">parameters.json</span>
+                      </div>
+                      <pre className="text-xs text-indigo-300 font-mono leading-relaxed">
+                        {JSON.stringify(selectedTool.parameters, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
               </div>
+            </div>
+
+            <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button 
+                onClick={() => setSelectedTool(null)}
+                className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
+              >
+                关闭
+              </button>
             </div>
           </div>
         </div>
