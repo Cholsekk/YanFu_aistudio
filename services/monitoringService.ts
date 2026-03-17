@@ -388,6 +388,9 @@ export const monitoringService = {
   updateLogMessageAnnotations: (appId: string, body: LogMessageAnnotationsRequest) =>
     request<LogMessageAnnotationsResponse>(`/apps/${appId}/annotations`, undefined, 'POST', body),
 
+  deleteLogMessageAnnotation: (appId: string, messageId: string) =>
+    request<any>(`/apps/${appId}/annotations/${messageId}`, undefined, 'DELETE'),
+
   getConversationMessages: async (appId: string, conversationId: string) => {
     try {
       return await request<MessageListResponse>(`/apps/${appId}/messages`, { conversation_id: conversationId });

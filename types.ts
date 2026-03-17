@@ -1298,6 +1298,8 @@ export type ModelConfigDetail = {
 export type LogAnnotation = {
   id: string
   content: string
+  question?: string
+  answer?: string
   account: {
     id: string
     name: string
@@ -1515,7 +1517,11 @@ export type LogMessageFeedbacksResponse = {
 /**
  * 日志消息标注请求
  */
-export type LogMessageAnnotationsRequest = Omit<LogMessageFeedbacksRequest, 'rating'>
+export type LogMessageAnnotationsRequest = {
+  message_id: string
+  question: string
+  answer: string
+}
 
 /**
  * 日志消息标注响应

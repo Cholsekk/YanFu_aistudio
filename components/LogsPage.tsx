@@ -16,7 +16,10 @@ import {
   ChevronRight,
   Check,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Edit3,
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { 
   Select, 
@@ -255,12 +258,13 @@ const LogsPage: React.FC = () => {
     }
   };
 
-  const handleUpdateAnnotation = async (messageId: string, content: string) => {
+  const handleUpdateAnnotation = async (messageId: string, question: string, answer: string) => {
     if (!app?.id) return;
     try {
       await monitoringService.updateLogMessageAnnotations(app.id, {
         message_id: messageId,
-        content
+        question,
+        answer
       });
       message.success('标注成功');
       // Update local state if needed
@@ -268,6 +272,18 @@ const LogsPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to update annotation:', error);
       message.error('标注失败');
+    }
+  };
+
+  const handleRemoveAnnotation = async (messageId: string) => {
+    if (!app?.id) return;
+    try {
+      await monitoringService.deleteLogMessageAnnotation(app.id, messageId);
+      message.success('移除标注成功');
+      fetchMessages(selectedLog?.id || '');
+    } catch (error) {
+      console.error('Failed to remove annotation:', error);
+      message.error('移除标注失败');
     }
   };
 
@@ -283,10 +299,15 @@ const LogsPage: React.FC = () => {
       dataIndex: 'summary',
       key: 'summary',
       width: '30%',
-      render: (text: string) => (
+      render: (text: string, record: LogItem) => (
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${record.annotated ? 'bg-blue-500' : 'bg-gray-300'}`} />
           <span className="text-gray-900 font-medium line-clamp-1">{text || '无摘要'}</span>
+          {record.annotated && (
+            <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase shrink-0">
+              已标注
+            </span>
+          )}
         </div>
       ),
     },
@@ -542,7 +563,7 @@ const LogsPage: React.FC = () => {
               className="custom-table"
               onRow={(record) => ({
                 onClick: () => handleRowClick(record),
-                className: 'cursor-pointer'
+                className: `cursor-pointer transition-colors ${record.annotated ? 'bg-blue-50/30 hover:bg-blue-50/50' : ''}`
               })}
             />
           </div>
@@ -710,8 +731,13 @@ const LogsPage: React.FC = () => {
                 <div key={msg.id} className="space-y-6">
                   {/* User Message */}
                   <div className="flex justify-end items-start gap-4">
-                    <div className="max-w-[80%] bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-sm">
-                      <p className="text-sm leading-relaxed">{msg.query}</p>
+                    <div className="max-w-[80%] bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-sm relative group">
+                      <p className="text-sm leading-relaxed">{(msg as any).annotation?.question || msg.query}</p>
+                      {(msg as any).annotation?.question && (
+                        <div className="absolute -left-16 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[10px] bg-blue-500/20 text-blue-100 px-1.5 py-0.5 rounded border border-blue-400/30">已修改</span>
+                        </div>
+                      )}
                     </div>
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                       <User className="w-6 h-6 text-blue-600" />
@@ -738,10 +764,17 @@ const LogsPage: React.FC = () => {
                       )}
                       
                       {/* Answer */}
-                      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+                      <div className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${ (msg as any).annotation ? 'border-blue-200 ring-4 ring-blue-500/5' : 'border-gray-100' }`}>
                         <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
-                          <Markdown>{msg.answer}</Markdown>
+                          <Markdown>{(msg as any).annotation?.answer || msg.answer}</Markdown>
                         </div>
+
+                        {(msg as any).annotation && (
+                          <div className="mt-4 pt-3 border-t border-blue-50 flex items-center gap-2 text-[10px] text-blue-400 font-medium italic">
+                            <Edit3 className="w-3 h-3" />
+                            <span>{(msg as any).annotation.account?.name || '管理员'} 编辑的标注回复</span>
+                          </div>
+                        )}
                         
                         {/* Message Footer */}
                         <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
@@ -761,37 +794,69 @@ const LogsPage: React.FC = () => {
                             
                             <Dropdown
                               trigger={['click']}
-                              dropdownRender={() => (
-                                <div className="bg-white p-4 rounded-xl shadow-xl border border-gray-100 w-80">
-                                  <div className="text-sm font-bold text-gray-900 mb-2">修改标注回复</div>
-                                  <Input.TextArea 
-                                    defaultValue={(msg as any).annotation?.content || ''}
-                                    placeholder="输入标注内容"
-                                    autoSize={{ minRows: 3 }}
-                                    className="mb-3 text-sm"
-                                    onPressEnter={(e) => {
-                                      handleUpdateAnnotation(msg.id, (e.target as HTMLTextAreaElement).value);
-                                    }}
-                                  />
-                                  <div className="flex justify-end gap-2">
-                                    <Button size="small" className="text-xs">取消</Button>
-                                    <Button 
-                                      size="small" 
-                                      type="primary" 
-                                      className="text-xs"
-                                      onClick={(e) => {
-                                        const textarea = (e.currentTarget.parentElement?.previousElementSibling as HTMLTextAreaElement);
-                                        handleUpdateAnnotation(msg.id, textarea.value);
-                                      }}
-                                    >
-                                      保存
-                                    </Button>
+                              dropdownRender={() => {
+                                const annotation = (msg as any).annotation;
+                                return (
+                                  <div className="bg-white p-5 rounded-2xl shadow-2xl border border-gray-100 w-[400px]">
+                                    <div className="flex items-center justify-between mb-4">
+                                      <div className="text-sm font-bold text-gray-900">编辑标注回复</div>
+                                      {annotation && (
+                                        <button 
+                                          onClick={() => handleRemoveAnnotation(msg.id)}
+                                          className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 rounded-lg transition-colors"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                          移除此标注
+                                        </button>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                      <div>
+                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">用户提问</div>
+                                        <Input.TextArea 
+                                          id={`q-${msg.id}`}
+                                          defaultValue={annotation?.question || msg.query}
+                                          placeholder="输入提问标注"
+                                          autoSize={{ minRows: 2 }}
+                                          className="text-sm rounded-xl bg-gray-50 border-none focus:bg-white"
+                                        />
+                                      </div>
+                                      
+                                      <div>
+                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">机器回复</div>
+                                        <Input.TextArea 
+                                          id={`a-${msg.id}`}
+                                          defaultValue={annotation?.answer || msg.answer}
+                                          placeholder="输入回复标注"
+                                          autoSize={{ minRows: 4 }}
+                                          className="text-sm rounded-xl bg-gray-50 border-none focus:bg-white"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-2 mt-5">
+                                      <Button size="small" className="rounded-lg text-xs">取消</Button>
+                                      <Button 
+                                        size="small" 
+                                        type="primary" 
+                                        className="rounded-lg text-xs px-4"
+                                        onClick={() => {
+                                          const q = (document.getElementById(`q-${msg.id}`) as HTMLTextAreaElement).value;
+                                          const a = (document.getElementById(`a-${msg.id}`) as HTMLTextAreaElement).value;
+                                          handleUpdateAnnotation(msg.id, q, a);
+                                        }}
+                                      >
+                                        保存
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                );
+                              }}
                             >
-                              <button className="text-gray-400 hover:text-blue-500 transition-colors">
-                                <span className="text-xs">📝 标注</span>
+                              <button className={`flex items-center gap-1 transition-colors ${(msg as any).annotation ? 'text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg' : 'text-gray-400 hover:text-blue-500'}`}>
+                                <span className="text-xs">{(msg as any).annotation ? '✅ 已标注' : '📝 标注'}</span>
+                                {(msg as any).annotation && <ChevronDown className="w-3 h-3" />}
                               </button>
                             </Dropdown>
                           </div>
