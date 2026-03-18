@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 const getBaseUrl = () => {
@@ -1129,6 +1129,64 @@ class ApiService {
       method: 'POST',
       body: formData as any,
     });
+  }
+
+  // 9. 模型提供商 (Model Providers)
+  async fetchModelProviders(): Promise<ModelProvider[]> {
+    const response = await this.request('/workspaces/current/model-providers');
+    return response.data;
+  }
+
+  async fetchModelList(type: ModelTypeEnum): Promise<Model[]> {
+    const response = await this.request(`/workspaces/current/models/model-types/${type}`);
+    return response.data;
+  }
+
+  async fetchDefaultModal(type: ModelTypeEnum): Promise<DefaultModelResponse> {
+    const response = await this.request(`/workspaces/current/default-model?model_type=${type}`);
+    return response.data;
+  }
+
+  async fetchModelProviderCredentials(provider: string, model?: string, modelType?: ModelTypeEnum): Promise<{ credentials?: Record<string, string | boolean | undefined>, load_balancing: ModelLoadBalancingConfig }> {
+    let url = `/workspaces/current/model-providers/${provider}/credentials`;
+    if (model && modelType) {
+      url = `/workspaces/current/model-providers/${provider}/models/credentials?model=${model}&model_type=${modelType}`;
+    }
+    const response = await this.request(url);
+    return response;
+  }
+
+  /**
+   * 获取指定模型提供商的支付购买链接
+   * @param provider 供应商标识
+   */
+  async getPayUrl(provider: string): Promise<{ url: string }> {
+    const response = await this.request(`/workspaces/current/model-providers/${provider}/checkout-url`);
+    return response;
+  }
+
+  /**
+   * 更新指定模型类型的默认模型配置
+   * @param model 模型名称
+   * @param model_type 模型类型
+   * @param provider 提供商标识
+   */
+  async updateDefaultModel(model: string, model_type: ModelTypeEnum, provider: string): Promise<CommonResponse> {
+    const response = await this.request(`/workspaces/current/default-model`, {
+      method: 'POST',
+      body: JSON.stringify({ model, model_type, provider }),
+    });
+    return response;
+  }
+
+  /**
+   * 获取指定模型支持的参数配置规则
+   * @param provider 供应商标识
+   * @param model 模型名称
+   */
+  async fetchModelParameterRules(provider: string, model: string): Promise<{ data: ModelParameterRule[] }> {
+    const response = await this.request(`/workspaces/current/model-providers/${provider}/models/${model}/parameters`);
+    return response;
   }
 }
 

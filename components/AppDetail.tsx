@@ -97,7 +97,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
     }
 
     return (
-      <div className={`${containerClass} ${app.iconBackground || 'bg-primary-100'} rounded-xl flex items-center justify-center border border-gray-100 shadow-sm`}>
+      <div className={`${containerClass} ${app.iconBgColor || 'bg-primary-100'} rounded-xl flex items-center justify-center border border-gray-100 shadow-sm`}>
         <span className={iconClass} role="img" aria-label="app icon">
           {app.icon || '🤖'}
         </span>

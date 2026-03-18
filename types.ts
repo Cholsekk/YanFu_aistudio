@@ -813,11 +813,16 @@ export type ModelParameterRule = {
   max?: number
   name: string
   precision?: number
-  required: false
+  required: boolean
   type: string
   use_template?: string
   options?: string[]
   tagPlaceholder?: TypeWithI18N
+}
+
+/** 通用响应结构 */
+export interface CommonResponse {
+  result: string;
 }
 
 export type ModelLoadBalancingConfigEntry = {
@@ -833,6 +838,13 @@ export type ModelLoadBalancingConfigEntry = {
   in_cooldown?: boolean
   /** cooldown time (in seconds) */
   ttl?: number
+}
+
+export type ModelLoadBalancingConfig = {
+  /** is load balancing enabled */
+  enabled: boolean
+  /** load balancing configs */
+  configs: ModelLoadBalancingConfigEntry[]
 }
 
 export enum LOC {
