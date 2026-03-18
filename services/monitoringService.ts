@@ -22,7 +22,12 @@ import {
   LogMessageFeedbacksRequest,
   LogMessageFeedbacksResponse,
   LogMessageAnnotationsRequest,
-  LogMessageAnnotationsResponse
+  LogMessageAnnotationsResponse,
+  AnnotationSetting,
+  AnnotationJobResponse,
+  AnnotationEnableStatus,
+  EmbeddingModelConfig,
+  AnnotationItemBasic
 } from '../types';
 
 const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
@@ -40,14 +45,20 @@ async function request<T>(path: string, params?: Record<string, string>, method:
     Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
   }
 
+  const isFormData = body instanceof FormData;
+  const headers: Record<string, string> = {
+    'x-target-base-url': API_BASE,
+    'Authorization': `Bearer ${token}`,
+  };
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(url.toString(), {
     method,
-    headers: {
-      'x-target-base-url': API_BASE,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: body ? JSON.stringify(body) : undefined
+    headers,
+    body: isFormData ? body : (body ? JSON.stringify(body) : undefined)
   });
 
   if (response.status === 401) {
@@ -385,11 +396,41 @@ export const monitoringService = {
   updateLogMessageFeedbacks: (appId: string, body: LogMessageFeedbacksRequest) =>
     request<LogMessageFeedbacksResponse>(`/apps/${appId}/feedbacks`, undefined, 'POST', body),
 
-  updateLogMessageAnnotations: (appId: string, body: LogMessageAnnotationsRequest) =>
+  updateLogMessageAnnotations: (appId: string, body: AnnotationItemBasic) =>
     request<LogMessageAnnotationsResponse>(`/apps/${appId}/annotations`, undefined, 'POST', body),
 
   deleteLogMessageAnnotation: (appId: string, annotationId: string) =>
     request<any>(`/apps/${appId}/annotations/${annotationId}`, undefined, 'DELETE'),
+
+  getAnnotations: (appId: string, params?: Record<string, any>) =>
+    request<any>(`/apps/${appId}/annotations`, params),
+
+  updateAnnotation: (appId: string, annotationId: string, body: AnnotationItemBasic) =>
+    request<any>(`/apps/${appId}/annotations/${annotationId}`, undefined, 'POST', body),
+
+  getAnnotationConfig: (appId: string) =>
+    request<AnnotationSetting>(`/apps/${appId}/annotation-reply`),
+
+  updateAnnotationStatus: (appId: string, action: AnnotationEnableStatus, body: { embedding_model?: EmbeddingModelConfig, score_threshold?: number }) =>
+    request<any>(`/apps/${appId}/annotation-reply/${action}`, undefined, 'POST', body),
+
+  updateAnnotationScore: (appId: string, settingId: string, scoreThreshold: number) =>
+    request<any>(`/apps/${appId}/annotation-reply/${settingId}/score-threshold`, undefined, 'POST', { score_threshold: scoreThreshold }),
+
+  getAnnotationJobStatus: (appId: string, jobId: string) =>
+    request<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-export-status/${jobId}`),
+
+  exportAnnotations: (appId: string) =>
+    request<any>(`/apps/${appId}/annotations/export`),
+
+  importAnnotations: (appId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    // Note: request function needs to handle FormData if we use it, 
+    // but the current request function uses JSON.stringify.
+    // I'll implement a separate request for multipart if needed.
+    return request<any>(`/apps/${appId}/annotations/import`, undefined, 'POST', formData);
+  },
 
   getConversationMessages: async (appId: string, conversationId: string) => {
     try {

@@ -23,7 +23,8 @@ import {
   ArrowDown,
   Edit3,
   RefreshCw,
-  Trash2
+  Trash2,
+  History
 } from 'lucide-react';
 import { 
   Select, 
@@ -43,7 +44,7 @@ import {
 } from 'antd';
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
-import { LogItem, LogQuery, Message } from '../types';
+import { LogItem, LogQuery, Message, AnnotationEnableStatus, EmbeddingModelConfig, AnnotationItem, AnnotationItemBasic } from '../types';
 import dayjs from 'dayjs';
 import TimeRangeSelector from './TimeRangeSelector';
 import Markdown from 'react-markdown';
@@ -67,8 +68,10 @@ const LogsPage: React.FC = () => {
   const [annotationReplyEnabled, setAnnotationReplyEnabled] = useState(false);
   const [annotationSettings, setAnnotationSettings] = useState({
     scoreThreshold: 0.9,
-    embeddingModel: 'bge-m3:latest'
+    embeddingModel: 'bge-m3:latest',
+    embeddingProvider: 'ollama'
   });
+  const [annotationSettingId, setAnnotationSettingId] = useState<string | null>(null);
   const [annotationForm, setAnnotationForm] = useState({
     question: '',
     answer: '',
@@ -77,7 +80,7 @@ const LogsPage: React.FC = () => {
 
   // Logs state
   const [logs, setLogs] = useState<LogItem[]>([]);
-  const [annotations, setAnnotations] = useState<LogItem[]>([]);
+  const [annotations, setAnnotations] = useState<AnnotationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,10 +96,14 @@ const LogsPage: React.FC = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [hitHistory, setHitHistory] = useState<any[]>([]);
 
   // Detail state
   const [selectedLog, setSelectedLog] = useState<LogItem | null>(null);
+  const [selectedAnnotation, setSelectedAnnotation] = useState<AnnotationItem | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isAnnotationDetailOpen, setIsAnnotationDetailOpen] = useState(false);
+  const [annotationDetailTab, setAnnotationDetailTab] = useState<'reply' | 'history'>('reply');
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
@@ -106,6 +113,106 @@ const LogsPage: React.FC = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      if (!app?.id) return;
+      try {
+        const config = await monitoringService.getAnnotationConfig(app.id);
+        if (config) {
+          setAnnotationSettings({
+            scoreThreshold: config.score_threshold,
+            embeddingModel: config.embedding_model.embedding_model_name,
+            embeddingProvider: config.embedding_model.embedding_provider_name
+          });
+          setAnnotationSettingId(config.id);
+          // If we have config, it might be enabled. 
+          // The current UI state annotationReplyEnabled is false by default.
+          // We might need a status field in AnnotationSetting if the API provides it.
+        }
+      } catch (error) {
+        console.error('Failed to fetch annotation config:', error);
+      }
+    };
+    fetchConfig();
+  }, [app?.id]);
+
+  const handleToggleAnnotationReply = async (enabled: boolean) => {
+    if (!app?.id) return;
+    try {
+      const action = enabled ? AnnotationEnableStatus.enable : AnnotationEnableStatus.disable;
+      const body = enabled ? {
+        embedding_model: {
+          embedding_provider_name: annotationSettings.embeddingProvider,
+          embedding_model_name: annotationSettings.embeddingModel
+        },
+        score_threshold: annotationSettings.scoreThreshold
+      } : {};
+      
+      await monitoringService.updateAnnotationStatus(app.id, action, body);
+      setAnnotationReplyEnabled(enabled);
+      message.success(enabled ? '已开启标注回复' : '已关闭标注回复');
+      
+      // Refresh config to get ID if it was just enabled
+      if (enabled) {
+        const config = await monitoringService.getAnnotationConfig(app.id);
+        if (config) setAnnotationSettingId(config.id);
+      }
+    } catch (error) {
+      console.error('Failed to toggle annotation reply:', error);
+      message.error('操作失败');
+    }
+  };
+
+  const handleUpdateScoreThreshold = async (score: number) => {
+    if (!app?.id || !annotationSettingId) return;
+    try {
+      await monitoringService.updateAnnotationScore(app.id, annotationSettingId, score);
+      setAnnotationSettings(prev => ({ ...prev, scoreThreshold: score }));
+    } catch (error) {
+      console.error('Failed to update score threshold:', error);
+      message.error('更新分数阈值失败');
+    }
+  };
+
+  const handleImport = async (file: File) => {
+    if (!app?.id) return;
+    try {
+      await monitoringService.importAnnotations(app.id, file);
+      message.success('导入任务已启动');
+    } catch (error) {
+      console.error('Failed to import annotations:', error);
+      message.error('导入失败');
+    }
+  };
+
+  const handleExport = async () => {
+    if (!app?.id) return;
+    try {
+      const response = await monitoringService.exportAnnotations(app.id);
+      if (response && response.job_id) {
+        message.success('导出任务已启动');
+        checkExportStatus(response.job_id);
+      }
+    } catch (error) {
+      console.error('Failed to export annotations:', error);
+      message.error('导出失败');
+    }
+  };
+
+  const checkExportStatus = async (jobId: string) => {
+    if (!app?.id) return;
+    try {
+      const status = await monitoringService.getAnnotationJobStatus(app.id, jobId);
+      if (status.job_status === 'completed') {
+        message.success('导出成功');
+      } else if (status.job_status === 'waiting' || status.job_status === 'processing') {
+        setTimeout(() => checkExportStatus(jobId), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to check export status:', error);
+    }
+  };
 
   const fetchLogs = async (query: LogQuery & { period: string | number }) => {
     if (!app?.id) return;
@@ -163,22 +270,14 @@ const LogsPage: React.FC = () => {
     setLoading(true);
     try {
       const apiQuery: any = {
-        ...query,
-        annotated: true,
-        ...(query.period !== 'all' && typeof query.period === 'number'
-          ? {
-            start: dayjs().subtract(query.period, 'day').startOf('day').format('YYYY-MM-DD HH:mm'),
-            end: dayjs().endOf('day').format('YYYY-MM-DD HH:mm'),
-          }
-          : {}),
+        page: query.page,
+        limit: query.limit,
+        keyword: query.keyword,
       };
-      // For now, we use the same getLogs but with a filter or mock
-      const response = await monitoringService.getLogs(app.id, apiQuery);
+      const response = await monitoringService.getAnnotations(app.id, apiQuery);
       if (response && response.data) {
-        // Filter for annotated items if the API doesn't support it yet
-        const annotatedData = response.data.filter(item => item.annotated || item.id.startsWith('mock-ann'));
-        setAnnotations(annotatedData);
-        setTotal(annotatedData.length);
+        setAnnotations(response.data);
+        setTotal(response.total || response.data.length);
       } else {
         setAnnotations([]);
         setTotal(0);
@@ -308,31 +407,37 @@ const LogsPage: React.FC = () => {
       await monitoringService.deleteLogMessageAnnotation(app.id, annotationId);
       message.success('移除标注成功');
       
-      // Update local state for immediate feedback
-      setLogs(prev => prev.map(log => 
-        log.id === selectedLog?.id ? { ...log, annotated: false } : log
-      ));
-      if (selectedLog) {
-        setSelectedLog({ ...selectedLog, annotated: false });
-      }
-
-      // Refresh logs list to update table highlight
       if (activeTab === 'logs') {
+        // Update local state for immediate feedback
+        setLogs(prev => prev.map(log => 
+          log.id === selectedLog?.id ? { ...log, annotated: false } : log
+        ));
+        if (selectedLog) {
+          setSelectedLog({ ...selectedLog, annotated: false });
+        }
         fetchLogs({ ...filters, page: currentPage, limit: pageSize });
+        fetchMessages(selectedLog?.id || '');
       } else {
         fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
       }
-      fetchMessages(selectedLog?.id || '');
     } catch (error) {
       console.error('Failed to remove annotation:', error);
       message.error('移除标注失败');
     }
   };
 
-  const handleRowClick = (record: LogItem) => {
-    setSelectedLog(record);
-    setIsDetailOpen(true);
-    fetchMessages(record.id);
+  const handleRowClick = (record: any) => {
+    if (activeTab === 'annotations') {
+      setSelectedAnnotation(record as AnnotationItem);
+      setIsAnnotationDetailOpen(true);
+      setAnnotationDetailTab('reply');
+      // In a real app, we might fetch hit history here
+      setHitHistory([]); 
+    } else {
+      setSelectedLog(record as LogItem);
+      setIsDetailOpen(true);
+      fetchMessages(record.id);
+    }
   };
 
   const columns = [
@@ -445,22 +550,108 @@ const LogsPage: React.FC = () => {
       ),
     },
   ];
+  
+  const annotationColumns = [
+    {
+      title: '问题',
+      dataIndex: 'question',
+      key: 'question',
+      width: '30%',
+      render: (text: string) => <span className="text-gray-900 font-medium line-clamp-2">{text}</span>
+    },
+    {
+      title: '回答',
+      dataIndex: 'answer',
+      key: 'answer',
+      width: '40%',
+      render: (text: string) => <span className="text-gray-500 line-clamp-2">{text}</span>
+    },
+    {
+      title: '命中次数',
+      dataIndex: 'hit_count',
+      key: 'hit_count',
+      align: 'center' as const,
+      render: (count: number) => <span className="text-gray-500">{count}</span>
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (timestamp: number) => (
+        <span className="text-gray-400 text-xs">
+          {dayjs(timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}
+        </span>
+      ),
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 120,
+      render: (record: AnnotationItem) => (
+        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+          <button 
+            onClick={() => {
+              setSelectedAnnotation(record);
+              setAnnotationForm({ question: record.question, answer: record.answer, addNext: false });
+              setIsAddAnnotationOpen(true);
+            }}
+            className="text-gray-400 hover:text-primary-600 transition-colors"
+          >
+            <Edit3 className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => handleRemoveAnnotation(record.id)}
+            className="text-gray-400 hover:text-red-500 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
-  const handleAddAnnotation = () => {
+  const handleAddAnnotation = async () => {
+    if (!app?.id) return;
     if (!annotationForm.question || !annotationForm.answer) {
       message.warning('请填写完整信息');
       return;
     }
-    message.success('添加成功');
-    if (annotationForm.addNext) {
-      setAnnotationForm({ ...annotationForm, question: '', answer: '' });
-    } else {
-      setIsAddAnnotationOpen(false);
-      setAnnotationForm({ question: '', answer: '', addNext: false });
-    }
-    // Refresh annotations if on that tab
-    if (activeTab === 'annotations') {
-      fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
+    
+    try {
+      if (selectedAnnotation) {
+        // Edit existing annotation
+        await monitoringService.updateAnnotation(app.id, selectedAnnotation.id, {
+          question: annotationForm.question,
+          answer: annotationForm.answer
+        });
+        message.success('更新成功');
+      } else {
+        // Add new annotation
+        await monitoringService.updateLogMessageAnnotations(app.id, {
+          question: annotationForm.question,
+          answer: annotationForm.answer
+        });
+        message.success('添加成功');
+      }
+
+      if (annotationForm.addNext && !selectedAnnotation) {
+        setAnnotationForm({ ...annotationForm, question: '', answer: '' });
+      } else {
+        setIsAddAnnotationOpen(false);
+        setAnnotationForm({ question: '', answer: '', addNext: false });
+        setSelectedAnnotation(null);
+      }
+      
+      // Refresh annotations if on that tab
+      if (activeTab === 'annotations') {
+        fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
+      } else {
+        // If on logs tab, maybe refresh logs to show annotated status
+        fetchLogs({ ...filters, page: currentPage, limit: pageSize });
+      }
+    } catch (error) {
+      console.error('Failed to save annotation:', error);
+      message.error('保存失败');
     }
   };
 
@@ -510,10 +701,20 @@ const LogsPage: React.FC = () => {
       key: 'import',
       label: '批量导入',
       icon: <Upload className="w-4 h-4" />,
+      onClick: () => document.getElementById('annotation-import-input')?.click()
     },
     {
       key: 'export',
       label: '批量导出',
+      icon: <Download className="w-4 h-4" />,
+      onClick: handleExport
+    },
+    {
+      type: 'divider'
+    },
+    {
+      key: 'export-formats',
+      label: '导出格式',
       icon: <Download className="w-4 h-4" />,
       children: [
         { 
@@ -653,7 +854,7 @@ const LogsPage: React.FC = () => {
                     if (checked) {
                       setIsAnnotationSettingsOpen(true);
                     } else {
-                      setAnnotationReplyEnabled(false);
+                      handleToggleAnnotationReply(false);
                     }
                   }}
                   className={annotationReplyEnabled ? 'bg-primary-500' : 'bg-gray-300'} 
@@ -686,8 +887,8 @@ const LogsPage: React.FC = () => {
         <div className="flex-grow flex flex-col">
           <div className="flex-grow overflow-auto">
             <Table 
-              columns={columns} 
-              dataSource={activeTab === 'logs' ? logs : annotations} 
+              columns={activeTab === 'logs' ? columns : annotationColumns} 
+              dataSource={(activeTab === 'logs' ? logs : annotations) as any[]} 
               rowKey="id"
               pagination={false}
               loading={loading}
@@ -853,6 +1054,16 @@ const LogsPage: React.FC = () => {
         </div>
       </Drawer>
 
+      <input 
+        type="file" 
+        id="annotation-import-input" 
+        className="hidden" 
+        accept=".csv,.jsonl"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleImport(file);
+        }}
+      />
       {/* Annotation Settings Modal */}
       <Modal
         title={
@@ -886,9 +1097,8 @@ const LogsPage: React.FC = () => {
             <Button 
               type="primary" 
               onClick={() => {
-                setAnnotationReplyEnabled(true);
+                handleToggleAnnotationReply(true);
                 setIsAnnotationSettingsOpen(false);
-                message.success('已开启标注回复');
               }} 
               className="rounded-xl h-11 px-10 font-bold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/20"
             >
@@ -1029,6 +1239,137 @@ const LogsPage: React.FC = () => {
               )}
             />
           </section>
+        </div>
+      </Modal>
+      
+      {/* Annotation Detail Modal */}
+      <Modal
+        open={isAnnotationDetailOpen}
+        onCancel={() => setIsAnnotationDetailOpen(false)}
+        footer={null}
+        width={800}
+        centered
+        closable={false}
+        className="annotation-detail-modal"
+        styles={{
+          body: { padding: 0 }
+        }}
+      >
+        <div className="flex flex-col h-[600px]">
+          {/* Header with Tabs */}
+          <div className="flex items-center justify-between px-6 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-8">
+              <button 
+                onClick={() => setAnnotationDetailTab('reply')}
+                className={`py-4 text-base font-bold relative transition-colors ${annotationDetailTab === 'reply' ? 'text-gray-900 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                标注回复
+              </button>
+              <button 
+                onClick={() => setAnnotationDetailTab('history')}
+                className={`py-4 text-base font-bold relative transition-colors ${annotationDetailTab === 'history' ? 'text-gray-900 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                命中历史
+              </button>
+            </div>
+            <button 
+              onClick={() => setIsAnnotationDetailOpen(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-8">
+            {annotationDetailTab === 'reply' ? (
+              <div className="space-y-10">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                      <User className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <span className="text-sm font-bold text-gray-900">用户提问</span>
+                  </div>
+                  <div className="pl-11 pr-4">
+                    <div className="text-sm text-gray-700 leading-relaxed mb-2">
+                      {selectedAnnotation?.question || '你好'}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setAnnotationForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '', addNext: false });
+                        setIsAddAnnotationOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      编辑
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                      <Bot className="w-5 h-5 text-primary-600" />
+                    </div>
+                    <span className="text-sm font-bold text-gray-900">机器回复</span>
+                  </div>
+                  <div className="pl-11 pr-4">
+                    <div className="text-sm text-gray-700 leading-relaxed mb-2 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                      <Markdown>{selectedAnnotation?.answer || '您好！我是由中国深度求索（DeepSeek）公司开发的智能助手DeepSeek-R1。有关模型和产品的详细内容请参考官方文档。'}</Markdown>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setAnnotationForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '', addNext: false });
+                        setIsAddAnnotationOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      编辑
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center">
+                {hitHistory.length > 0 ? (
+                  <div className="w-full space-y-4">
+                    {/* Render hit history list here */}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50/50 rounded-3xl p-12 flex flex-col items-center gap-4 border border-dashed border-gray-200 w-full max-w-lg">
+                    <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-gray-100">
+                      <History className="w-7 h-7 text-gray-300" />
+                    </div>
+                    <span className="text-sm text-gray-400 font-medium">没有命中历史</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between shrink-0">
+            <button 
+              className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 font-medium transition-colors group"
+              onClick={() => {
+                if (selectedAnnotation) {
+                  handleRemoveAnnotation(selectedAnnotation.id);
+                  setIsAnnotationDetailOpen(false);
+                }
+              }}
+            >
+              <div className="w-8 h-8 rounded-xl bg-white border border-gray-100 flex items-center justify-center group-hover:border-red-100 group-hover:bg-red-50 transition-all">
+                <Trash2 className="w-4 h-4" />
+              </div>
+              删除此标注
+            </button>
+            <div className="text-xs text-gray-400 font-medium">
+              创建于 {selectedAnnotation ? dayjs(selectedAnnotation.created_at * 1000).format('YYYY-MM-DD HH:mm:ss') : 'Invalid Date'}
+            </div>
+          </div>
         </div>
       </Modal>
 
