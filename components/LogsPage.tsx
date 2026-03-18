@@ -119,24 +119,35 @@ const LogsPage: React.FC = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (isAnnotationSettingsOpen) {
-      const fetchDefaultEmbeddingModel = async () => {
+    if (isAnnotationSettingsOpen && app?.id) {
+      const fetchAnnotationConfig = async () => {
         try {
-          const res = await apiService.fetchDefaultModal(ModelTypeEnum.textEmbedding);
-          if (res && res.model && res.provider) {
+          const config = await monitoringService.getAnnotationConfig(app.id);
+          if (config && config.embedding_model) {
             setAnnotationSettings(prev => ({
               ...prev,
-              embeddingModel: res.model,
-              embeddingProvider: res.provider.provider
+              embeddingModel: config.embedding_model.embedding_model_name,
+              embeddingProvider: config.embedding_model.embedding_provider_name,
+              scoreThreshold: config.score_threshold
             }));
+          } else {
+            // Fallback to default if no config
+            const res = await apiService.fetchDefaultModal(ModelTypeEnum.textEmbedding);
+            if (res && res.model && res.provider) {
+              setAnnotationSettings(prev => ({
+                ...prev,
+                embeddingModel: res.model,
+                embeddingProvider: res.provider.provider
+              }));
+            }
           }
         } catch (error) {
-          console.error('Failed to fetch default embedding model:', error);
+          console.error('Failed to fetch annotation config:', error);
         }
       };
-      fetchDefaultEmbeddingModel();
+      fetchAnnotationConfig();
     }
-  }, [isAnnotationSettingsOpen]);
+  }, [isAnnotationSettingsOpen, app?.id]);
 
   const handleToggleAnnotationReply = async (enabled: boolean) => {
     if (!app?.id) return;
