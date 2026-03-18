@@ -143,10 +143,8 @@ const LogsPage: React.FC = () => {
     try {
       const action = enabled ? AnnotationEnableStatus.enable : AnnotationEnableStatus.disable;
       const body = enabled ? {
-        embedding_model: {
-          embedding_provider_name: annotationSettings.embeddingProvider,
-          embedding_model_name: annotationSettings.embeddingModel
-        },
+        embedding_provider_name: annotationSettings.embeddingProvider,
+        embedding_model_name: annotationSettings.embeddingModel,
         score_threshold: annotationSettings.scoreThreshold
       } : {};
       
@@ -157,7 +155,15 @@ const LogsPage: React.FC = () => {
       // Refresh config to get ID if it was just enabled
       if (enabled) {
         const config = await monitoringService.getAnnotationConfig(app.id);
-        if (config) setAnnotationSettingId(config.id);
+        if (config) {
+          setAnnotationSettingId(config.id);
+          setAnnotationSettings(prev => ({
+            ...prev,
+            scoreThreshold: config.score_threshold,
+            embeddingModel: config.embedding_model?.embedding_model_name || prev.embeddingModel,
+            embeddingProvider: config.embedding_model?.embedding_provider_name || prev.embeddingProvider
+          }));
+        }
         fetchAnnotations(filters);
       }
     } catch (error) {
@@ -314,6 +320,30 @@ const LogsPage: React.FC = () => {
       if (!silent) setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (app?.id) {
+      const fetchInitialConfig = async () => {
+        try {
+          const config = await monitoringService.getAnnotationConfig(app.id);
+          if (config && config.id) {
+            setAnnotationSettingId(config.id);
+            setAnnotationReplyEnabled(true);
+            setAnnotationSettings(prev => ({
+              ...prev,
+              scoreThreshold: config.score_threshold,
+              embeddingModel: config.embedding_model?.embedding_model_name || prev.embeddingModel,
+              embeddingProvider: config.embedding_model?.embedding_provider_name || prev.embeddingProvider
+            }));
+          }
+        } catch (error) {
+          // If it fails (e.g., 404), we assume it's disabled
+          console.log('Annotation reply is likely disabled or not configured');
+        }
+      };
+      fetchInitialConfig();
+    }
+  }, [app?.id]);
 
   useEffect(() => {
     if (activeTab === 'logs') {

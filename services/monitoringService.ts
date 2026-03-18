@@ -409,13 +409,13 @@ export const monitoringService = {
     request<any>(`/apps/${appId}/annotations/${annotationId}`, undefined, 'POST', body),
 
   getAnnotationConfig: (appId: string) =>
-    request<AnnotationSetting>(`/apps/${appId}/annotation-reply`),
+    request<AnnotationSetting>(`/apps/${appId}/annotation-setting`),
 
-  updateAnnotationStatus: (appId: string, action: AnnotationEnableStatus, body: { embedding_model?: EmbeddingModelConfig, score_threshold?: number }) =>
+  updateAnnotationStatus: (appId: string, action: AnnotationEnableStatus, body: { embedding_model_name?: string, embedding_provider_name?: string, score_threshold?: number }) =>
     request<any>(`/apps/${appId}/annotation-reply/${action}`, undefined, 'POST', body),
 
   updateAnnotationScore: (appId: string, settingId: string, scoreThreshold: number) =>
-    request<any>(`/apps/${appId}/annotation-reply/${settingId}/score-threshold`, undefined, 'POST', { score_threshold: scoreThreshold }),
+    request<any>(`/apps/${appId}/annotation-settings/${settingId}`, undefined, 'POST', { score_threshold: scoreThreshold }),
 
   getAnnotationJobStatus: (appId: string, jobId: string) =>
     request<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-export-status/${jobId}`),
