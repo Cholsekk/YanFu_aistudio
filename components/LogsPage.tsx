@@ -44,6 +44,7 @@ import {
 } from 'antd';
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
+import { apiService } from '../services/apiService';
 import { LogItem, LogQuery, Message, AnnotationEnableStatus, EmbeddingModelConfig, AnnotationItem, AnnotationItemBasic, ModelTypeEnum } from '../types';
 import dayjs from 'dayjs';
 import TimeRangeSelector from './TimeRangeSelector';
@@ -117,6 +118,26 @@ const LogsPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  useEffect(() => {
+    if (isAnnotationSettingsOpen) {
+      const fetchDefaultEmbeddingModel = async () => {
+        try {
+          const res = await apiService.fetchDefaultModal(ModelTypeEnum.textEmbedding);
+          if (res && res.model && res.provider) {
+            setAnnotationSettings(prev => ({
+              ...prev,
+              embeddingModel: res.model,
+              embeddingProvider: res.provider.provider
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch default embedding model:', error);
+        }
+      };
+      fetchDefaultEmbeddingModel();
+    }
+  }, [isAnnotationSettingsOpen]);
+
   const handleToggleAnnotationReply = async (enabled: boolean) => {
     if (!app?.id) return;
     try {
@@ -137,6 +158,7 @@ const LogsPage: React.FC = () => {
       if (enabled) {
         const config = await monitoringService.getAnnotationConfig(app.id);
         if (config) setAnnotationSettingId(config.id);
+        fetchAnnotations(filters);
       }
     } catch (error) {
       console.error('Failed to toggle annotation reply:', error);
@@ -888,6 +910,15 @@ const LogsPage: React.FC = () => {
                   }}
                   className={annotationReplyEnabled ? 'bg-primary-500' : 'bg-gray-300'} 
                 />
+                {annotationReplyEnabled && (
+                  <button 
+                    onClick={() => setIsAnnotationSettingsOpen(true)}
+                    className="p-1 hover:bg-gray-200 rounded-md transition-colors text-gray-500 hover:text-gray-700"
+                    title="标注回复初始设置"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               <Button 
                 type="primary" 
@@ -1132,7 +1163,7 @@ const LogsPage: React.FC = () => {
               }} 
               className="rounded-xl h-11 px-10 font-bold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/20"
             >
-              保存并启用
+              {annotationReplyEnabled ? '保存' : '保存并启用'}
             </Button>
           </div>
         }
