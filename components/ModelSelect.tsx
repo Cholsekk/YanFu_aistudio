@@ -9,6 +9,7 @@ interface ModelSelectProps {
   onChange?: (model: string, provider: string, rules?: ModelParameterRule[]) => void;
   modelType: ModelTypeEnum;
   className?: string;
+  disableFetchRules?: boolean;
 }
 
 const getI18nText = (text: TypeWithI18N | string | undefined, lang: string = 'zh_Hans') => {
@@ -17,7 +18,7 @@ const getI18nText = (text: TypeWithI18N | string | undefined, lang: string = 'zh
   return text[lang] || text['en_US'] || '';
 };
 
-const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, className = '' }) => {
+const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, className = '', disableFetchRules = false }) => {
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,6 +71,13 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
   }, [models, value]);
 
   const handleSelect = async (modelValue: string, providerValue: string) => {
+    if (disableFetchRules) {
+      if (onChange) {
+        onChange(modelValue, providerValue);
+      }
+      setIsOpen(false);
+      return;
+    }
     try {
       const rulesRes = await apiService.fetchModelParameterRules(providerValue, modelValue);
       if (onChange) {

@@ -1174,7 +1174,7 @@ const LogsPage: React.FC = () => {
         centered
         styles={{
           header: { borderBottom: '1px solid #f3f4f6', padding: '24px 32px' },
-          body: { padding: '32px' },
+          body: { padding: '24px' },
           footer: { borderTop: '1px solid #f3f4f6', padding: '20px 32px' }
         }}
         footer={
@@ -1253,6 +1253,7 @@ const LogsPage: React.FC = () => {
               value={annotationSettings.embeddingModel}
               onChange={(model, provider) => setAnnotationSettings({ ...annotationSettings, embeddingModel: model, embeddingProvider: provider })}
               modelType={ModelTypeEnum.textEmbedding}
+              disableFetchRules={true}
             />
           </section>
         </div>
