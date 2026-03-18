@@ -178,11 +178,33 @@ const LogsPage: React.FC = () => {
   const handleImport = async (file: File) => {
     if (!app?.id) return;
     try {
-      await monitoringService.importAnnotations(app.id, file);
-      message.success('导入任务已启动');
+      const response = await monitoringService.importAnnotations(app.id, file);
+      if (response && response.job_id) {
+        message.success('导入任务已启动');
+        checkImportStatus(response.job_id);
+      }
     } catch (error) {
       console.error('Failed to import annotations:', error);
       message.error('导入失败');
+    }
+  };
+
+  const checkImportStatus = async (jobId: string) => {
+    if (!app?.id) return;
+    try {
+      const status = await monitoringService.getBatchImportStatus(app.id, jobId);
+      if (status.job_status === 'completed') {
+        message.success('导入成功');
+        if (activeTab === 'annotations') {
+          fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
+        }
+      } else if (status.job_status === 'waiting' || status.job_status === 'processing') {
+        setTimeout(() => checkImportStatus(jobId), 3000);
+      } else if (status.job_status === 'error' || status.job_status === 'failed') {
+        message.error('导入失败');
+      }
+    } catch (error) {
+      console.error('Failed to check import status:', error);
     }
   };
 
@@ -426,12 +448,26 @@ const LogsPage: React.FC = () => {
     }
   };
 
+  const fetchHitHistory = async (annotationId: string) => {
+    if (!app?.id) return;
+    try {
+      const response = await monitoringService.getHitHistory(app.id, annotationId);
+      if (response && response.data) {
+        setHitHistory(response.data);
+      } else {
+        setHitHistory([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch hit history:', error);
+      setHitHistory([]);
+    }
+  };
+
   const handleRowClick = (record: any) => {
     if (activeTab === 'annotations') {
       setSelectedAnnotation(record as AnnotationItem);
       setIsAnnotationDetailOpen(true);
       setAnnotationDetailTab('reply');
-      // In a real app, we might fetch hit history here
       setHitHistory([]); 
     } else {
       setSelectedLog(record as LogItem);
@@ -1266,7 +1302,12 @@ const LogsPage: React.FC = () => {
                 标注回复
               </button>
               <button 
-                onClick={() => setAnnotationDetailTab('history')}
+                onClick={() => {
+                  setAnnotationDetailTab('history');
+                  if (selectedAnnotation) {
+                    fetchHitHistory(selectedAnnotation.id);
+                  }
+                }}
                 className={`py-4 text-base font-bold relative transition-colors ${annotationDetailTab === 'history' ? 'text-gray-900 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 命中历史
@@ -1335,8 +1376,29 @@ const LogsPage: React.FC = () => {
             ) : (
               <div className="h-full flex flex-col items-center justify-center">
                 {hitHistory.length > 0 ? (
-                  <div className="w-full space-y-4">
-                    {/* Render hit history list here */}
+                  <div className="w-full h-full overflow-auto space-y-4">
+                    {hitHistory.map((hit, index) => (
+                      <div key={hit.id || index} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            {dayjs(hit.created_at * 1000).format('YYYY-MM-DD HH:mm:ss')}
+                          </span>
+                          <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase">
+                            Score: {hit.score?.toFixed(2) || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-xs font-bold text-gray-500 mb-1 block">匹配问题</span>
+                            <p className="text-sm text-gray-900">{hit.match || hit.question}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-gray-500 mb-1 block">实际回复</span>
+                            <p className="text-sm text-gray-600 line-clamp-3">{hit.response}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="bg-gray-50/50 rounded-3xl p-12 flex flex-col items-center gap-4 border border-dashed border-gray-200 w-full max-w-lg">

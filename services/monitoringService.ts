@@ -426,11 +426,14 @@ export const monitoringService = {
   importAnnotations: (appId: string, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    // Note: request function needs to handle FormData if we use it, 
-    // but the current request function uses JSON.stringify.
-    // I'll implement a separate request for multipart if needed.
-    return request<any>(`/apps/${appId}/annotations/import`, undefined, 'POST', formData);
+    return request<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-import`, undefined, 'POST', formData);
   },
+
+  getBatchImportStatus: (appId: string, jobId: string) =>
+    request<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-import-status/${jobId}`),
+
+  getHitHistory: (appId: string, annotationId: string, params?: Record<string, any>) =>
+    request<any>(`/apps/${appId}/annotations/${annotationId}/hit-histories`, params),
 
   getConversationMessages: async (appId: string, conversationId: string) => {
     try {
