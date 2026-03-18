@@ -66,6 +66,45 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
     }
   };
 
+  const renderAppIcon = () => {
+    const containerClass = "w-10 h-10 flex-shrink-0";
+    const iconClass = "w-6 h-6";
+
+    if (app.iconType === 'sys-icon') {
+      return (
+        <div className={`${containerClass} bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm`}>
+          <img 
+            src={`/sys_icons/Component ${app.icon}.svg`} 
+            alt={app.name} 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg'; // Fallback
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (app.iconType === 'image') {
+      const src = app.icon_url || app.icon;
+      return (
+        <img 
+          src={src || undefined} 
+          alt={app.name} 
+          className={`${containerClass} rounded-xl object-cover border border-gray-100 shadow-sm`} 
+        />
+      );
+    }
+
+    return (
+      <div className={`${containerClass} ${app.iconBackground || 'bg-primary-100'} rounded-xl flex items-center justify-center border border-gray-100 shadow-sm`}>
+        <span className={iconClass} role="img" aria-label="app icon">
+          {app.icon || '🤖'}
+        </span>
+      </div>
+    );
+  };
+
   const getTypeColor = () => {
     switch (app.mode) {
       case 'chat': return 'bg-primary-50 text-primary-700 border-primary-100';
@@ -124,9 +163,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
           </button>
           
           <div className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getTypeColor()} border shadow-sm`}>
-              {getTypeIcon()}
-            </div>
+            {renderAppIcon()}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold text-gray-900">{app.name}</h1>

@@ -104,6 +104,8 @@ const LogsPage: React.FC = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isAnnotationDetailOpen, setIsAnnotationDetailOpen] = useState(false);
   const [annotationDetailTab, setAnnotationDetailTab] = useState<'reply' | 'history'>('reply');
+  const [editingField, setEditingField] = useState<'question' | 'answer' | null>(null);
+  const [editForm, setEditForm] = useState({ question: '', answer: '' });
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
@@ -113,29 +115,6 @@ const LogsPage: React.FC = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  useEffect(() => {
-    const fetchConfig = async () => {
-      if (!app?.id) return;
-      try {
-        const config = await monitoringService.getAnnotationConfig(app.id);
-        if (config) {
-          setAnnotationSettings({
-            scoreThreshold: config.score_threshold,
-            embeddingModel: config.embedding_model.embedding_model_name,
-            embeddingProvider: config.embedding_model.embedding_provider_name
-          });
-          setAnnotationSettingId(config.id);
-          // If we have config, it might be enabled. 
-          // The current UI state annotationReplyEnabled is false by default.
-          // We might need a status field in AnnotationSetting if the API provides it.
-        }
-      } catch (error) {
-        console.error('Failed to fetch annotation config:', error);
-      }
-    };
-    fetchConfig();
-  }, [app?.id]);
 
   const handleToggleAnnotationReply = async (enabled: boolean) => {
     if (!app?.id) return;
@@ -287,9 +266,9 @@ const LogsPage: React.FC = () => {
     }
   };
 
-  const fetchAnnotations = async (query: LogQuery & { period: string | number }) => {
+  const fetchAnnotations = async (query: LogQuery & { period: string | number }, silent = false) => {
     if (!app?.id) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const apiQuery: any = {
         page: query.page,
@@ -309,7 +288,7 @@ const LogsPage: React.FC = () => {
       setAnnotations([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -463,11 +442,32 @@ const LogsPage: React.FC = () => {
     }
   };
 
+  const handleInlineSave = async () => {
+    if (!app?.id || !selectedAnnotation) return;
+    try {
+      await monitoringService.updateAnnotation(app.id, selectedAnnotation.id, {
+        question: editForm.question,
+        answer: editForm.answer
+      });
+      message.success('更新成功');
+      
+      const updatedAnnotation = { ...selectedAnnotation, question: editForm.question, answer: editForm.answer };
+      setSelectedAnnotation(updatedAnnotation);
+      setAnnotations(prev => prev.map(a => a.id === updatedAnnotation.id ? updatedAnnotation : a));
+      
+      setEditingField(null);
+    } catch (error) {
+      console.error('Failed to update annotation:', error);
+      message.error('更新失败');
+    }
+  };
+
   const handleRowClick = (record: any) => {
     if (activeTab === 'annotations') {
       setSelectedAnnotation(record as AnnotationItem);
       setIsAnnotationDetailOpen(true);
       setAnnotationDetailTab('reply');
+      setEditingField(null);
       setHitHistory([]); 
     } else {
       setSelectedLog(record as LogItem);
@@ -628,8 +628,10 @@ const LogsPage: React.FC = () => {
           <button 
             onClick={() => {
               setSelectedAnnotation(record);
-              setAnnotationForm({ question: record.question, answer: record.answer, addNext: false });
-              setIsAddAnnotationOpen(true);
+              setAnnotationDetailTab('reply');
+              setIsAnnotationDetailOpen(true);
+              setEditingField('answer');
+              setEditForm({ question: record.question, answer: record.answer });
             }}
             className="text-gray-400 hover:text-primary-600 transition-colors"
           >
@@ -654,33 +656,23 @@ const LogsPage: React.FC = () => {
     }
     
     try {
-      if (selectedAnnotation) {
-        // Edit existing annotation
-        await monitoringService.updateAnnotation(app.id, selectedAnnotation.id, {
-          question: annotationForm.question,
-          answer: annotationForm.answer
-        });
-        message.success('更新成功');
-      } else {
-        // Add new annotation
-        await monitoringService.updateLogMessageAnnotations(app.id, {
-          question: annotationForm.question,
-          answer: annotationForm.answer
-        });
-        message.success('添加成功');
-      }
+      // Add new annotation
+      await monitoringService.updateLogMessageAnnotations(app.id, {
+        question: annotationForm.question,
+        answer: annotationForm.answer
+      });
+      message.success('添加成功');
 
-      if (annotationForm.addNext && !selectedAnnotation) {
+      if (annotationForm.addNext) {
         setAnnotationForm({ ...annotationForm, question: '', answer: '' });
       } else {
         setIsAddAnnotationOpen(false);
         setAnnotationForm({ question: '', answer: '', addNext: false });
-        setSelectedAnnotation(null);
       }
       
       // Refresh annotations if on that tab
       if (activeTab === 'annotations') {
-        fetchAnnotations({ ...filters, page: currentPage, limit: pageSize });
+        fetchAnnotations({ ...filters, page: currentPage, limit: pageSize }, true);
       } else {
         // If on logs tab, maybe refresh logs to show annotated status
         fetchLogs({ ...filters, page: currentPage, limit: pageSize });
@@ -901,6 +893,7 @@ const LogsPage: React.FC = () => {
                 icon={<Plus className="w-4 h-4" />}
                 className="flex items-center gap-2 h-10 rounded-xl font-semibold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 onClick={() => {
+                  setSelectedAnnotation(null);
                   setAnnotationForm({ question: '', answer: '', addNext: false });
                   setIsAddAnnotationOpen(true);
                 }}
@@ -1333,19 +1326,36 @@ const LogsPage: React.FC = () => {
                     <span className="text-sm font-bold text-gray-900">用户提问</span>
                   </div>
                   <div className="pl-11 pr-4">
-                    <div className="text-sm text-gray-700 leading-relaxed mb-2">
-                      {selectedAnnotation?.question || '你好'}
-                    </div>
-                    <button 
-                      onClick={() => {
-                        setAnnotationForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '', addNext: false });
-                        setIsAddAnnotationOpen(true);
-                      }}
-                      className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      编辑
-                    </button>
+                    {editingField === 'question' ? (
+                      <div className="space-y-3">
+                        <Input.TextArea 
+                          value={editForm.question}
+                          onChange={(e) => setEditForm({ ...editForm, question: e.target.value })}
+                          autoSize={{ minRows: 2, maxRows: 6 }}
+                          className="rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-primary-500/20 transition-all p-3 text-sm leading-relaxed"
+                        />
+                        <div className="flex items-center gap-2">
+                          <Button type="primary" size="small" onClick={handleInlineSave} className="rounded-lg">保存</Button>
+                          <Button size="small" onClick={() => setEditingField(null)} className="rounded-lg border-gray-200">取消</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-sm text-gray-700 leading-relaxed mb-2">
+                          {selectedAnnotation?.question || '你好'}
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setEditForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '' });
+                            setEditingField('question');
+                          }}
+                          className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          编辑
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1357,19 +1367,44 @@ const LogsPage: React.FC = () => {
                     <span className="text-sm font-bold text-gray-900">机器回复</span>
                   </div>
                   <div className="pl-11 pr-4">
-                    <div className="text-sm text-gray-700 leading-relaxed mb-2 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                      <Markdown>{selectedAnnotation?.answer || '您好！我是由中国深度求索（DeepSeek）公司开发的智能助手DeepSeek-R1。有关模型和产品的详细内容请参考官方文档。'}</Markdown>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        setAnnotationForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '', addNext: false });
-                        setIsAddAnnotationOpen(true);
-                      }}
-                      className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      编辑
-                    </button>
+                    {editingField === 'answer' ? (
+                      <div className="space-y-3">
+                        <div className="text-sm text-gray-500 leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100 italic">
+                          &gt; {selectedAnnotation?.answer}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                          <Edit3 className="w-3.5 h-3.5" />
+                          您的回复
+                        </div>
+                        <Input.TextArea 
+                          value={editForm.answer}
+                          onChange={(e) => setEditForm({ ...editForm, answer: e.target.value })}
+                          autoSize={{ minRows: 4, maxRows: 10 }}
+                          placeholder="在这里输入您的回复"
+                          className="rounded-xl bg-white border-gray-200 focus:ring-2 focus:ring-primary-500/20 transition-all p-3 text-sm leading-relaxed"
+                        />
+                        <div className="flex items-center gap-2">
+                          <Button type="primary" size="small" onClick={handleInlineSave} className="rounded-lg">保存</Button>
+                          <Button size="small" onClick={() => setEditingField(null)} className="rounded-lg border-gray-200">取消</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-sm text-gray-700 leading-relaxed mb-2 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                          <Markdown>{selectedAnnotation?.answer || '您好！我是由中国深度求索（DeepSeek）公司开发的智能助手DeepSeek-R1。有关模型和产品的详细内容请参考官方文档。'}</Markdown>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setEditForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '' });
+                            setEditingField('answer');
+                          }}
+                          className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          编辑
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
