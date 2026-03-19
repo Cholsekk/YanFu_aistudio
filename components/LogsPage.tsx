@@ -229,33 +229,6 @@ const LogsPage: React.FC = () => {
     }
   };
 
-  const handleExport = async () => {
-    if (!app?.id) return;
-    try {
-      const response = await monitoringService.exportAnnotations(app.id);
-      if (response && response.job_id) {
-        message.success('导出任务已启动');
-        checkExportStatus(response.job_id);
-      }
-    } catch (error) {
-      console.error('Failed to export annotations:', error);
-      message.error('导出失败');
-    }
-  };
-
-  const checkExportStatus = async (jobId: string) => {
-    if (!app?.id) return;
-    try {
-      const status = await monitoringService.getAnnotationJobStatus(app.id, jobId);
-      if (status.job_status === 'completed') {
-        message.success('导出成功');
-      } else if (status.job_status === 'waiting' || status.job_status === 'processing') {
-        setTimeout(() => checkExportStatus(jobId), 3000);
-      }
-    } catch (error) {
-      console.error('Failed to check export status:', error);
-    }
-  };
 
   const fetchLogs = async (query: LogQuery & { period: string | number }) => {
     if (!app?.id) return;
@@ -749,45 +722,50 @@ const LogsPage: React.FC = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    const dataToExport = activeTab === 'logs' ? logs : annotations;
-    if (dataToExport.length === 0) {
-      message.warning('没有数据可导出');
-      return;
+  const handleExport = async (format: 'csv' | 'jsonl') => {
+    if (!app?.id) return;
+    message.loading('正在获取导出数据...', 0);
+    try {
+      const data = await monitoringService.exportAnnotations(app.id);
+      if (!data || data.length === 0) {
+        message.destroy();
+        message.warning('没有数据可导出');
+        return;
+      }
+
+      if (format === 'csv') {
+        const headers = ['id', 'question', 'answer', 'hit_count', 'created_at'];
+        const rows = data.map(item => [
+          item.id,
+          item.question,
+          item.answer,
+          item.hit_count,
+          item.created_at
+        ]);
+        const csvContent = [
+          headers.join(','),
+          ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `annotations_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
+        link.click();
+      } else {
+        const jsonlContent = data.map(item => JSON.stringify(item)).join('\n');
+        const blob = new Blob([jsonlContent], { type: 'application/x-jsonlines' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `annotations_${dayjs().format('YYYYMMDD_HHmmss')}.jsonl`;
+        link.click();
+      }
+      message.destroy();
+      message.success('导出成功');
+    } catch (error) {
+      console.error('Failed to export annotations:', error);
+      message.destroy();
+      message.error('导出失败');
     }
-
-    // CSV headers: question, answer
-    const headers = ['question', 'answer'];
-    const rows = dataToExport.map(item => [
-      item.summary || '', // Using summary as question for now
-      item.annotated ? '已标注' : '未标注'
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `annotations_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
-    link.click();
-  };
-
-  const handleExportJSONL = () => {
-    const dataToExport = activeTab === 'logs' ? logs : annotations;
-    if (dataToExport.length === 0) {
-      message.warning('没有数据可导出');
-      return;
-    }
-
-    const jsonlContent = dataToExport.map(item => JSON.stringify(item)).join('\n');
-    const blob = new Blob([jsonlContent], { type: 'application/x-jsonlines' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `annotations_${dayjs().format('YYYYMMDD_HHmmss')}.jsonl`;
-    link.click();
   };
 
   const menuItems: MenuProps['items'] = [
@@ -805,12 +783,12 @@ const LogsPage: React.FC = () => {
         { 
           key: 'export-csv', 
           label: 'CSV',
-          onClick: handleExportCSV
+          onClick: () => handleExport('csv')
         },
         { 
           key: 'export-jsonl', 
           label: 'JSONL',
-          onClick: handleExportJSONL
+          onClick: () => handleExport('jsonl')
         },
       ]
     },

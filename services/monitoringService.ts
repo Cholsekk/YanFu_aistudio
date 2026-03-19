@@ -417,11 +417,8 @@ export const monitoringService = {
   updateAnnotationScore: (appId: string, settingId: string, scoreThreshold: number) =>
     request<any>(`/apps/${appId}/annotation-settings/${settingId}`, undefined, 'POST', { score_threshold: scoreThreshold }),
 
-  getAnnotationJobStatus: (appId: string, jobId: string) =>
-    request<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-export-status/${jobId}`),
-
   exportAnnotations: (appId: string) =>
-    request<any>(`/apps/${appId}/annotations/export`),
+    request<any[]>(`/apps/${appId}/annotations/export`),
 
   importAnnotations: (appId: string, file: File) => {
     const formData = new FormData();
