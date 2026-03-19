@@ -280,7 +280,7 @@ const AppCard: React.FC<AppCardProps> = ({
       </div>
 
       <Tooltip title={app.description} arrow={false}>
-        <p className="text-sm text-gray-600 mb-6 flex-grow line-clamp-3 leading-relaxed h-[92px] overflow-hidden cursor-default">
+        <p className="text-sm text-gray-600 mb-6 flex-grow line-clamp-3 leading-relaxed max-h-[92px] overflow-hidden cursor-default">
           {app.description}
         </p>
       </Tooltip>
