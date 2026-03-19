@@ -418,7 +418,7 @@ export const monitoringService = {
     request<any>(`/apps/${appId}/annotation-settings/${settingId}`, undefined, 'POST', { score_threshold: scoreThreshold }),
 
   exportAnnotations: (appId: string) =>
-    request<any[]>(`/apps/${appId}/annotations/export`),
+    request<any>(`/apps/${appId}/annotations/export`),
 
   importAnnotations: (appId: string, file: File) => {
     const formData = new FormData();

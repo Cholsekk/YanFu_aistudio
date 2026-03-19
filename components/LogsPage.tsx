@@ -726,7 +726,9 @@ const LogsPage: React.FC = () => {
     if (!app?.id) return;
     message.loading('正在获取导出数据...', 0);
     try {
-      const data = await monitoringService.exportAnnotations(app.id);
+      const response = await monitoringService.exportAnnotations(app.id);
+      const data = Array.isArray(response) ? response : (response?.data || response?.items || []);
+      
       if (!data || data.length === 0) {
         message.destroy();
         message.warning('没有数据可导出');
@@ -735,7 +737,7 @@ const LogsPage: React.FC = () => {
 
       if (format === 'csv') {
         const headers = ['id', 'question', 'answer', 'hit_count', 'created_at'];
-        const rows = data.map(item => [
+        const rows = data.map((item: any) => [
           item.id,
           item.question,
           item.answer,
@@ -752,7 +754,7 @@ const LogsPage: React.FC = () => {
         link.download = `annotations_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
         link.click();
       } else {
-        const jsonlContent = data.map(item => JSON.stringify(item)).join('\n');
+        const jsonlContent = data.map((item: any) => JSON.stringify(item)).join('\n');
         const blob = new Blob([jsonlContent], { type: 'application/x-jsonlines' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
