@@ -1185,7 +1185,7 @@ class ApiService {
    * @param model 模型名称
    */
   async fetchModelParameterRules(provider: string, model: string): Promise<{ data: ModelParameterRule[] }> {
-    const response = await this.request(`/workspaces/current/model-providers/${provider}/models/${model}/parameters`);
+    const response = await this.request(`/workspaces/current/model-providers/${provider}/models/parameter-rules?model=${model}`);
     return response;
   }
 }

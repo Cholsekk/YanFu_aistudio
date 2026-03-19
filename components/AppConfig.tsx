@@ -44,6 +44,7 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import { ModelTypeEnum, ModelParameterRule } from '../types';
+import { apiService } from '../services/apiService';
 
 const { TextArea } = Input;
 
@@ -104,6 +105,53 @@ const AppConfig: React.FC = () => {
   const [showParams, setShowParams] = useState<string | null>(null);
   const [metadataFilter, setMetadataFilter] = useState('disabled');
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
+
+  useEffect(() => {
+    const fetchDefaultModel = async () => {
+      try {
+        const res = await apiService.fetchDefaultModal(ModelTypeEnum.textGeneration);
+        if (res && res.model && res.provider) {
+          let rules: ModelParameterRule[] = [];
+          try {
+            const rulesRes = await apiService.fetchModelParameterRules(res.provider.provider, res.model);
+            rules = rulesRes.data || [];
+          } catch (e) {
+            console.error('Failed to fetch model parameter rules:', e);
+          }
+          
+          const newModel: ModelConfig = {
+            ...DEFAULT_MODEL,
+            id: res.model,
+            name: res.model,
+            provider: res.provider.provider,
+            rules,
+            ...(rules ? rules.reduce((acc, rule) => {
+              if (rule.default !== undefined) {
+                const keyMap: Record<string, keyof ModelConfig> = {
+                  'temperature': 'temperature',
+                  'top_p': 'topP',
+                  'presence_penalty': 'presencePenalty',
+                  'frequency_penalty': 'frequencyPenalty',
+                  'max_tokens': 'maxTokens'
+                };
+                const configKey = keyMap[rule.name];
+                if (configKey) {
+                  acc[configKey] = rule.default as any;
+                }
+              }
+              return acc;
+            }, {} as any) : {})
+          };
+          
+          setModels([newModel]);
+          setMessages({ [newModel.id]: [] });
+        }
+      } catch (e) {
+        console.error('Failed to fetch default model:', e);
+      }
+    };
+    fetchDefaultModel();
+  }, []);
 
   const onPublish = () => {
     const hide = message.loading('正在发布配置...', 0);

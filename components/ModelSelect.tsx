@@ -120,7 +120,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
       open={isOpen}
       onOpenChange={setIsOpen}
       popupMatchSelectWidth={false}
-      styles={{ popup: { root: { width: '320px', padding: 0 } } }}
+      popupStyle={{ width: '320px', padding: 0 }}
       labelRender={() => {
         if (!value) {
           return <span className="text-gray-400">选择您的模型</span>;
