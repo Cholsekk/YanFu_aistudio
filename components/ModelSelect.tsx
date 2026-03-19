@@ -118,12 +118,12 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
       className={`w-full custom-select ${className}`}
       value={value}
       open={isOpen}
-      onDropdownVisibleChange={setIsOpen}
-      dropdownMatchSelectWidth={false}
-      dropdownStyle={{ width: '320px', padding: 0 }}
+      onOpenChange={setIsOpen}
+      popupMatchSelectWidth={false}
+      styles={{ popup: { root: { width: '320px', padding: 0 } } }}
       labelRender={() => {
         if (!value) {
-          return <span className="text-gray-400">请选择模型</span>;
+          return <span className="text-gray-400">选择您的模型</span>;
         }
         
         if (selectedModelData) {

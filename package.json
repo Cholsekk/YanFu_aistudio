@@ -15,6 +15,7 @@
     "@types/node-fetch": "^2.6.11",
     "@types/react-datepicker": "^6.2.0",
     "antd": "^6.3.1",
+    "antd-style": "^4.1.0",
     "dagre": "^0.8.5",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
