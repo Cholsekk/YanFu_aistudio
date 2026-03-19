@@ -720,7 +720,7 @@ const MCPServices: React.FC = () => {
                             title={descText} 
                             placement="left" 
                             arrow={false}
-                            overlayInnerStyle={{ maxWidth: '300px', fontSize: '12px', lineHeight: '1.5', borderRadius: '12px', padding: '12px' }}
+                            styles={{ container: { maxWidth: '300px', fontSize: '12px', lineHeight: '1.5', borderRadius: '12px', padding: '12px' } }}
                           >
                             <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{descText}</p>
                           </Tooltip>

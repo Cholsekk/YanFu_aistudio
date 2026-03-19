@@ -4,6 +4,7 @@ import {
   Wand2, 
   Plus, 
   Settings2, 
+  Settings,
   MessageSquare, 
   Send, 
   RotateCcw, 
@@ -22,7 +23,12 @@ import {
   Search,
   Sparkles,
   Cpu,
-  Sliders
+  Sliders,
+  PlayCircle,
+  Store,
+  Code,
+  FileText,
+  ArrowUpRight
 } from 'lucide-react';
 import { 
   Input, 
@@ -37,12 +43,16 @@ import {
   Space,
   Dropdown,
   MenuProps,
-  message
+  message,
+  Popover,
+  Modal,
+  Checkbox
 } from 'antd';
 import { motion, AnimatePresence } from 'motion/react';
 import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
+import VariableEditModal, { Variable } from './VariableEditModal';
 import { ModelTypeEnum, ModelParameterRule } from '../types';
 import { apiService } from '../services/apiService';
 
@@ -77,14 +87,6 @@ const DEFAULT_MODEL: ModelConfig = {
   responseFormat: 'text'
 };
 
-interface Variable {
-  id: string;
-  name: string;
-  type: string;
-  value?: any;
-  options?: string[];
-}
-
 interface KnowledgeBase {
   id: string;
   name: string;
@@ -94,8 +96,15 @@ interface KnowledgeBase {
 const AppConfig: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [variables, setVariables] = useState<Variable[]>([]);
+  const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
+  const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
   const [isMultiModel, setIsMultiModel] = useState(false);
+  const [variableValues, setVariableValues] = useState<Record<string, any>>({});
+
+  const handleVariableChange = (id: string, value: any) => {
+    setVariableValues(prev => ({ ...prev, [id]: value }));
+  };
   const [models, setModels] = useState<ModelConfig[]>([DEFAULT_MODEL]);
   const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string }[]>>({
     [DEFAULT_MODEL.id]: []
@@ -160,27 +169,6 @@ const AppConfig: React.FC = () => {
       message.success('配置发布成功！');
     }, 1500);
   };
-
-  const addVariable = (type: string) => {
-    const newVar: Variable = {
-      id: `var-${Date.now()}`,
-      name: `变量_${variables.length + 1}`,
-      type,
-      value: type === 'checkbox' ? false : type === 'number' ? 0 : '',
-      options: type === 'select' ? ['选项1', '选项2'] : undefined
-    };
-    setVariables([...variables, newVar]);
-  };
-
-  const variableMenuItems: MenuProps['items'] = [
-    { key: 'text', label: '文本', icon: <Type className="w-4 h-4" />, onClick: () => addVariable('text') },
-    { key: 'paragraph', label: '段落', icon: <AlignLeft className="w-4 h-4" />, onClick: () => addVariable('paragraph') },
-    { key: 'select', label: '下拉选项', icon: <List className="w-4 h-4" />, onClick: () => addVariable('select') },
-    { key: 'number', label: '数字', icon: <Hash className="w-4 h-4" />, onClick: () => addVariable('number') },
-    { key: 'checkbox', label: '复选框', icon: <CheckSquare className="w-4 h-4" />, onClick: () => addVariable('checkbox') },
-    { type: 'divider' },
-    { key: 'api', label: '基于 API 的变量', icon: <Database className="w-4 h-4" />, onClick: () => addVariable('api') },
-  ];
 
   const addKnowledgeBase = () => {
     setIsKBModalOpen(true);
@@ -291,10 +279,14 @@ const AppConfig: React.FC = () => {
 
   const removeModel = (id: string) => {
     if (models.length <= 1) return;
-    setModels(models.filter(m => m.id !== id));
+    const newModels = models.filter(m => m.id !== id);
+    setModels(newModels);
     const newMsgs = { ...messages };
     delete newMsgs[id];
     setMessages(newMsgs);
+    if (newModels.length === 1) {
+      setIsMultiModel(false);
+    }
   };
 
   const updateModelParam = (id: string, param: keyof ModelConfig | 'model_info', value: any, extra?: { provider: string; rules?: ModelParameterRule[] }) => {
@@ -420,74 +412,101 @@ const AppConfig: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-4"
+            className="bg-gray-50/50 rounded-xl border border-gray-200 p-4 shadow-sm space-y-4"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-900">变量</span>
+                <span className="text-sm font-bold text-gray-700">{"{x} 变量"}</span>
                 <Tooltip title="变量能使用用户输入表单引入提示词或开场白">
                   <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
                 </Tooltip>
               </div>
-              <Dropdown menu={{ items: variableMenuItems }} placement="bottomRight" trigger={['click']}>
-                <Button 
-                  type="text" 
-                  size="small" 
-                  icon={<Plus className="w-3.5 h-3.5" />}
-                  className="text-gray-500 hover:text-primary-600 hover:bg-gray-50 flex items-center gap-1 text-xs font-medium"
-                >
-                  添加
-                </Button>
-              </Dropdown>
+              <Button 
+                type="text" 
+                size="small" 
+                icon={<Plus className="w-3.5 h-3.5" />}
+                className="text-gray-500 hover:text-primary-600 hover:bg-gray-100 flex items-center gap-1 text-xs font-medium"
+                onClick={() => {
+                  setEditingVariable({
+                    id: `var-${Date.now()}`,
+                    name: 'key',
+                    displayName: '',
+                    type: 'text',
+                    maxLength: 48,
+                    required: true
+                  });
+                  setIsVariableModalOpen(true);
+                }}
+              >
+                添加
+              </Button>
             </div>
-            {variables.length > 0 ? (
-              <div className="space-y-2">
+            
+            <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+              {/* Table Header */}
+              <div className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-100 text-xs font-medium text-gray-500 bg-white">
+                <div className="col-span-4">变量 KEY</div>
+                <div className="col-span-4">字段名称</div>
+                <div className="col-span-2 text-center">可选</div>
+                <div className="col-span-2 text-right">操作</div>
+              </div>
+
+              {/* Table Body */}
+              <div className="divide-y divide-gray-50">
                 <AnimatePresence>
-                  {variables.map((v, i) => (
+                  {variables.length > 0 ? variables.map((v, i) => (
                     <motion.div 
                       key={v.id} 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 group/var"
+                      className="grid grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-gray-50 bg-white group/var transition-colors"
                     >
-                      <div className="w-6 h-6 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400">
-                        {v.type === 'text' && <Type className="w-3 h-3" />}
-                        {v.type === 'paragraph' && <AlignLeft className="w-3 h-3" />}
-                        {v.type === 'select' && <List className="w-3 h-3" />}
-                        {v.type === 'number' && <Hash className="w-3 h-3" />}
-                        {v.type === 'checkbox' && <CheckSquare className="w-3 h-3" />}
-                        {v.type === 'api' && <Database className="w-3 h-3" />}
+                      <div className="col-span-4 flex items-center gap-2 text-sm text-gray-500">
+                        <div className="flex items-center justify-center w-6 h-6 rounded bg-blue-50 text-blue-500">
+                          {v.type === 'text' && <Type className="w-3.5 h-3.5" />}
+                          {v.type === 'paragraph' && <AlignLeft className="w-3.5 h-3.5" />}
+                          {v.type === 'select' && <CheckSquare className="w-3.5 h-3.5" />}
+                          {v.type === 'number' && <Hash className="w-3.5 h-3.5" />}
+                        </div>
+                        <span className="font-mono text-gray-700">{v.name || 'key'}</span>
                       </div>
-                      <Input 
-                        size="small" 
-                        placeholder="变量名" 
-                        value={v.name}
-                        className="text-xs border-none bg-transparent focus:bg-white transition-colors"
-                        onChange={(e) => {
-                          const newVars = [...variables];
-                          newVars[i].name = e.target.value;
-                          setVariables(newVars);
-                        }}
-                      />
-                      <div className="flex items-center gap-1 opacity-0 group-hover/var:opacity-100 transition-opacity">
-                        <Tooltip title="设置">
-                          <Button type="text" size="small" icon={<Settings2 className="w-3 h-3 text-gray-400" />} />
-                        </Tooltip>
+                      <div className="col-span-4 text-sm text-gray-500">
+                        {v.displayName}
+                      </div>
+                      <div className="col-span-2 flex justify-center">
+                        <Switch 
+                          size="small" 
+                          checked={!v.required} 
+                          onChange={(checked) => {
+                            const newVars = [...variables];
+                            newVars[i].required = !checked;
+                            setVariables(newVars);
+                          }} 
+                        />
+                      </div>
+                      <div className="col-span-2 flex items-center justify-end gap-3">
+                        <Settings 
+                          className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer transition-colors" 
+                          onClick={() => {
+                            setEditingVariable(v);
+                            setIsVariableModalOpen(true);
+                          }}
+                        />
                         <Trash2 
-                          className="w-3.5 h-3.5 text-gray-300 hover:text-red-500 cursor-pointer transition-colors" 
+                          className="w-4 h-4 text-gray-400 hover:text-red-500 cursor-pointer transition-colors" 
                           onClick={() => setVariables(variables.filter((_, idx) => idx !== i))}
                         />
                       </div>
                     </motion.div>
-                  ))}
+                  )) : (
+                    <div className="py-8 text-center text-gray-400 text-xs bg-white">
+                      暂无变量，点击右上角添加
+                    </div>
+                  )}
                 </AnimatePresence>
               </div>
-            ) : (
-              <div className="bg-gray-50/50 rounded-xl border border-dashed border-gray-200 p-4 text-center">
-                <p className="text-[11px] text-gray-400">变量能使用用户输入表单引入提示词或开场白，你可以试试在提示词中输入 {"{{input}}"}</p>
-              </div>
-            )}
+            </div>
           </motion.div>
 
           {/* Knowledge Base Section Card */}
@@ -636,15 +655,65 @@ const AppConfig: React.FC = () => {
         </div>
         
         <div className="p-4 border-t border-gray-200 bg-white">
-          <Button 
-            type="primary" 
-            block 
-            size="large"
-            className="h-12 rounded-xl font-bold shadow-lg shadow-primary-500/20 bg-gradient-to-r from-primary-600 to-primary-500 border-none hover:scale-[1.02] transition-transform"
-            onClick={onPublish}
+          <Popover 
+            placement="topRight" 
+            trigger="click"
+            styles={{ container: { padding: '12px', borderRadius: '12px' } }}
+            content={
+              <div className="w-64">
+                <div className="mb-3">
+                  <div className="text-gray-600 text-sm mb-1">当前草稿未发布</div>
+                  <div className="text-gray-400 text-xs">自动保存 ·</div>
+                </div>
+                <Button 
+                  type="primary" 
+                  block 
+                  className="mb-2 bg-blue-600 h-10 rounded-lg font-medium" 
+                  onClick={onPublish}
+                >
+                  发布
+                </Button>
+                <div className="space-y-1 mt-2">
+                  <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-600 group transition-colors">
+                    <div className="flex items-center gap-2">
+                      <PlayCircle className="w-4 h-4" />
+                      <span className="text-sm">运行</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg cursor-pointer text-blue-600 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-4 h-4" />
+                      <span className="text-sm font-medium">发布到应用市场</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-600 group transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Code className="w-4 h-4" />
+                      <span className="text-sm">嵌入网站</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-600 group transition-colors">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      <span className="text-sm">访问 API</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+            }
           >
-            发布
-          </Button>
+            <Button 
+              type="primary" 
+              block 
+              size="large"
+              className="h-12 rounded-xl font-bold shadow-lg shadow-primary-500/20 bg-gradient-to-r from-primary-600 to-primary-500 border-none hover:scale-[1.02] transition-transform"
+            >
+              发布
+            </Button>
+          </Popover>
         </div>
       </div>
 
@@ -656,53 +725,56 @@ const AppConfig: React.FC = () => {
             <span className="text-sm font-bold text-gray-900">调试与预览</span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {!isMultiModel && (
-                <div className="flex items-center gap-2">
-                  <ModelSelect
-                    className="w-48"
-                    value={models[0].name}
-                    modelType={ModelTypeEnum.textGeneration}
-                    onChange={(m, provider, rules) => updateModelParam(models[0].id, 'model_info', m, { provider, rules })}
+            {!isMultiModel ? (
+              <div className="flex items-center gap-3">
+                <ModelSelect
+                  className="w-48"
+                  value={models[0].name}
+                  modelType={ModelTypeEnum.textGeneration}
+                  onChange={(m, provider, rules) => updateModelParam(models[0].id, 'model_info', m, { provider, rules })}
+                />
+                <Tooltip title="添加模型对比">
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    icon={<Plus className="w-4 h-4" />}
+                    className="text-gray-400 hover:text-primary-600 transition-colors"
+                    onClick={() => {
+                      const newId = `model-${Date.now()}`;
+                      const firstModel = models[0];
+                      const secondModel = { ...DEFAULT_MODEL, id: newId, name: '' };
+                      setModels([firstModel, secondModel]);
+                      setMessages({
+                        [firstModel.id]: messages[firstModel.id] || [],
+                        [newId]: []
+                      });
+                      setIsMultiModel(true);
+                    }}
                   />
+                </Tooltip>
+                <div className="w-px h-4 bg-gray-200"></div>
+                <Tooltip title="重置对话">
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    icon={<RotateCcw className="w-4 h-4" />}
+                    className="text-gray-400 hover:text-primary-600 transition-colors"
+                    onClick={resetChat}
+                  />
+                </Tooltip>
+                <div className="w-px h-4 bg-gray-200"></div>
+                <Tooltip title="参数设置">
                   <Button 
                     type="text" 
                     size="small" 
                     icon={<Settings2 className="w-4 h-4" />}
-                    className="text-gray-400 hover:text-primary-600"
-                    onClick={() => setShowParams(models[0].id)}
+                    className={`text-gray-400 hover:text-primary-600 transition-colors ${showParams === models[0].id ? 'text-primary-600 bg-primary-50' : ''}`}
+                    onClick={() => setShowParams(showParams === models[0].id ? null : models[0].id)}
                   />
-                </div>
-              )}
-              <Button 
-                type={isMultiModel ? 'default' : 'primary'}
-                size="small"
-                className={`rounded-lg px-3 text-xs font-bold ${!isMultiModel ? 'bg-primary-600 border-none shadow-sm' : ''}`}
-                onClick={() => {
-                  if (!isMultiModel) {
-                    // Entering multi-model mode: reset to exactly 2 models
-                    const newId = `model-${Date.now()}`;
-                    const firstModel = models[0];
-                    const secondModel = { ...DEFAULT_MODEL, id: newId, name: '' };
-                    setModels([firstModel, secondModel]);
-                    setMessages({
-                      [firstModel.id]: messages[firstModel.id] || [],
-                      [newId]: []
-                    });
-                    setIsMultiModel(true);
-                  } else {
-                    // Exiting multi-model mode: keep only the first model
-                    setModels([models[0]]);
-                    setIsMultiModel(false);
-                  }
-                }}
-              >
-                {isMultiModel ? '退出多模型' : '多模型调试'}
-              </Button>
-            </div>
-            {isMultiModel && (
-              <>
-                <div className="w-px h-4 bg-gray-200"></div>
+                </Tooltip>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
                 <Button 
                   type="text" 
                   size="small" 
@@ -713,67 +785,140 @@ const AppConfig: React.FC = () => {
                 >
                   添加模型({models.length}/4)
                 </Button>
-              </>
+                <Button
+                  type="text"
+                  size="small"
+                  className="text-gray-400 hover:text-primary-600 transition-colors text-xs"
+                  onClick={() => setIsMultiModel(false)}
+                >
+                  切换单模型
+                </Button>
+                <div className="w-px h-4 bg-gray-200"></div>
+                <Tooltip title="重置对话">
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    icon={<RotateCcw className="w-4 h-4" />}
+                    className="text-gray-400 hover:text-primary-600 transition-colors"
+                    onClick={resetChat}
+                  />
+                </Tooltip>
+                <div className="w-px h-4 bg-gray-200"></div>
+                <Tooltip title="全局设置">
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    icon={<Settings2 className="w-4 h-4" />}
+                    className="text-gray-400 hover:text-primary-600 transition-colors"
+                    // In multi-model mode, global settings might be different, but for now we can just toggle a global state or do nothing
+                  />
+                </Tooltip>
+              </div>
             )}
-            <div className="w-px h-4 bg-gray-200"></div>
-            <Button 
-              type="text" 
-              size="small" 
-              icon={<RotateCcw className="w-4 h-4" />}
-              className="text-gray-400 hover:text-primary-600 transition-colors"
-              onClick={resetChat}
-            />
           </div>
         </div>
 
         {/* Chat Area */}
-        <div className="flex-grow overflow-hidden relative p-4">
-          <div className={`h-full grid gap-4 overflow-y-auto custom-scrollbar max-w-[1400px] mx-auto ${
-            !isMultiModel || models.length === 1 ? 'grid-cols-1' :
-            models.length === 2 ? 'grid-cols-2' :
-            models.length === 3 ? 'grid-cols-3' :
-            'grid-cols-2'
+        <div className="flex-grow overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
+          {/* Variables Area */}
+          {variables.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 shrink-0 max-w-[1400px] w-full mx-auto">
+              <div className="text-sm font-bold text-gray-900 mb-4">变量</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {variables.map(v => (
+                  <div key={v.id} className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">
+                      {v.displayName || v.name}
+                      {!v.required && <span className="text-gray-400 font-normal ml-1">(选填)</span>}
+                    </div>
+                    {v.type === 'text' && (
+                      <Input 
+                        placeholder={v.displayName || v.name} 
+                        value={variableValues[v.id] || ''}
+                        onChange={(e) => handleVariableChange(v.id, e.target.value)}
+                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-blue-500 h-10 rounded-lg transition-colors"
+                      />
+                    )}
+                    {v.type === 'paragraph' && (
+                      <Input.TextArea 
+                        placeholder={v.displayName || v.name} 
+                        value={variableValues[v.id] || ''}
+                        onChange={(e) => handleVariableChange(v.id, e.target.value)}
+                        autoSize={{ minRows: 3, maxRows: 6 }}
+                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-blue-500 rounded-lg transition-colors"
+                      />
+                    )}
+                    {v.type === 'number' && (
+                      <Input 
+                        type="number"
+                        placeholder={v.displayName || v.name} 
+                        value={variableValues[v.id] || ''}
+                        onChange={(e) => handleVariableChange(v.id, e.target.value)}
+                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-blue-500 h-10 rounded-lg transition-colors"
+                      />
+                    )}
+                    {v.type === 'select' && (
+                      <Select 
+                        placeholder={v.displayName || v.name} 
+                        value={variableValues[v.id]}
+                        onChange={(val) => handleVariableChange(v.id, val)}
+                        className="w-full h-10"
+                        options={v.options?.map(o => ({ label: o, value: o })) || []}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className={`flex-grow max-w-[1400px] w-full mx-auto ${
+            isMultiModel ? 'grid gap-4 grid-cols-2' : 'flex flex-col'
           }`}>
             {(isMultiModel ? models : [models[0]]).map((model, index) => (
               <div 
                 key={model.id} 
-                className={`flex flex-col h-full bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden relative`}
+                className={`flex flex-col min-h-[400px] relative ${
+                  isMultiModel ? 'bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden' : ''
+                }`}
               >
-                {/* Model Header */}
-                <div className="h-12 px-4 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-gray-400 italic">#{index + 1}</span>
-                    <ModelSelect
-                      className="w-44"
-                      value={model.name}
-                      modelType={ModelTypeEnum.textGeneration}
-                      onChange={(m, provider, rules) => updateModelParam(model.id, 'model_info', m, { provider, rules })}
-                    />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Tooltip title="参数设置">
-                      <Button 
-                        type="text" 
-                        size="small" 
-                        icon={<Settings2 className="w-3.5 h-3.5" />} 
-                        className="text-gray-400 hover:text-primary-600"
-                        onClick={() => setShowParams(model.id)}
+                {/* Model Header (Only in multi-model) */}
+                {isMultiModel && (
+                  <div className="h-12 px-4 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-gray-400 italic">#{index + 1}</span>
+                      <ModelSelect
+                        className="w-44"
+                        value={model.name}
+                        modelType={ModelTypeEnum.textGeneration}
+                        onChange={(m, provider, rules) => updateModelParam(model.id, 'model_info', m, { provider, rules })}
                       />
-                    </Tooltip>
-                    {isMultiModel && models.length > 1 && (
-                      <Button 
-                        type="text" 
-                        size="small" 
-                        icon={<Trash2 className="w-3.5 h-3.5" />} 
-                        className="text-gray-400 hover:text-red-500"
-                        onClick={() => removeModel(model.id)}
-                      />
-                    )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Tooltip title="参数设置">
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          icon={<Settings2 className="w-3.5 h-3.5" />} 
+                          className="text-gray-400 hover:text-primary-600"
+                          onClick={() => setShowParams(model.id)}
+                        />
+                      </Tooltip>
+                      {models.length > 1 && (
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          icon={<Trash2 className="w-3.5 h-3.5" />} 
+                          className="text-gray-400 hover:text-red-500"
+                          onClick={() => removeModel(model.id)}
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Messages */}
-                <div className="flex-grow overflow-y-auto p-5 space-y-5 custom-scrollbar bg-gray-50/10">
+                <div className={`flex-grow overflow-y-auto custom-scrollbar relative ${isMultiModel ? 'p-5 space-y-5 bg-gray-50/10' : 'py-5 space-y-5'}`}>
                   {messages[model.id]?.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center opacity-20">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -806,79 +951,6 @@ const AppConfig: React.FC = () => {
                   )}
                   <div ref={el => { chatEndRefs.current[model.id] = el; }} />
                 </div>
-
-                {/* Parameter Sidebar Overlay */}
-                <AnimatePresence>
-                  {showParams === model.id && (
-                    <motion.div 
-                      initial={{ x: '100%' }}
-                      animate={{ x: 0 }}
-                      exit={{ x: '100%' }}
-                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                      className="absolute inset-y-0 right-0 w-80 bg-white shadow-2xl border-l border-gray-100 z-30 flex flex-col"
-                    >
-                      <div className="h-14 px-5 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0">
-                        <div className="flex items-center gap-2">
-                          <Settings2 className="w-4 h-4 text-primary-600" />
-                          <span className="text-sm font-bold text-gray-900">参数设置</span>
-                        </div>
-                        <Button type="text" size="small" icon={<Plus className="w-4 h-4 rotate-45" />} onClick={() => setShowParams(null)} />
-                      </div>
-                      <div className="p-6 space-y-8 overflow-y-auto flex-grow custom-scrollbar">
-                        {(model.rules || [
-                          { label: { zh_Hans: '温度 (Temperature)', en_US: 'Temperature' }, name: 'temperature', min: 0, max: 2, type: 'slider', precision: 1 },
-                          { label: { zh_Hans: 'Top P', en_US: 'Top P' }, name: 'top_p', min: 0, max: 1, type: 'slider', precision: 2 },
-                          { label: { zh_Hans: '存在惩罚', en_US: 'Presence Penalty' }, name: 'presence_penalty', min: -2, max: 2, type: 'slider', precision: 1 },
-                          { label: { zh_Hans: '频率惩罚', en_US: 'Frequency Penalty' }, name: 'frequency_penalty', min: -2, max: 2, type: 'slider', precision: 1 },
-                          { label: { zh_Hans: '最大标记 (Max Tokens)', en_US: 'Max Tokens' }, name: 'max_tokens', min: 1, max: 4096, type: 'slider', precision: 0 },
-                        ]).map((rule: any) => {
-                          const keyMap: Record<string, keyof ModelConfig> = {
-                            'temperature': 'temperature',
-                            'top_p': 'topP',
-                            'presence_penalty': 'presencePenalty',
-                            'frequency_penalty': 'frequencyPenalty',
-                            'max_tokens': 'maxTokens'
-                          };
-                          const configKey = keyMap[rule.name];
-                          if (!configKey) return null;
-                          
-                          const label = typeof rule.label === 'string' ? rule.label : (rule.label?.zh_Hans || rule.label?.en_US || rule.name);
-
-                          return (
-                            <div key={rule.name} className="space-y-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs font-semibold text-gray-500">{label}</span>
-                                <span className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-bold font-mono border border-primary-100">
-                                  {(model as any)[configKey]}
-                                </span>
-                              </div>
-                              <Slider 
-                                min={rule.min ?? 0} 
-                                max={rule.max ?? 1} 
-                                step={rule.precision ? 1 / Math.pow(10, rule.precision) : (rule.name === 'max_tokens' ? 1 : 0.1)} 
-                                value={(model as any)[configKey]} 
-                                onChange={v => updateModelParam(model.id, configKey, v)}
-                                tooltip={{ open: false }}
-                                className="m-0"
-                              />
-                            </div>
-                          );
-                        })}
-                        <Divider className="my-2" />
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-gray-500">回复格式</span>
-                          <Select 
-                            size="small" 
-                            value={model.responseFormat} 
-                            className="w-28"
-                            onChange={v => updateModelParam(model.id, 'responseFormat', v)}
-                            options={[{ value: 'text', label: '文本' }, { value: 'json', label: 'JSON' }]}
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             ))}
           </div>
@@ -886,13 +958,13 @@ const AppConfig: React.FC = () => {
 
         {/* Input Area */}
         <div className="p-6 border-t border-gray-100 bg-white">
-          <div className="max-w-4xl mx-auto relative">
+          <div className="max-w-4xl mx-auto space-y-3">
             <motion.div 
               whileFocus={{ scale: 1.01 }}
-              className="relative flex items-center bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10 transition-all px-4 py-2 shadow-sm"
+              className="relative flex items-center bg-white rounded-2xl border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all px-4 py-2 shadow-sm"
             >
               <Input 
-                placeholder="和 Bot 聊天" 
+                placeholder="和言复对话，获取您需要的信息" 
                 variant="borderless"
                 className="flex-grow text-sm py-2"
                 value={inputValue}
@@ -903,24 +975,106 @@ const AppConfig: React.FC = () => {
               <Button 
                 type="primary" 
                 icon={<Send className="w-4 h-4" />} 
-                className="rounded-xl h-10 w-10 flex items-center justify-center p-0 shadow-lg shadow-primary-500/20 bg-primary-600 border-none hover:scale-110 transition-transform disabled:opacity-50"
+                className="rounded-full h-10 w-10 flex items-center justify-center p-0 shadow-lg shadow-blue-500/20 bg-blue-600 border-none hover:scale-110 transition-transform disabled:opacity-50"
                 onClick={handleSendMessage}
                 disabled={Object.values(isStreaming).some(s => s)}
               />
             </motion.div>
-            <div className="mt-3 flex items-center justify-between px-1">
+            
+            <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/50 rounded-xl border border-blue-100/50">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm">
-                  <Bot className="w-3 h-3" />
+                <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm">
+                  <MessageSquare className="w-3 h-3" />
                 </div>
-                <span className="text-[11px] text-gray-500 font-medium">功能已开启</span>
+                <span className="text-xs text-gray-600 font-medium">功能已开启</span>
               </div>
-              <Button type="link" size="small" className="text-[11px] text-primary-600 p-0 flex items-center gap-1 hover:gap-2 transition-all">
-                管理 <Layout className="w-3 h-3" />
+              <Button type="link" size="small" className="text-xs text-blue-600 p-0 flex items-center gap-1 hover:gap-2 transition-all font-medium">
+                管理 <ArrowUpRight className="w-3 h-3" />
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Global Parameter Sidebar Overlay */}
+        <AnimatePresence>
+          {showParams && (
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute inset-y-0 right-0 w-80 bg-white shadow-2xl border-l border-gray-100 z-30 flex flex-col"
+            >
+              {(() => {
+                const model = models.find(m => m.id === showParams);
+                if (!model) return null;
+                return (
+                  <>
+                    <div className="h-14 px-5 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0">
+                      <div className="flex items-center gap-2">
+                        <Settings2 className="w-4 h-4 text-primary-600" />
+                        <span className="text-sm font-bold text-gray-900">参数设置</span>
+                      </div>
+                      <Button type="text" size="small" icon={<Plus className="w-4 h-4 rotate-45" />} onClick={() => setShowParams(null)} />
+                    </div>
+                    <div className="p-6 space-y-8 overflow-y-auto flex-grow custom-scrollbar">
+                      {(model.rules || [
+                        { label: { zh_Hans: '温度 (Temperature)', en_US: 'Temperature' }, name: 'temperature', min: 0, max: 2, type: 'slider', precision: 1 },
+                        { label: { zh_Hans: 'Top P', en_US: 'Top P' }, name: 'top_p', min: 0, max: 1, type: 'slider', precision: 2 },
+                        { label: { zh_Hans: '存在惩罚', en_US: 'Presence Penalty' }, name: 'presence_penalty', min: -2, max: 2, type: 'slider', precision: 1 },
+                        { label: { zh_Hans: '频率惩罚', en_US: 'Frequency Penalty' }, name: 'frequency_penalty', min: -2, max: 2, type: 'slider', precision: 1 },
+                        { label: { zh_Hans: '最大标记 (Max Tokens)', en_US: 'Max Tokens' }, name: 'max_tokens', min: 1, max: 4096, type: 'slider', precision: 0 },
+                      ]).map((rule: any) => {
+                        const keyMap: Record<string, keyof ModelConfig> = {
+                          'temperature': 'temperature',
+                          'top_p': 'topP',
+                          'presence_penalty': 'presencePenalty',
+                          'frequency_penalty': 'frequencyPenalty',
+                          'max_tokens': 'maxTokens'
+                        };
+                        const configKey = keyMap[rule.name];
+                        if (!configKey) return null;
+                        
+                        const label = typeof rule.label === 'string' ? rule.label : (rule.label?.zh_Hans || rule.label?.en_US || rule.name);
+
+                        return (
+                          <div key={rule.name} className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-semibold text-gray-500">{label}</span>
+                              <span className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-bold font-mono border border-primary-100">
+                                {(model as any)[configKey]}
+                              </span>
+                            </div>
+                            <Slider 
+                              min={rule.min ?? 0} 
+                              max={rule.max ?? 1} 
+                              step={rule.precision ? 1 / Math.pow(10, rule.precision) : (rule.name === 'max_tokens' ? 1 : 0.1)} 
+                              value={(model as any)[configKey]} 
+                              onChange={v => updateModelParam(model.id, configKey, v)}
+                              tooltip={{ open: false }}
+                              className="m-0"
+                            />
+                          </div>
+                        );
+                      })}
+                      <Divider className="my-2" />
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-500">回复格式</span>
+                        <Select 
+                          size="small" 
+                          value={model.responseFormat} 
+                          className="w-28"
+                          onChange={v => updateModelParam(model.id, 'responseFormat', v)}
+                          options={[{ value: 'text', label: '文本' }, { value: 'json', label: 'JSON' }]}
+                        />
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <style>{`
@@ -950,6 +1104,109 @@ const AppConfig: React.FC = () => {
         onClose={() => setIsKBModalOpen(false)} 
         onAdd={handleKBAdd}
       />
+
+      <Modal
+        title={<span className="text-base font-bold text-gray-900">编辑变量</span>}
+        open={isVariableModalOpen}
+        onCancel={() => setIsVariableModalOpen(false)}
+        footer={null}
+        width={480}
+        className="custom-modal"
+      >
+        {editingVariable && (
+          <div className="space-y-6 pt-4">
+            {/* Field Type */}
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">字段类型</div>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'text', label: '文本', icon: <Type className="w-5 h-5 mb-1" /> },
+                  { id: 'paragraph', label: '段落', icon: <AlignLeft className="w-5 h-5 mb-1" /> },
+                  { id: 'select', label: '下拉选项', icon: <CheckSquare className="w-5 h-5 mb-1" /> },
+                  { id: 'number', label: '数字', icon: <Hash className="w-5 h-5 mb-1" /> }
+                ].map(type => (
+                  <div 
+                    key={type.id}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
+                      editingVariable.type === type.id 
+                        ? 'border-blue-500 bg-blue-50/50 text-blue-600' 
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                    onClick={() => setEditingVariable({ ...editingVariable, type: type.id })}
+                  >
+                    {type.icon}
+                    <span className="text-xs">{type.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Variable Name */}
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">变量名称</div>
+              <Input 
+                placeholder="请输入" 
+                value={editingVariable.name}
+                onChange={e => setEditingVariable({ ...editingVariable, name: e.target.value })}
+                className="bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 hover:bg-gray-100 h-10 rounded-lg"
+              />
+            </div>
+
+            {/* Display Name */}
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">显示名称</div>
+              <Input 
+                placeholder="请输入" 
+                value={editingVariable.displayName}
+                onChange={e => setEditingVariable({ ...editingVariable, displayName: e.target.value })}
+                className="bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 hover:bg-gray-100 h-10 rounded-lg"
+              />
+            </div>
+
+            {/* Max Length */}
+            <div>
+              <div className="text-sm font-medium text-gray-700 mb-2">最大长度</div>
+              <Input 
+                type="number"
+                value={editingVariable.maxLength}
+                onChange={e => setEditingVariable({ ...editingVariable, maxLength: parseInt(e.target.value) || 0 })}
+                className="bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 hover:bg-gray-100 h-10 rounded-lg"
+              />
+            </div>
+
+            {/* Required */}
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                checked={editingVariable.required}
+                onChange={e => setEditingVariable({ ...editingVariable, required: e.target.checked })}
+              />
+              <span className="text-sm font-medium text-gray-700">必填</span>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              <Button onClick={() => setIsVariableModalOpen(false)} className="h-9 rounded-lg px-5">取消</Button>
+              <Button 
+                type="primary" 
+                className="bg-blue-600 h-9 rounded-lg px-5"
+                onClick={() => {
+                  const existingIndex = variables.findIndex(v => v.id === editingVariable.id);
+                  if (existingIndex >= 0) {
+                    const newVars = [...variables];
+                    newVars[existingIndex] = editingVariable;
+                    setVariables(newVars);
+                  } else {
+                    setVariables([...variables, editingVariable]);
+                  }
+                  setIsVariableModalOpen(false);
+                }}
+              >
+                保存
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
