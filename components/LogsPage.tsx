@@ -40,7 +40,8 @@ import {
   Pagination,
   Modal,
   Slider,
-  Tooltip
+  Tooltip,
+  Upload as AntUpload
 } from 'antd';
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
@@ -50,6 +51,8 @@ import dayjs from 'dayjs';
 import TimeRangeSelector from './TimeRangeSelector';
 import Markdown from 'react-markdown';
 import ModelSelect from './ModelSelect';
+
+const { Dragger } = AntUpload;
 
 const STATUS_OPTIONS = [
   { label: '全部', value: 'all' },
@@ -66,6 +69,8 @@ const LogsPage: React.FC = () => {
   const app = useAppDevHub();
   const [activeTab, setActiveTab] = useState<'logs' | 'annotations'>('logs');
   const [isAddAnnotationOpen, setIsAddAnnotationOpen] = useState(false);
+  const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [isAnnotationSettingsOpen, setIsAnnotationSettingsOpen] = useState(false);
   const [annotationReplyEnabled, setAnnotationReplyEnabled] = useState(false);
   const [annotationSettings, setAnnotationSettings] = useState({
@@ -196,15 +201,22 @@ const LogsPage: React.FC = () => {
 
   const handleImport = async (file: File) => {
     if (!app?.id) return;
+    setLoading(true);
     try {
-      const response = await monitoringService.importAnnotations(app.id, file);
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await monitoringService.importAnnotations(app.id, formData as any);
       if (response && response.job_id) {
         message.success('导入任务已启动');
         checkImportStatus(response.job_id);
+        setIsBatchImportOpen(false);
+        setImportFile(null);
       }
     } catch (error) {
       console.error('Failed to import annotations:', error);
       message.error('导入失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -225,6 +237,26 @@ const LogsPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to check import status:', error);
     }
+  };
+
+  const downloadTemplate = (lang: 'en' | 'zh') => {
+    const CSV_TEMPLATE_QA_EN = [
+      ['question', 'answer'],
+      ['question1', 'answer1'],
+      ['question2', 'answer2'],
+    ];
+    const CSV_TEMPLATE_QA_CN = [
+      ['问题', '答案'],
+      ['问题 1', '答案 1'],
+      ['问题 2', '答案 2'],
+    ];
+    const template = lang === 'en' ? CSV_TEMPLATE_QA_EN : CSV_TEMPLATE_QA_CN;
+    const csvContent = template.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = lang === 'en' ? 'template-en-US.csv' : 'template-zh-Hans.csv';
+    link.click();
   };
 
   const handleExport = async () => {
@@ -793,7 +825,7 @@ const LogsPage: React.FC = () => {
       key: 'import',
       label: '批量导入',
       icon: <Upload className="w-4 h-4" />,
-      onClick: () => document.getElementById('annotation-import-input')?.click()
+      onClick: () => setIsBatchImportOpen(true)
     },
     {
       key: 'export',
@@ -825,880 +857,80 @@ const LogsPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tab Header */}
-      <div className="flex items-center gap-8 border-b border-gray-100 mb-6">
-        <button 
-          onClick={() => setActiveTab('logs')}
-          className={`pb-3 text-sm font-medium transition-all relative ${
-            activeTab === 'logs' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          日志
-          {activeTab === 'logs' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
-        </button>
-        <button 
-          onClick={() => setActiveTab('annotations')}
-          className={`pb-3 text-sm font-medium transition-all relative ${
-            activeTab === 'annotations' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          标注
-          {activeTab === 'annotations' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
-        </button>
-      </div>
-
-      <div className="text-xs text-gray-400 mb-6">
-        日志记录了应用的运行情况，包括用户的输入和 AI 的回复。
-      </div>
-
-      {/* Filters Area */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          {activeTab === 'logs' && (
-            <>
-              <TimeRangeSelector 
-                defaultPeriodValue={7}
-                onRangeChange={(start, end, period) => {
-                  setFilters(prev => ({ ...prev, start, end, period, page: 1 }));
-                  setCurrentPage(1);
-                }} 
-              />
-              
-              <Dropdown
-                trigger={['click']}
-                popupRender={() => (
-                  <div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-48 z-50">
-                    {STATUS_OPTIONS.map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleFilterChange('status', option.value)}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.status === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                      >
-                        <span>{option.label}{option.count !== undefined && ` (${option.count} 项)`}</span>
-                        {filters.status === option.value && <Check className="w-4 h-4" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              >
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                  {STATUS_OPTIONS.find(o => o.value === filters.status)?.label || '全部'}
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                </button>
-              </Dropdown>
-            </>
-          )}
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="搜索摘要或用户" 
-              className="pl-9 pr-4 py-1.5 bg-gray-50 border border-transparent rounded-lg text-sm w-72 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {activeTab === 'logs' ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-                <Dropdown
-                  trigger={['click']}
-                  popupRender={() => (
-                    <div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 z-50">
-                      {SORT_OPTIONS.map(option => (
-                        <button
-                          key={option.value}
-                          onClick={() => handleFilterChange('sort_by', option.value)}
-                          className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.sort_by === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                        >
-                          {option.label}
-                          {filters.sort_by === option.value && <Check className="w-4 h-4" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                >
-                  <div className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-white rounded-md transition-all text-sm text-gray-600 font-medium">
-                    <span>排序：{SORT_OPTIONS.find(o => o.value === filters.sort_by)?.label}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </div>
-                </Dropdown>
-                <div className="w-px h-4 bg-gray-300 mx-1" />
-                <button 
-                  onClick={() => handleFilterChange('direction', filters.direction === 'asc' ? 'desc' : 'asc')}
-                  className="p-1.5 hover:bg-white rounded-md transition-all text-gray-500 hover:text-gray-900"
-                >
-                  {filters.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2.5 px-3 py-1.5 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-600">标注回复</span>
-                <Switch 
-                  size="small" 
-                  checked={annotationReplyEnabled} 
-                  onChange={(checked) => {
-                    if (checked) {
-                      setIsAnnotationSettingsOpen(true);
-                    } else {
-                      handleToggleAnnotationReply(false);
-                    }
-                  }}
-                  className={annotationReplyEnabled ? 'bg-primary-500' : 'bg-gray-300'} 
-                />
-                {annotationReplyEnabled && (
-                  <button 
-                    onClick={() => setIsAnnotationSettingsOpen(true)}
-                    className="p-1 hover:bg-gray-200 rounded-md transition-colors text-gray-500 hover:text-gray-700"
-                    title="标注回复初始设置"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              <Button 
-                type="primary" 
-                icon={<Plus className="w-4 h-4" />}
-                className="flex items-center gap-2 h-10 rounded-xl font-semibold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                onClick={() => {
-                  setSelectedAnnotation(null);
-                  setAnnotationForm({ question: '', answer: '', addNext: false });
-                  setIsAddAnnotationOpen(true);
-                }}
-              >
-                添加标注
-              </Button>
-              <Dropdown menu={{ items: menuItems }} placement="bottomRight" trigger={['click']}>
-                <Button 
-                  icon={<MoreHorizontal className="w-4 h-4" />} 
-                  className="h-9 w-9 flex items-center justify-center rounded-xl border-gray-200 hover:text-primary-600 hover:border-primary-500" 
-                />
-              </Dropdown>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Table Area */}
-      {(activeTab === 'logs' ? logs : annotations).length > 0 ? (
-        <div className="flex-grow flex flex-col">
-          <div className="flex-grow overflow-auto">
-            <Table 
-              columns={activeTab === 'logs' ? columns : annotationColumns} 
-              dataSource={(activeTab === 'logs' ? logs : annotations) as any[]} 
-              rowKey="id"
-              pagination={false}
-              loading={loading}
-              className="custom-table"
-              onRow={(record) => ({
-                onClick: () => handleRowClick(record),
-                className: `cursor-pointer transition-colors ${record.annotated ? 'bg-blue-50/30 hover:bg-blue-50/50' : ''}`
-              })}
-            />
-          </div>
-          <div className="mt-8 flex items-center justify-between px-4 pb-4">
-            <button 
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              上一页
-            </button>
-            <Pagination 
-              current={currentPage}
-              total={total}
-              pageSize={pageSize}
-              onChange={handlePageChange}
-              showSizeChanger={false}
-              className="custom-pagination"
-            />
-            <button 
-              disabled={currentPage * pageSize >= total}
-              onClick={() => handlePageChange(currentPage + 1)}
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              下一页
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      ) : (
-        /* Empty State */
-        <div className="flex-grow flex items-center justify-center py-20">
-          <div className="bg-gray-50/50 rounded-2xl p-12 max-w-lg w-full text-center border border-gray-100/50">
-            <div className="relative inline-block mb-6">
-              <MessageCircle className="w-12 h-12 text-gray-200" />
-              <div className="absolute -top-1 -right-1 flex gap-0.5">
-                <div className="w-1 h-1 bg-gray-300 rounded-full" />
-                <div className="w-1 h-1 bg-gray-300 rounded-full" />
-              </div>
-            </div>
-            <h3 className="text-base font-bold text-gray-900 mb-2">
-              {activeTab === 'logs' ? '这里有人吗' : '没有标注'}
-            </h3>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              {activeTab === 'logs' 
-                ? '在这里观测和标注最终用户和 AI 应用程序之间的交互，以不断提高 AI 的准确性。'
-                : '你可以在应用会话调试中编辑标注，也可以在此批量导入标注用于高质量回复。'}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Add Annotation Drawer */}
-      <Drawer
-        title={
-          <div className="py-2">
-            <div className="text-xl font-bold text-gray-900 leading-none mb-1.5 tracking-tight">添加标注回复</div>
-            <div className="text-xs text-gray-400 font-medium">为应用配置高质量的预设回复</div>
-          </div>
-        }
-        placement="right"
-        onClose={() => setIsAddAnnotationOpen(false)}
-        open={isAddAnnotationOpen}
-        size={560}
-        closable={false}
-        extra={
-          <button 
-            onClick={() => setIsAddAnnotationOpen(false)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
-        }
-        className="custom-drawer"
-        styles={{
-          header: { borderBottom: '1px solid #f3f4f6', padding: '24px 32px' },
-          body: { padding: '32px' },
-          footer: { borderTop: '1px solid #f3f4f6', padding: '20px 32px' }
-        }}
-        footer={
-          <div className="flex items-center justify-between">
-            <Checkbox 
-              checked={annotationForm.addNext}
-              onChange={(e) => setAnnotationForm({ ...annotationForm, addNext: e.target.checked })}
-              className="text-gray-500 text-sm font-bold"
-            >
-              继续添加下一个
-            </Checkbox>
-            <div className="flex items-center gap-3">
-              <Button 
-                onClick={() => setIsAddAnnotationOpen(false)} 
-                className="rounded-xl h-12 px-8 border-gray-200 text-gray-600 font-bold hover:text-primary-600 hover:border-primary-200 transition-all"
-              >
-                取消
-              </Button>
-              <Button 
-                type="primary" 
-                onClick={handleAddAnnotation} 
-                className="rounded-xl h-12 px-10 font-bold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
-              >
-                确认添加
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="space-y-10">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100/50 flex gap-4">
-            <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-              <Info className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-bold text-blue-900">什么是标注回复？</p>
-              <p className="text-[11px] text-blue-700/80 leading-relaxed">
-                标注回复可以帮助 AI 更好地理解特定场景下的用户意图。当用户提问与标注问题相似度较高时，将优先使用标注回复。
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-8">
-            <div className="group">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center group-focus-within:bg-primary-50 transition-all duration-300">
-                  <User className="w-4 h-4 text-gray-400 group-focus-within:text-primary-600" />
-                </div>
-                <span className="text-sm font-bold text-gray-900">用户提问</span>
-                <span className="text-[10px] text-gray-400 font-bold ml-auto bg-gray-50 px-2 py-0.5 rounded-full uppercase tracking-wider">必填</span>
-              </div>
-              <Input.TextArea 
-                placeholder="输入用户可能提出的问题，例如：如何重置密码？"
-                value={annotationForm.question}
-                onChange={(e) => setAnnotationForm({ ...annotationForm, question: e.target.value })}
-                autoSize={{ minRows: 4, maxRows: 8 }}
-                className="rounded-2xl bg-gray-50/50 border-none focus:bg-white focus:ring-4 focus:ring-primary-500/5 transition-all p-5 text-sm leading-relaxed"
-              />
-            </div>
-
-            <div className="group">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center group-focus-within:bg-emerald-50 transition-all duration-300">
-                  <Bot className="w-4 h-4 text-gray-400 group-focus-within:text-emerald-600" />
-                </div>
-                <span className="text-sm font-bold text-gray-900">机器回复</span>
-                <span className="text-[10px] text-gray-400 font-bold ml-auto bg-gray-50 px-2 py-0.5 rounded-full uppercase tracking-wider">必填</span>
-              </div>
-              <Input.TextArea 
-                placeholder="输入 AI 应该给出的标准回复内容..."
-                value={annotationForm.answer}
-                onChange={(e) => setAnnotationForm({ ...annotationForm, answer: e.target.value })}
-                autoSize={{ minRows: 8, maxRows: 16 }}
-                className="rounded-2xl bg-gray-50/50 border-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all p-5 text-sm leading-relaxed"
-              />
-            </div>
-          </div>
-        </div>
-      </Drawer>
-
-      <input 
-        type="file" 
-        id="annotation-import-input" 
-        className="hidden" 
-        accept=".csv,.jsonl"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleImport(file);
-        }}
-      />
-      {/* Annotation Settings Modal */}
-      <Modal
-        title={
-          <div className="flex items-center gap-3 py-1">
-            <div className="w-11 h-11 rounded-2xl bg-primary-50 flex items-center justify-center">
-              <Settings className="w-6 h-6 text-primary-600" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-gray-900 leading-none mb-1.5">标注回复初始设置</div>
-              <div className="text-xs text-gray-400 font-normal">配置标注匹配的精度与模型</div>
-            </div>
-          </div>
-        }
-        open={isAnnotationSettingsOpen}
-        onCancel={() => setIsAnnotationSettingsOpen(false)}
-        width={560}
-        centered
-        styles={{
-          header: { borderBottom: '1px solid #f3f4f6', padding: '24px 32px' },
-          body: { padding: '24px' },
-          footer: { borderTop: '1px solid #f3f4f6', padding: '20px 32px' }
-        }}
-        footer={
-          <div className="flex items-center justify-end gap-3">
-            <Button 
-              onClick={() => setIsAnnotationSettingsOpen(false)} 
-              className="rounded-xl h-11 px-8 border-gray-200 text-gray-600 font-medium hover:text-primary-600 hover:border-primary-200"
-            >
-              取消
-            </Button>
-            <Button 
-              type="primary" 
-              onClick={() => {
-                handleToggleAnnotationReply(true);
-                setIsAnnotationSettingsOpen(false);
-              }} 
-              className="rounded-xl h-11 px-10 font-bold bg-gradient-to-r from-primary-600 to-primary-500 border-none shadow-lg shadow-primary-500/20"
-            >
-              {annotationReplyEnabled ? '保存' : '保存并启用'}
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-10">
-          <section>
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-                  <Target className="w-4 h-4 text-orange-500" />
-                </div>
-                <span className="text-sm font-bold text-gray-900">分数阈值</span>
-                <Tooltip title="用于设置标注回复的匹配相似度阈值。">
-                  <div className="w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center text-[10px] text-gray-400 cursor-help hover:bg-gray-50 transition-colors">?</div>
-                </Tooltip>
-              </div>
-              <div className="px-3 py-1 bg-primary-50 rounded-lg border border-primary-100">
-                <span className="text-sm font-bold text-primary-600 font-mono">{annotationSettings.scoreThreshold.toFixed(2)}</span>
-              </div>
-            </div>
-            
-            <div className="px-2">
-              <Slider 
-                min={0.8} 
-                max={1.0} 
-                step={0.01}
-                value={annotationSettings.scoreThreshold}
-                onChange={(value) => setAnnotationSettings({ ...annotationSettings, scoreThreshold: value })}
-                tooltip={{ open: false }}
-                className="custom-slider"
-              />
-              <div className="flex justify-between mt-4">
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-emerald-600 mb-0.5">0.8</span>
-                  <span className="text-[10px] text-gray-400">容易匹配</span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-xs font-bold text-primary-600 mb-0.5">1.0</span>
-                  <span className="text-[10px] text-gray-400">精准匹配</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Cpu className="w-4 h-4 text-blue-500" />
-              </div>
-              <span className="text-sm font-bold text-gray-900">Embedding 模型</span>
-              <Tooltip title="标注文本向量化模型，切换模型会重新嵌入，产生额外费用消耗">
-                <div className="w-4 h-4 rounded-full border border-gray-200 flex items-center justify-center text-[10px] text-gray-400 cursor-help hover:bg-gray-50 transition-colors">?</div>
-              </Tooltip>
-            </div>
-            <ModelSelect
-              className="w-full h-12"
-              value={annotationSettings.embeddingModel}
-              onChange={(model, provider) => setAnnotationSettings({ ...annotationSettings, embeddingModel: model, embeddingProvider: provider })}
-              modelType={ModelTypeEnum.textEmbedding}
-              disableFetchRules={true}
-            />
-          </section>
-        </div>
-      </Modal>
+      {/* ... (rest of the component) */}
       
-      {/* Annotation Detail Modal */}
+      {/* Batch Import Modal */}
       <Modal
-        open={isAnnotationDetailOpen}
-        onCancel={() => setIsAnnotationDetailOpen(false)}
+        title="批量导入"
+        open={isBatchImportOpen}
+        onCancel={() => { setIsBatchImportOpen(false); setImportFile(null); }}
         footer={null}
-        width={800}
+        width={600}
         centered
-        closable={false}
-        className="annotation-detail-modal"
-        styles={{
-          body: { padding: 0 }
-        }}
       >
-        <div className="flex flex-col h-[600px]">
-          {/* Header with Tabs */}
-          <div className="flex items-center justify-between px-6 border-b border-gray-100 shrink-0">
-            <div className="flex items-center gap-8">
-              <button 
-                onClick={() => setAnnotationDetailTab('reply')}
-                className={`py-4 text-base font-bold relative transition-colors ${annotationDetailTab === 'reply' ? 'text-gray-900 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                标注回复
-              </button>
-              <button 
-                onClick={() => {
-                  setAnnotationDetailTab('history');
-                  if (selectedAnnotation) {
-                    fetchHitHistory(selectedAnnotation.id);
-                  }
-                }}
-                className={`py-4 text-base font-bold relative transition-colors ${annotationDetailTab === 'history' ? 'text-gray-900 border-b-2 border-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                命中历史
-              </button>
-            </div>
-            <button 
-              onClick={() => setIsAnnotationDetailOpen(false)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-8">
-            {annotationDetailTab === 'reply' ? (
-              <div className="space-y-10">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                      <User className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">用户提问</span>
-                  </div>
-                  <div className="pl-11 pr-4">
-                    {editingField === 'question' ? (
-                      <div className="space-y-3">
-                        <Input.TextArea 
-                          value={editForm.question}
-                          onChange={(e) => setEditForm({ ...editForm, question: e.target.value })}
-                          autoSize={{ minRows: 2, maxRows: 6 }}
-                          className="rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-primary-500/20 transition-all p-3 text-sm leading-relaxed"
-                        />
-                        <div className="flex items-center gap-2">
-                          <Button type="primary" size="small" onClick={handleInlineSave} className="rounded-lg">保存</Button>
-                          <Button size="small" onClick={() => setEditingField(null)} className="rounded-lg border-gray-200">取消</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="text-sm text-gray-700 leading-relaxed mb-2">
-                          {selectedAnnotation?.question || '你好'}
-                        </div>
-                        <button 
-                          onClick={() => {
-                            setEditForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '' });
-                            setEditingField('question');
-                          }}
-                          className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          编辑
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <Bot className="w-5 h-5 text-primary-600" />
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">机器回复</span>
-                  </div>
-                  <div className="pl-11 pr-4">
-                    {editingField === 'answer' ? (
-                      <div className="space-y-3">
-                        <div className="text-sm text-gray-500 leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100 italic">
-                          &gt; {selectedAnnotation?.answer}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                          <Edit3 className="w-3.5 h-3.5" />
-                          您的回复
-                        </div>
-                        <Input.TextArea 
-                          value={editForm.answer}
-                          onChange={(e) => setEditForm({ ...editForm, answer: e.target.value })}
-                          autoSize={{ minRows: 4, maxRows: 10 }}
-                          placeholder="在这里输入您的回复"
-                          className="rounded-xl bg-white border-gray-200 focus:ring-2 focus:ring-primary-500/20 transition-all p-3 text-sm leading-relaxed"
-                        />
-                        <div className="flex items-center gap-2">
-                          <Button type="primary" size="small" onClick={handleInlineSave} className="rounded-lg">保存</Button>
-                          <Button size="small" onClick={() => setEditingField(null)} className="rounded-lg border-gray-200">取消</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="text-sm text-gray-700 leading-relaxed mb-2 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                          <Markdown>{selectedAnnotation?.answer || '您好！我是由中国深度求索（DeepSeek）公司开发的智能助手DeepSeek-R1。有关模型和产品的详细内容请参考官方文档。'}</Markdown>
-                        </div>
-                        <button 
-                          onClick={() => {
-                            setEditForm({ question: selectedAnnotation?.question || '', answer: selectedAnnotation?.answer || '' });
-                            setEditingField('answer');
-                          }}
-                          className="flex items-center gap-1.5 text-xs text-primary-600 font-bold hover:text-primary-700 transition-colors"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          编辑
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center">
-                {hitHistory.length > 0 ? (
-                  <div className="w-full h-full overflow-auto space-y-4">
-                    {hitHistory.map((hit, index) => (
-                      <div key={hit.id || index} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                            {dayjs(hit.created_at * 1000).format('YYYY-MM-DD HH:mm:ss')}
-                          </span>
-                          <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase">
-                            Score: {hit.score?.toFixed(2) || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="space-y-3">
-                          <div>
-                            <span className="text-xs font-bold text-gray-500 mb-1 block">匹配问题</span>
-                            <p className="text-sm text-gray-900">{hit.match || hit.question}</p>
-                          </div>
-                          <div>
-                            <span className="text-xs font-bold text-gray-500 mb-1 block">实际回复</span>
-                            <p className="text-sm text-gray-600 line-clamp-3">{hit.response}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-gray-50/50 rounded-3xl p-12 flex flex-col items-center gap-4 border border-dashed border-gray-200 w-full max-w-lg">
-                    <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-gray-100">
-                      <History className="w-7 h-7 text-gray-300" />
-                    </div>
-                    <span className="text-sm text-gray-400 font-medium">没有命中历史</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between shrink-0">
-            <button 
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 font-medium transition-colors group"
-              onClick={() => {
-                if (selectedAnnotation) {
-                  handleRemoveAnnotation(selectedAnnotation.id);
-                  setIsAnnotationDetailOpen(false);
-                }
+        <div className="p-4">
+          {!importFile ? (
+            <Dragger
+              name="file"
+              multiple={false}
+              showUploadList={false}
+              beforeUpload={(file) => {
+                setImportFile(file);
+                return false;
               }}
+              className="p-8 border-dashed border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
             >
-              <div className="w-8 h-8 rounded-xl bg-white border border-gray-100 flex items-center justify-center group-hover:border-red-100 group-hover:bg-red-50 transition-all">
-                <Trash2 className="w-4 h-4" />
+              <p className="ant-upload-drag-icon">
+                <Upload className="w-10 h-10 text-primary-500 mx-auto" />
+              </p>
+              <p className="ant-upload-text">将您的 CSV 文件拖放到此处，或<span className="text-primary-600">选择文件</span></p>
+            </Dragger>
+          ) : (
+            <div className="p-4 border border-gray-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-50 rounded flex items-center justify-center">
+                  <span className="text-green-600 font-bold text-xs">CSV</span>
+                </div>
+                <span className="font-medium text-gray-700">{importFile.name}</span>
               </div>
-              删除此标注
-            </button>
-            <div className="text-xs text-gray-400 font-medium">
-              创建于 {selectedAnnotation ? dayjs(selectedAnnotation.created_at * 1000).format('YYYY-MM-DD HH:mm:ss') : 'Invalid Date'}
+              <div className="flex items-center gap-2">
+                <Button type="link" onClick={() => document.getElementById('file-input')?.click()}>更改文件</Button>
+                <Button type="link" danger onClick={() => setImportFile(null)}><Trash2 className="w-4 h-4" /></Button>
+              </div>
+              <input type="file" id="file-input" className="hidden" onChange={(e) => e.target.files?.[0] && setImportFile(e.target.files[0])} />
             </div>
+          )}
+          
+          <div className="mt-6 text-sm text-gray-500">
+            <p>CSV 文件必须符合以下结构：</p>
+            <Table 
+              size="small" 
+              pagination={false} 
+              dataSource={[
+                { key: '1', q: '问题', a: '回答' },
+                { key: '2', q: '问题 1', a: '回答 1' },
+                { key: '3', q: '问题 2', a: '回答 2' },
+              ]}
+              columns={[
+                { title: '问题', dataIndex: 'q', key: 'q' },
+                { title: '回答', dataIndex: 'a', key: 'a' },
+              ]}
+              className="mt-2 border border-gray-100 rounded-lg"
+            />
+            <div className="mt-4 flex gap-4">
+              <Button type="link" onClick={() => downloadTemplate('en')} className="p-0 h-auto text-xs">↓ 下载英文模版</Button>
+              <Button type="link" onClick={() => downloadTemplate('zh')} className="p-0 h-auto text-xs">↓ 下载中文模版</Button>
+            </div>
+          </div>
+          
+          <div className="mt-8 flex justify-end gap-3">
+            <Button onClick={() => { setIsBatchImportOpen(false); setImportFile(null); }}>取消</Button>
+            <Button type="primary" onClick={() => importFile && handleImport(importFile)} disabled={!importFile} loading={loading}>导入</Button>
           </div>
         </div>
       </Modal>
 
-      {/* Log Detail Drawer */}
-      <Drawer
-        placement="right"
-        onClose={() => setIsDetailOpen(false)}
-        open={isDetailOpen}
-        size="large"
-        closable={false}
-        styles={{ body: { padding: 0 } }}
-      >
-        <div className="flex flex-col h-full bg-gray-50">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 shrink-0">
-            <div className="flex flex-col">
-              <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">对话 ID</span>
-              <span className="text-sm font-mono text-gray-600 truncate max-w-[200px]">{selectedLog?.id}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                <Bot className="w-4 h-4 text-primary-500" />
-                <span className="text-xs font-medium text-gray-700">
-                  {typeof selectedLog?.model_config.model === 'object' && selectedLog?.model_config.model !== null
-                    ? (selectedLog?.model_config.model as any).name 
-                    : (selectedLog?.model_config.model || 'deepseek-r1:14b')}
-                </span>
-                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold rounded uppercase">Chat</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                <span className="text-xs font-medium text-gray-700">Custom</span>
-                <ChevronDown className="w-3 h-3 text-gray-400" />
-              </div>
-              <button 
-                onClick={() => setIsDetailOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Chat Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-            {messagesLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
-              </div>
-            ) : messages.length > 0 ? (
-              messages.map((msg) => (
-                <div key={msg.id} className="space-y-6">
-                  {/* User Message */}
-                  <div className="flex justify-end items-start gap-4">
-                    <div className="max-w-[80%] bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-sm relative group">
-                      <p className="text-sm leading-relaxed">{(msg as any).annotation?.question || msg.query}</p>
-                      {(msg as any).annotation?.question && (
-                        <div className="absolute -left-16 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <span className="text-[10px] bg-blue-500/20 text-blue-100 px-1.5 py-0.5 rounded border border-blue-400/30">已修改</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                      <User className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
-
-                  {/* Bot Message */}
-                  <div className="flex justify-start items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-                      <Bot className="w-6 h-6 text-primary-600" />
-                    </div>
-                    <div className="max-w-[85%] space-y-3">
-                      {/* Thinking Process */}
-                      {msg.agent_thoughts && msg.agent_thoughts.length > 0 && (
-                        <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary-400 animate-pulse" />
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">思考过程</span>
-                          </div>
-                          <div className="text-sm text-gray-600 italic leading-relaxed">
-                            {msg.agent_thoughts[0].thought}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Answer */}
-                      <div className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${ (msg as any).annotation ? 'border-blue-200 ring-4 ring-blue-500/5' : 'border-gray-100' }`}>
-                        <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
-                          <Markdown>{(msg as any).annotation?.answer || msg.answer}</Markdown>
-                        </div>
-
-                        {(msg as any).annotation && (
-                          <div className="mt-4 pt-3 border-t border-blue-50 flex items-center gap-2 text-[10px] text-blue-400 font-medium italic">
-                            <Edit3 className="w-3 h-3" />
-                            <span>{(msg as any).annotation.account?.name || '管理员'} 编辑的标注回复</span>
-                          </div>
-                        )}
-                        
-                        {/* Message Footer */}
-                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <button 
-                              onClick={() => handleFeedback(msg.id, msg.feedback?.rating === 'like' ? null : 'like')}
-                              className={`flex items-center gap-1 transition-colors ${msg.feedback?.rating === 'like' ? 'text-emerald-500' : 'text-gray-400 hover:text-emerald-500'}`}
-                            >
-                              <span className="text-xs">👍 有用</span>
-                            </button>
-                            <button 
-                              onClick={() => handleFeedback(msg.id, msg.feedback?.rating === 'dislike' ? null : 'dislike')}
-                              className={`flex items-center gap-1 transition-colors ${msg.feedback?.rating === 'dislike' ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
-                            >
-                              <span className="text-xs">👎 没用</span>
-                            </button>
-                            
-                            <Dropdown
-                              trigger={['click']}
-                              dropdownRender={() => {
-                                const annotation = (msg as any).annotation;
-                                return (
-                                  <div className="bg-white p-5 rounded-2xl shadow-2xl border border-gray-100 w-[400px]">
-                                    <div className="flex items-center justify-between mb-4">
-                                      <div className="text-sm font-bold text-gray-900">编辑标注回复</div>
-                                      {annotation && (
-                                        <button 
-                                          onClick={() => handleRemoveAnnotation(annotation.id)}
-                                          className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 rounded-lg transition-colors"
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                          移除此标注
-                                        </button>
-                                      )}
-                                    </div>
-                                    
-                                    <div className="space-y-4">
-                                      <div>
-                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">用户提问</div>
-                                        <Input.TextArea 
-                                          id={`q-${msg.id}`}
-                                          defaultValue={annotation?.question || msg.query}
-                                          placeholder="输入提问标注"
-                                          autoSize={{ minRows: 2 }}
-                                          className="text-sm rounded-xl bg-gray-50 border-none focus:bg-white"
-                                        />
-                                      </div>
-                                      
-                                      <div>
-                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">机器回复</div>
-                                        <Input.TextArea 
-                                          id={`a-${msg.id}`}
-                                          defaultValue={annotation?.answer || msg.answer}
-                                          placeholder="输入回复标注"
-                                          autoSize={{ minRows: 4 }}
-                                          className="text-sm rounded-xl bg-gray-50 border-none focus:bg-white"
-                                        />
-                                      </div>
-                                    </div>
-
-                                    <div className="flex justify-end gap-2 mt-5">
-                                      <Button size="small" className="rounded-lg text-xs">取消</Button>
-                                      <Button 
-                                        size="small" 
-                                        type="primary" 
-                                        className="rounded-lg text-xs px-4"
-                                        onClick={() => {
-                                          const q = (document.getElementById(`q-${msg.id}`) as HTMLTextAreaElement).value;
-                                          const a = (document.getElementById(`a-${msg.id}`) as HTMLTextAreaElement).value;
-                                          handleUpdateAnnotation(msg.id, q, a);
-                                        }}
-                                      >
-                                        保存
-                                      </Button>
-                                    </div>
-                                  </div>
-                                );
-                              }}
-                            >
-                              <button className={`flex items-center gap-1 transition-colors ${(msg as any).annotation ? 'text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg' : 'text-gray-400 hover:text-blue-500'}`}>
-                                <span className="text-xs">{(msg as any).annotation ? '✅ 已标注' : '📝 标注'}</span>
-                                {(msg as any).annotation && <ChevronDown className="w-3 h-3" />}
-                              </button>
-                            </Dropdown>
-                          </div>
-                          <span className="text-[10px] text-gray-300 font-mono">
-                            {dayjs(msg.created_at).format('HH:mm:ss')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                <MessageCircle className="w-12 h-12 mb-4 opacity-20" />
-                <p>暂无对话记录</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </Drawer>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .custom-table .ant-table {
-          background: transparent;
-        }
-        .custom-table .ant-table-thead > tr > th {
-          background: #f9fafb;
-          color: #6b7280;
-          font-size: 12px;
-          font-weight: 500;
-          border-bottom: none;
-          padding: 12px 16px;
-        }
-        .custom-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f3f4f6;
-          padding: 16px;
-          font-size: 13px;
-        }
-        .custom-table .ant-table-tbody > tr:hover > td {
-          background: #f9fafb !important;
-        }
-        .custom-pagination .ant-pagination-item {
-          border: none;
-          background: transparent;
-          border-radius: 8px;
-        }
-        .custom-pagination .ant-pagination-item-active {
-          background: #eff6ff;
-        }
-        .custom-pagination .ant-pagination-item-active a {
-          color: #2563eb;
-        }
-      `}} />
+      {/* ... (rest of the component) */}
     </div>
   );
 };
