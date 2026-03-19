@@ -67,10 +67,26 @@ const BatchImportModal: React.FC<BatchImportModalProps> = ({ isOpen, onClose, on
       <input type="file" id="batch-import-input" className="hidden" accept=".csv" onChange={handleFileChange} />
       <div className="space-y-6">
         {!selectedFile ? (
-          <div className="p-8 border-2 border-dashed border-emerald-200 rounded-2xl bg-emerald-50/50 text-center hover:border-emerald-400 transition-colors">
+          <div 
+            className="p-8 border-2 border-dashed border-emerald-200 rounded-2xl bg-emerald-50/50 text-center hover:border-emerald-400 transition-colors cursor-pointer"
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const file = e.dataTransfer.files?.[0];
+              if (file) {
+                if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+                  message.error('请上传 CSV 文件');
+                  return;
+                }
+                setSelectedFile(file);
+              }
+            }}
+            onClick={() => document.getElementById('batch-import-input')?.click()}
+          >
             <Upload className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
             <p className="text-gray-700 mb-2">将您的 CSV 文件拖放到此处，或</p>
-            <Button type="link" onClick={() => document.getElementById('batch-import-input')?.click()} className="text-emerald-600 font-semibold">选择文件</Button>
+            <span className="text-emerald-600 font-semibold">选择文件</span>
           </div>
         ) : (
           <div className="p-4 border border-emerald-200 rounded-xl bg-emerald-50 flex items-center justify-between">
