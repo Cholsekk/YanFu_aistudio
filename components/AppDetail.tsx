@@ -16,6 +16,7 @@ import {
 import WorkflowEditor from './WorkflowEditor';
 import MonitoringPage from './MonitoringPage';
 import LogsPage from './LogsPage';
+import AppConfig from './AppConfig';
 
 interface AppDetailProps {
   app: AppItem;
@@ -39,13 +40,13 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
       ];
     } else if (type === '智能体应用') {
       return [
-        { id: 'orchestrate', label: '编排', icon: <Layout className="w-4 h-4" /> },
+        { id: 'config', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志与标注', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
     } else if (type === '工作流应用') {
       return [
-        { id: 'orchestrate', label: '编排', icon: <Layout className="w-4 h-4" /> },
+        { id: 'orchestrate', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
@@ -132,6 +133,10 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
       return <LogsPage />;
     }
 
+    if (activeTab === 'config') {
+      return <AppConfig />;
+    }
+
     return (
       <div className="max-w-5xl mx-auto">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center text-center">
@@ -199,7 +204,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
       </div>
 
       {/* Content Section */}
-      <div className={`flex-grow bg-white overflow-auto relative ${activeTab === 'orchestrate' && app.type === '工作流应用' ? 'p-0' : 'p-8'}`}>
+      <div className={`flex-grow bg-white overflow-auto relative ${['orchestrate', 'config'].includes(activeTab) ? 'p-0' : 'p-8'}`}>
         <AppDevHubContext.Provider value={app}>
           {renderContent()}
         </AppDevHubContext.Provider>
