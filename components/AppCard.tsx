@@ -218,7 +218,9 @@ const AppCard: React.FC<AppCardProps> = ({
             </Tooltip>
             <span className="text-[10px] text-gray-400 font-medium">{app.typeLabel}</span>
           </div>
-          <p className="text-xs text-gray-500 flex-grow line-clamp-1">{app.description}</p>
+          <Tooltip title={app.description} arrow={false}>
+            <p className="text-xs text-gray-500 flex-grow line-clamp-1 cursor-default">{app.description}</p>
+          </Tooltip>
           <div className="flex gap-2 min-w-[200px] justify-end overflow-hidden">
             {!(app.type === '定制应用' || app.mode === 'custom') && app.tags.map(tag => (
               <span key={tag.id} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium whitespace-nowrap">
@@ -277,9 +279,11 @@ const AppCard: React.FC<AppCardProps> = ({
         </div>
       </div>
 
-      <p className="text-sm text-gray-600 mb-6 flex-grow line-clamp-2 leading-relaxed">
-        {app.description}
-      </p>
+      <Tooltip title={app.description} arrow={false}>
+        <p className="text-sm text-gray-600 mb-6 flex-grow line-clamp-3 leading-relaxed h-[92px] overflow-hidden cursor-default">
+          {app.description}
+        </p>
+      </Tooltip>
 
       <div className="flex items-center justify-between mt-auto">
         <div className="flex flex-wrap gap-1.5 max-w-[70%]">

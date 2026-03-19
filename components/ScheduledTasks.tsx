@@ -8,6 +8,7 @@ import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskLogModal from './TaskLogModal';
 import ConfirmStatusModal from './ConfirmStatusModal';
 import { apiService } from '../services/apiService';
+import { message } from 'antd';
 
 const ScheduledTasks: React.FC = () => {
   // View State
@@ -84,9 +85,11 @@ const ScheduledTasks: React.FC = () => {
     if (taskToToggleStatus) {
       try {
         await apiService.toggleTaskStatus(taskToToggleStatus.id);
+        message.success(`${taskToToggleStatus.status === 'active' ? '禁用' : '启用'}任务成功`);
         fetchTasks(currentPage, pageSize);
       } catch (error) {
         console.error('Failed to toggle status:', error);
+        message.error('操作失败，请重试');
       }
       setTaskToToggleStatus(null);
     }
@@ -100,9 +103,11 @@ const ScheduledTasks: React.FC = () => {
   const handleSaveTask = async (updatedTask: ScheduledTask) => {
     try {
       await apiService.updateTask(updatedTask.id, updatedTask);
+      message.success('修改任务成功');
       fetchTasks(currentPage, pageSize);
     } catch (error) {
       console.error('Failed to update task:', error);
+      message.error('修改任务失败');
     }
     setEditingTask(null);
   };
@@ -110,9 +115,12 @@ const ScheduledTasks: React.FC = () => {
   const handleCreateTask = async (newTask: ScheduledTask) => {
     try {
       await apiService.createTask(newTask);
+      message.success('创建任务成功');
+      setIsNewModalOpen(false);
       fetchTasks(1, pageSize);
     } catch (error) {
       console.error('Failed to create task:', error);
+      message.error('创建任务失败');
     }
   };
 
@@ -125,6 +133,7 @@ const ScheduledTasks: React.FC = () => {
     if (taskToDelete) {
       try {
         await apiService.deleteTask(taskToDelete.id);
+        message.success('删除任务成功');
         // If deleting the last item on the current page, go back one page
         if (displayedTasks.length === 1 && currentPage > 1) {
           setCurrentPage(currentPage - 1);
@@ -133,6 +142,7 @@ const ScheduledTasks: React.FC = () => {
         }
       } catch (error) {
         console.error('Failed to delete task:', error);
+        message.error('删除任务失败');
       }
       setTaskToDelete(null);
     }
