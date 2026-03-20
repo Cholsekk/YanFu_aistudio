@@ -8,13 +8,12 @@ import {
   MessageSquare, 
   Send, 
   RotateCcw, 
+  Mic,
+  Type,
+  Quote, 
   ChevronDown,
   Info,
-  Trash2,
-  Maximize2,
-  Layout,
-  Bot,
-  Type,
+  ShieldCheck,
   AlignLeft,
   List,
   Hash,
@@ -28,7 +27,8 @@ import {
   Store,
   Code,
   FileText,
-  ArrowUpRight
+  ArrowUpRight,
+  Paperclip
 } from 'lucide-react';
 import { 
   Input, 
@@ -46,7 +46,8 @@ import {
   message,
   Popover,
   Modal,
-  Checkbox
+  Checkbox,
+  Drawer
 } from 'antd';
 import { motion, AnimatePresence } from 'motion/react';
 import PromptGeneratorModal from './PromptGeneratorModal';
@@ -93,6 +94,17 @@ interface KnowledgeBase {
   count: number;
 }
 
+const features = [
+  { id: 'opening', name: '对话开场白', desc: '在对话型应用中，让 AI 主动说第一段话可以拉近与用户间的距离。', icon: MessageSquare, color: 'bg-blue-500' },
+  { id: 'suggestion', name: '下一步问题建议', desc: '设置下一步问题建议可以让用户更好的对话。', icon: MessageSquare, color: 'bg-sky-500' },
+  { id: 'tts', name: '文字转语音', desc: '文本可以转换成语音。', icon: Type, color: 'bg-indigo-500' },
+  { id: 'stt', name: '语音转文字', desc: '您可以使用语音输入。', icon: Mic, color: 'bg-purple-500' },
+  { id: 'citation', name: '引用和归属', desc: '显示源文档和生成内容的归属部分。', icon: Quote, color: 'bg-orange-500' },
+  { id: 'content_check', name: '内容审查', desc: '您可以调用审查 API 或者维护敏感词库来使模型更安全地输出。', icon: ShieldCheck, color: 'bg-emerald-500' },
+  { id: 'annotation', name: '标注回复', desc: '启用后，将标注用户的回复，以便在用户重复提问时快速响应。', icon: MessageSquare, color: 'bg-blue-500' },
+  { id: 'attachment', name: '上传附件', desc: '支持上传图片、文档等附件。', icon: Plus, color: 'bg-amber-500' },
+];
+
 const AppConfig: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [variables, setVariables] = useState<Variable[]>([]);
@@ -112,6 +124,17 @@ const AppConfig: React.FC = () => {
   const [isStreaming, setIsStreaming] = useState<Record<string, boolean>>({});
   const [inputValue, setInputValue] = useState('');
   const [showParams, setShowParams] = useState<string | null>(null);
+  const [showFeaturesDrawer, setShowFeaturesDrawer] = useState(false);
+  const [enabledFeatures, setEnabledFeatures] = useState<Record<string, boolean>>({
+    opening: true,
+    suggestion: true,
+    tts: false,
+    stt: false,
+    citation: false,
+    content_check: false,
+    annotation: false,
+    attachment: false,
+  });
   const [metadataFilter, setMetadataFilter] = useState('disabled');
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
 
@@ -375,6 +398,12 @@ const AppConfig: React.FC = () => {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-900">提示词</span>
+                <Tooltip title="提示词用于对 AI 的回复做出一系列指令和约束。可插入表单变量，例如 {{input}}。这段提示词不会被最终用户所看到。">
+                  <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-2">
                 <Button 
                   type="text" 
                   size="small" 
@@ -417,7 +446,7 @@ const AppConfig: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-gray-700">{"{x} 变量"}</span>
-                <Tooltip title="变量能使用用户输入表单引入提示词或开场白">
+                <Tooltip title="变量将以表单形式让用户在对话前填写，用户填写的表单内容将自动替换提示词中的变量。">
                   <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
                 </Tooltip>
               </div>
@@ -582,7 +611,7 @@ const AppConfig: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-gray-900">元数据过滤</span>
-                  <Tooltip title="根据元数据对知识库进行过滤">
+                  <Tooltip title="元数据过滤是使用元数据属性（例如标签、类别或访问权限）来细化和控制系统内相关信息的检索过程。">
                     <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
                   </Tooltip>
                 </div>
@@ -590,12 +619,18 @@ const AppConfig: React.FC = () => {
                   value={metadataFilter}
                   onChange={setMetadataFilter}
                   size="small"
-                  className="w-24"
+                  className="w-32"
                   options={[
-                    { value: 'disabled', label: '禁用' },
-                    { value: 'auto', label: '自动' },
-                    { value: 'manual', label: '手动' }
+                    { value: 'disabled', label: '禁用', title: '禁用元数据过滤' },
+                    { value: 'auto', label: '自动', title: '根据用户查询自动生成元数据过滤条件' },
+                    { value: 'manual', label: '手动', title: '手动添加元数据过滤条件' }
                   ]}
+                  optionRender={(option) => (
+                    <div className="py-1">
+                      <div className="font-medium text-gray-900">{option.label}</div>
+                      <div className="text-[10px] text-gray-500">{option.data.title}</div>
+                    </div>
+                  )}
                 />
               </div>
               
@@ -963,6 +998,12 @@ const AppConfig: React.FC = () => {
               whileFocus={{ scale: 1.01 }}
               className="relative flex items-center bg-white rounded-2xl border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all px-4 py-2 shadow-sm"
             >
+              {enabledFeatures.attachment && (
+                <Button type="text" icon={<Paperclip className="w-4 h-4 text-gray-400" />} className="p-0 w-8 h-8 flex items-center justify-center" />
+              )}
+              {enabledFeatures.stt && (
+                <Button type="text" icon={<Mic className="w-4 h-4 text-gray-400" />} className="p-0 w-8 h-8 flex items-center justify-center" />
+              )}
               <Input 
                 placeholder="和言复对话，获取您需要的信息" 
                 variant="borderless"
@@ -982,13 +1023,26 @@ const AppConfig: React.FC = () => {
             </motion.div>
             
             <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/50 rounded-xl border border-blue-100/50">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm">
-                  <MessageSquare className="w-3 h-3" />
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-1.5">
+                  {Object.entries(enabledFeatures).filter(([_, enabled]) => enabled).map(([id, _]) => {
+                    const feature = features.find(f => f.id === id);
+                    if (!feature) return null;
+                    return (
+                      <div key={id} className={`w-6 h-6 ${feature.color} rounded-md flex items-center justify-center text-white shadow-sm border border-white`}>
+                        <feature.icon className="w-3.5 h-3.5" />
+                      </div>
+                    );
+                  })}
                 </div>
-                <span className="text-xs text-gray-600 font-medium">功能已开启</span>
+                <span className="text-xs text-blue-800 font-medium">功能已开启</span>
               </div>
-              <Button type="link" size="small" className="text-xs text-blue-600 p-0 flex items-center gap-1 hover:gap-2 transition-all font-medium">
+              <Button 
+                type="link" 
+                size="small" 
+                className="text-xs text-blue-600 p-0 flex items-center gap-1 hover:gap-2 transition-all font-medium"
+                onClick={() => setShowFeaturesDrawer(true)}
+              >
                 管理 <ArrowUpRight className="w-3 h-3" />
               </Button>
             </div>
@@ -1076,6 +1130,12 @@ const AppConfig: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+      <FeaturesDrawer 
+        isOpen={showFeaturesDrawer} 
+        onClose={() => setShowFeaturesDrawer(false)} 
+        enabledFeatures={enabledFeatures}
+        setEnabledFeatures={setEnabledFeatures}
+      />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -1208,6 +1268,42 @@ const AppConfig: React.FC = () => {
         )}
       </Modal>
     </div>
+  );
+};
+
+const FeaturesDrawer = ({ 
+  isOpen, 
+  onClose, 
+  enabledFeatures, 
+  setEnabledFeatures 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  enabledFeatures: Record<string, boolean>;
+  setEnabledFeatures: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+}) => {
+  return (
+    <Drawer title="功能" open={isOpen} onClose={onClose} width={400}>
+      <div className="text-sm text-gray-500 mb-4">增强 web app 用户体验</div>
+      <div className="space-y-3">
+        {features.map(f => (
+          <div key={f.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+            <div className={`w-10 h-10 rounded-lg ${f.color} flex items-center justify-center text-white shrink-0`}>
+              <f.icon className="w-5 h-5" />
+            </div>
+            <div className="flex-grow">
+              <div className="font-bold text-gray-900">{f.name}</div>
+              <div className="text-xs text-gray-500">{f.desc}</div>
+            </div>
+            <Switch 
+              size="small" 
+              checked={enabledFeatures[f.id]}
+              onChange={(checked) => setEnabledFeatures(prev => ({ ...prev, [f.id]: checked }))}
+            />
+          </div>
+        ))}
+      </div>
+    </Drawer>
   );
 };
 
