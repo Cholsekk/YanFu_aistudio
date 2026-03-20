@@ -76,31 +76,18 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
       title="选择引用知识库"
       maxWidth="max-w-2xl"
       bodyClassName="p-0 flex flex-col h-[600px]"
-      footer={
-        <div className="flex justify-end gap-3 w-full">
-          <Button onClick={onClose} className="rounded-lg px-6">取消</Button>
-          <Button 
-            type="primary" 
-            onClick={handleAdd} 
-            disabled={selectedIds.length === 0}
-            className="rounded-lg px-8 bg-blue-600"
-          >
-            添加
-          </Button>
-        </div>
-      }
     >
-      <div className="p-6 pb-0 space-y-4">
-        <div className="flex items-center gap-4">
+      <div className="p-4 pb-2 space-y-2 border-b border-gray-100">
+        <div className="flex items-center gap-2">
           <Tabs 
             activeKey={activeTab}
             onChange={setActiveTab}
             items={tabItems.map(tab => ({
               key: tab.key,
               label: (
-                <div className="flex items-center gap-2 px-1">
+                <div className="flex items-center gap-1.5 px-0.5">
                   {tab.icon}
-                  <span>{tab.label}</span>
+                  <span className="text-sm">{tab.label}</span>
                 </div>
               )
             }))}
@@ -111,39 +98,39 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input 
-            placeholder="搜索知识库..." 
+            placeholder="搜索知识库 (支持多选)..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 rounded-xl border-gray-100 bg-gray-50/50 focus:bg-white transition-all h-10"
+            className="pl-9 rounded-lg border-gray-100 bg-gray-50/50 focus:bg-white transition-all h-9"
           />
         </div>
       </div>
 
-      <div className="flex-grow overflow-y-auto p-6 pt-4 custom-scrollbar space-y-2">
+      <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-1.5">
         {filteredKBs.map((kb) => (
           <div
             key={kb.id}
             onClick={() => toggleSelect(kb.id)}
             className={`
-              flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer group
+              flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer group
               ${selectedIds.includes(kb.id) 
-                ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/10' 
+                ? 'border-blue-500 bg-blue-50/50' 
                 : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50/50'}
             `}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className={`
-                w-10 h-10 rounded-lg flex items-center justify-center transition-colors
+                w-8 h-8 rounded-md flex items-center justify-center transition-colors
                 ${selectedIds.includes(kb.id) ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-500'}
               `}>
-                <Folder className="w-5 h-5" />
+                <Folder className="w-4 h-4" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-gray-900">{kb.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded uppercase font-medium">
+                  <span className="text-[10px] text-gray-400 bg-gray-100 px-1 py-0 rounded uppercase font-medium">
                     {kb.quality} · {kb.searchType}
                   </span>
                 </div>
@@ -151,10 +138,10 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
             </div>
             
             <div className={`
-              w-5 h-5 rounded-full border flex items-center justify-center transition-all
+              w-4 h-4 rounded border flex items-center justify-center transition-all
               ${selectedIds.includes(kb.id) 
                 ? 'bg-blue-500 border-blue-500 text-white' 
-                : 'border-gray-200 group-hover:border-blue-300'}
+                : 'border-gray-300 group-hover:border-blue-300'}
             `}>
               {selectedIds.includes(kb.id) && <Check className="w-3 h-3" />}
             </div>
@@ -167,6 +154,18 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
             <p className="text-sm">未找到匹配的知识库</p>
           </div>
         )}
+      </div>
+
+      <div className="flex justify-end gap-3 p-4 border-t border-gray-100 bg-white">
+        <Button onClick={onClose} className="rounded-full px-6">取消</Button>
+        <Button 
+          type="primary" 
+          onClick={handleAdd} 
+          disabled={selectedIds.length === 0}
+          className="rounded-full px-8 bg-blue-600"
+        >
+          添加 ({selectedIds.length})
+        </Button>
       </div>
     </Modal>
   );

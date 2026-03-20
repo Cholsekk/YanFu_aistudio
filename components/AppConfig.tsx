@@ -28,7 +28,8 @@ import {
   Code,
   FileText,
   ArrowUpRight,
-  Paperclip
+  Paperclip,
+  Trash2
 } from 'lucide-react';
 import { 
   Input, 
