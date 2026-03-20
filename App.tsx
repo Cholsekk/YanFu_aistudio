@@ -344,18 +344,8 @@ const App: React.FC = () => {
   };
 
   const filteredApps = useMemo(() => {
-    // Client-side sorting and filtering
+    // Client-side sorting
     let result = [...apps];
-
-    // Client-side filtering to ensure consistency if API returns mixed results
-    if (activeFilterTab !== '全部') {
-      if (activeFilterTab === '内置应用') {
-        // Assuming built-in apps are not supported in this view or handled via API
-      } else {
-        const targetMode = mapTypeToAppMode(activeFilterTab);
-        result = result.filter(app => !app.mode || app.mode === targetMode);
-      }
-    }
 
     if (sortBy === 'name') {
       result.sort((a, b) => a.name.localeCompare(b.name));
@@ -366,7 +356,7 @@ const App: React.FC = () => {
     }
     
     return result;
-  }, [apps, sortBy, activeFilterTab]);
+  }, [apps, sortBy]);
 
   const handleCreateTag = async (name: string) => {
     try {
