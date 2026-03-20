@@ -1283,7 +1283,7 @@ const FeaturesDrawer = ({
   setEnabledFeatures: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }) => {
   return (
-    <Drawer title="功能" open={isOpen} onClose={onClose} width={400}>
+    <Drawer title="功能" open={isOpen} onClose={onClose} size="default">
       <div className="text-sm text-gray-500 mb-4">增强 web app 用户体验</div>
       <div className="space-y-3">
         {features.map(f => (

@@ -151,7 +151,7 @@ const App: React.FC = () => {
       const currentPage = isLoadMore ? page + 1 : 1;
       const params: Record<string, any> = {
         page: currentPage,
-        limit: 100, // Increased limit as per new API default
+        limit: 30, // Increased limit as per new API default
         name: searchQuery
       };
 
@@ -208,10 +208,10 @@ const App: React.FC = () => {
         // If we need categories, we can extract them here: response.categories
       } else if (response && Array.isArray(response.data)) {
         appList = response.data;
-        hasMoreData = response.has_more || false;
+        hasMoreData = response.has_more || (activeFilterTab !== '全部' && appList.length > 0);
       } else if (response && Array.isArray(response.items)) {
         appList = response.items;
-        hasMoreData = (response.current_page < response.pages);
+        hasMoreData = (response.current_page < response.pages) || (activeFilterTab !== '全部' && appList.length > 0);
       }
 
       const mappedApps: AppItem[] = appList.map((item: any) => {
@@ -353,7 +353,7 @@ const App: React.FC = () => {
         // Assuming built-in apps are not supported in this view or handled via API
       } else {
         const targetMode = mapTypeToAppMode(activeFilterTab);
-        result = result.filter(app => app.mode === targetMode);
+        result = result.filter(app => !app.mode || app.mode === targetMode);
       }
     }
 

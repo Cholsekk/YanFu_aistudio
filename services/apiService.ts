@@ -690,7 +690,7 @@ class ApiService {
     });
   }
 
-  async getApps(params: Record<string, any> = { page: 1, limit: 100, built_in: false }): Promise<any> {
+  async getApps(params: Record<string, any> = { page: 1, limit: 30, built_in: false }): Promise<any> {
     const tenantId = getTenantId();
     const queryParams = { ...params };
     
