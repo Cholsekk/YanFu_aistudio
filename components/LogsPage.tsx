@@ -138,67 +138,15 @@ const TracingNode = ({ trace, index }: { trace: any, index: number }) => {
       {isExpanded && (
         <div className="p-4 border-t border-gray-100 space-y-4 bg-gray-50/50">
           {trace.inputs && (
-            <div>
-              <div className="text-xs font-bold text-gray-500 mb-2">输入 (Inputs)</div>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <Editor
-                  height="150px"
-                  defaultLanguage="json"
-                  theme="light"
-                  value={JSON.stringify(trace.inputs, null, 2)}
-                  options={{ 
-                    readOnly: true, 
-                    minimap: { enabled: false }, 
-                    scrollBeyondLastLine: false,
-                    fontSize: 12,
-                    lineNumbers: 'on',
-                    renderLineHighlight: 'none'
-                  }}
-                />
-              </div>
-            </div>
+            <CodeBlock title="输入 (Inputs)" content={JSON.stringify(trace.inputs, null, 2)} />
           )}
           {trace.process_data && (
-            <div>
-              <div className="text-xs font-bold text-gray-500 mb-2">处理数据 (Process Data)</div>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <Editor
-                  height="150px"
-                  defaultLanguage="json"
-                  theme="light"
-                  value={JSON.stringify(trace.process_data, null, 2)}
-                  options={{ 
-                    readOnly: true, 
-                    minimap: { enabled: false }, 
-                    scrollBeyondLastLine: false,
-                    fontSize: 12,
-                    lineNumbers: 'on',
-                    renderLineHighlight: 'none'
-                  }}
-                />
-              </div>
-            </div>
+            <CodeBlock title="处理数据 (Process Data)" content={JSON.stringify(trace.process_data, null, 2)} />
           )}
           {trace.outputs && (
             <div>
-              <div className="text-xs font-bold text-gray-500 mb-2">输出 (Outputs)</div>
-              {trace.error && <div className="text-red-500 text-xs mb-2">错误提示: {trace.error}</div>}
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <Editor
-                  height="150px"
-                  defaultLanguage="json"
-                  theme="light"
-                  value={JSON.stringify(trace.outputs, null, 2)}
-                  options={{ 
-                    readOnly: true, 
-                    minimap: { enabled: false }, 
-                    scrollBeyondLastLine: false,
-                    fontSize: 12,
-                    lineNumbers: 'on',
-                    renderLineHighlight: 'none'
-                  }}
-                />
-              </div>
+              {trace.error && <div className="text-red-500 text-xs mb-2 font-bold">错误提示: {trace.error}</div>}
+              <CodeBlock title="输出 (Outputs)" content={JSON.stringify(trace.outputs, null, 2)} />
             </div>
           )}
         </div>
