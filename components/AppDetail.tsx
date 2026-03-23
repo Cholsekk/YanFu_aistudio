@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { AppItem } from '../types';
 import { AppDevHubContext } from '../context/AppContext';
+import { Tooltip } from 'antd';
 import { 
   ChevronLeft, 
   Settings, 
@@ -171,9 +172,11 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
             {renderAppIcon()}
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
-                <h1 className="text-sm font-bold text-gray-900" title={app.name}>
-                  {app.name.length > 6 ? `${app.name.substring(0, 6)}...` : app.name}
-                </h1>
+                <Tooltip title={app.name}>
+                  <h1 className="text-sm font-bold text-gray-900 cursor-help">
+                    {app.name.length > 6 ? `${app.name.substring(0, 6)}...` : app.name}
+                  </h1>
+                </Tooltip>
               </div>
               <div className="mt-0.5">
                 <span className={`px-1 py-0.5 rounded text-[9px] font-bold border ${getTypeColor()}`}>

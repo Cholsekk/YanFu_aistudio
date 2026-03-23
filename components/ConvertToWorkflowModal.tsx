@@ -18,8 +18,8 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Icon state
-  const [icon, setIcon] = useState('MessageSquare');
-  const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>('icon');
+  const [icon, setIcon] = useState('156');
+  const [iconType, setIconType] = useState<'icon' | 'image' | 'sys-icon'>('sys-icon');
   const [iconBgColor, setIconBgColor] = useState('bg-primary-600');
   const [iconUrl, setIconUrl] = useState('');
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);

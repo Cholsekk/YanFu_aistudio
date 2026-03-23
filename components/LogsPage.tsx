@@ -671,7 +671,9 @@ const LogsPage: React.FC = () => {
       render: (text: string, record: LogItem) => (
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${record.annotated ? 'bg-blue-500' : 'bg-gray-300'}`} />
-          <span className="text-gray-900 font-medium line-clamp-1">{text || '无摘要'}</span>
+          <Tooltip title={text || '无摘要'}>
+            <span className="text-gray-900 font-medium line-clamp-1 cursor-help">{text || '无摘要'}</span>
+          </Tooltip>
           {record.annotated && (
             <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase shrink-0">
               已标注
@@ -686,9 +688,11 @@ const LogsPage: React.FC = () => {
       render: (record: LogItem) => (
         <div className="flex items-center gap-2 text-gray-500">
           <User className="w-3.5 h-3.5" />
-          <span className="truncate max-w-[120px]">
-            {record.from_account_name || record.from_end_user_id || '未知'}
-          </span>
+          <Tooltip title={record.from_account_name || record.from_end_user_id || '未知'}>
+            <span className="truncate max-w-[120px] cursor-help">
+              {record.from_account_name || record.from_end_user_id || '未知'}
+            </span>
+          </Tooltip>
         </div>
       ),
     },
@@ -823,9 +827,11 @@ const LogsPage: React.FC = () => {
       title: '用户或账户',
       key: 'created_by',
       render: (record: any) => (
-        <span className="text-gray-500 text-sm truncate max-w-[200px] block">
-          {record.created_by_end_user ? record.created_by_end_user.session_id : record.created_by_account ? record.created_by_account.name : "N/A"}
-        </span>
+        <Tooltip title={record.created_by_end_user ? record.created_by_end_user.session_id : record.created_by_account ? record.created_by_account.name : "N/A"}>
+          <span className="text-gray-500 text-sm truncate max-w-[200px] block cursor-help">
+            {record.created_by_end_user ? record.created_by_end_user.session_id : record.created_by_account ? record.created_by_account.name : "N/A"}
+          </span>
+        </Tooltip>
       )
     }
   ];
@@ -836,14 +842,22 @@ const LogsPage: React.FC = () => {
       dataIndex: 'question',
       key: 'question',
       width: '30%',
-      render: (text: string) => <span className="text-gray-900 font-medium line-clamp-2">{text}</span>
+      render: (text: string) => (
+        <Tooltip title={text}>
+          <span className="text-gray-900 font-medium line-clamp-2 cursor-help">{text}</span>
+        </Tooltip>
+      )
     },
     {
       title: '回答',
       dataIndex: 'answer',
       key: 'answer',
       width: '40%',
-      render: (text: string) => <span className="text-gray-500 line-clamp-2">{text}</span>
+      render: (text: string) => (
+        <Tooltip title={text}>
+          <span className="text-gray-500 line-clamp-2 cursor-help">{text}</span>
+        </Tooltip>
+      )
     },
     {
       title: '命中次数',

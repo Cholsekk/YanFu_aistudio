@@ -20,8 +20,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     description: '',
     type: '对话助手',
     subType: '对话助手',
-    icon: 'MessageSquare',
-    iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
+    icon: '156',
+    iconType: 'sys-icon' as 'icon' | 'image' | 'sys-icon',
     iconBgColor: 'bg-primary-600',
     iconUrl: '',
     builtIn: false
@@ -47,8 +47,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         description: '', 
         type: '对话助手', 
         subType: '对话助手',
-        icon: 'MessageSquare',
-        iconType: 'icon',
+        icon: '156',
+        iconType: 'sys-icon',
         iconBgColor: 'bg-primary-600',
         iconUrl: '',
         builtIn: false
