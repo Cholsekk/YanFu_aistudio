@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Collection, ToolExtension, WorkflowToolProviderResponse, McpProvider, McpTool } from '../types';
 import { X, ExternalLink, ShieldCheck, Info, RefreshCw, Key } from 'lucide-react';
 import ToolParamDrawer from './ToolParamDrawer';
@@ -21,7 +21,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
   const [mcpTools, setMcpTools] = useState<McpTool[]>([]);
   const [isUpdatingMcpTools, setIsUpdatingMcpTools] = useState(false);
   const [isAuthenticatingMcp, setIsAuthenticatingMcp] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     if (toolDetail && isMcpDetail(toolDetail)) {
@@ -83,7 +83,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
     const appId = isWorkflowDetail(toolDetail) ? toolDetail.workflow_app_id : (tool.workflow_app_id || tool.plugin_id || tool.id);
     
     if (appId) {
-      navigate(`/client/apps/app/${appId}/workflow`);
+      router.push(`/client/apps/app/${appId}/workflow`);
       onClose();
     } else {
       console.error('Missing app ID for tool:', tool);

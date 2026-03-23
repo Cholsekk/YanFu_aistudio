@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { apiService } from '../services/apiService';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
 const McpAuthCallback: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +27,7 @@ const McpAuthCallback: React.FC = () => {
         setStatus('success');
         // Redirect back to MCP services after a short delay
         setTimeout(() => {
-          navigate('/?tab=mcp');
+          router.push('/?tab=mcp');
         }, 2000);
       } catch (err: any) {
         console.error('MCP Auth Callback Error:', err);
@@ -37,7 +37,7 @@ const McpAuthCallback: React.FC = () => {
     };
 
     completeAuth();
-  }, [searchParams, navigate]);
+  }, [searchParams, router]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -64,7 +64,7 @@ const McpAuthCallback: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-900">认证失败</h2>
             <p className="text-red-500 text-sm">{error}</p>
             <button 
-              onClick={() => navigate('/?tab=mcp')}
+              onClick={() => router.push('/?tab=mcp')}
               className="mt-6 px-6 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
             >
               返回管理页面

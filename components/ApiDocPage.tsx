@@ -1,13 +1,14 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useRouter } from 'next/navigation'
 import { monitoringService } from '../services/monitoringService'
 import ApiDoc from './ApiDoc'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 
 const ApiDocPage = () => {
-  const { appId } = useParams<{ appId: string }>()
-  const navigate = useNavigate()
+  const params = useParams()
+  const appId = params?.appId as string
+  const router = useRouter()
   const [appDetail, setAppDetail] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +43,7 @@ const ApiDocPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-screen text-gray-500">
         <p className="mb-4">{error}</p>
-        <button onClick={() => navigate(-1)} className="text-primary-600 hover:underline">返回</button>
+        <button onClick={() => router.back()} className="text-primary-600 hover:underline">返回</button>
       </div>
     )
   }
@@ -50,7 +51,7 @@ const ApiDocPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full">
+        <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-full">
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
         <h1 className="text-lg font-semibold text-gray-900">API 文档</h1>

@@ -13,32 +13,16 @@ async function startServer() {
   const PORT = 3000;
 
   // API Proxy
-  // This proxies requests from /api-proxy/* to the target backend
-  // The target backend URL is determined by the client, but we can provide a default
-  // or use an environment variable.
-  // For flexibility, we'll look for a header 'x-target-url' or similar, 
-  // but a simpler way is to just proxy to a configured base URL.
-  
-  // Since the user is configuring the base URL in the UI, we need a way to tell the server where to proxy.
-  // A common pattern is to send the target URL in a header.
-  
-  app.use('/api-proxy', (req, res, next) => {
-    const targetUrl = req.headers['x-target-base-url'] as string;
-    if (!targetUrl) {
-      return res.status(400).json({ error: 'Missing x-target-base-url header' });
-    }
-
-    createProxyMiddleware({
-      target: targetUrl,
-      changeOrigin: true,
-      pathRewrite: {
-        '^/api-proxy': '', // remove /api-proxy from the path
-      },
-      on: {
-        proxyReq: (proxyReq, req, res) => {
-          // You can add additional headers here if needed
-        },
-        error: (err, req, res) => {
+  const apiProxy = createProxyMiddleware({
+    target: 'http://localhost', // Default target, overridden by router
+    router: (req) => req.headers['x-target-base-url'] as string,
+    changeOrigin: true,
+    pathRewrite: {
+      '^/api-proxy': '', // remove /api-proxy from the path
+    },
+    on: {
+      error: (err, req, res) => {
+        try {
           console.error('Proxy Error:', err);
           const errorMessage = err.message || 'Unknown Proxy Error';
           const isTimeout = errorMessage.includes('ETIMEDOUT');
@@ -51,17 +35,27 @@ async function startServer() {
             code: (err as any).code
           });
 
-          if ('writeHead' in res) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(responseBody);
-          } else {
-            res.end();
+          if ('headersSent' in res && !res.headersSent) {
+            if ('writeHead' in res) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+            }
           }
-        },
+          res.end(responseBody);
+        } catch (e) {
+          console.error('Error sending proxy error response:', e);
+        }
       },
-      // Important for self-signed certs or local dev
-      secure: false,
-    })(req, res, next);
+    },
+    // Important for self-signed certs or local dev
+    secure: false,
+  });
+
+  app.use('/api-proxy', (req, res, next) => {
+    const targetUrl = req.headers['x-target-base-url'] as string;
+    if (!targetUrl) {
+      return res.status(400).json({ error: 'Missing x-target-base-url header' });
+    }
+    apiProxy(req, res, next);
   });
 
   // Vite middleware for development

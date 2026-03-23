@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { AppItem, Tag } from '../types';
 import { getIcon } from '../constants';
 import { MoreHorizontal, ExternalLink, X, Plus } from 'lucide-react';
@@ -52,12 +52,12 @@ const AppCard: React.FC<AppCardProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleEnterApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (app.type === '定制应用' || app.mode === 'custom') {
-      navigate(`/client/custom/${app.itemId || app.id}`);
+      router.push(`/client/custom/${app.itemId || app.id}`);
     } else if (onClick) {
       onClick();
     } else {
@@ -73,7 +73,7 @@ const AppCard: React.FC<AppCardProps> = ({
           modeType = 'workflow';
           break;
       }
-      navigate(`/client/apps/app/${app.id}/${modeType}`);
+      router.push(`/client/apps/app/${app.id}/${modeType}`);
     }
   };
 

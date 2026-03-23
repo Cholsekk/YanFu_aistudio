@@ -171,7 +171,9 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
             {renderAppIcon()}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold text-gray-900">{app.name}</h1>
+                <h1 className="text-base font-bold text-gray-900" title={app.name}>
+                  {app.name.length > 6 ? `${app.name.substring(0, 6)}...` : app.name}
+                </h1>
               </div>
               <div className="mt-0.5">
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getTypeColor()}`}>

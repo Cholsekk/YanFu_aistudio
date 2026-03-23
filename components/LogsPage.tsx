@@ -58,6 +58,13 @@ const STATUS_OPTIONS = [
   { label: '未标注', value: 'not_annotated' },
 ];
 
+const WORKFLOW_STATUS_OPTIONS = [
+  { label: 'All', value: 'all' },
+  { label: 'Success', value: 'succeeded' },
+  { label: 'Fail', value: 'failed' },
+  { label: 'Stop', value: 'stopped' },
+];
+
 const SORT_OPTIONS = [
   { label: '创建时间', value: 'created_at' },
   { label: '更新时间', value: 'updated_at' },
@@ -107,6 +114,11 @@ const LogsPage: React.FC = () => {
   const [selectedAnnotation, setSelectedAnnotation] = useState<AnnotationItem | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isAnnotationDetailOpen, setIsAnnotationDetailOpen] = useState(false);
+  const [isWorkflowDetailOpen, setIsWorkflowDetailOpen] = useState(false);
+  const [selectedWorkflowLog, setSelectedWorkflowLog] = useState<any>(null);
+  const [workflowRunDetail, setWorkflowRunDetail] = useState<any>(null);
+  const [workflowRunDetailLoading, setWorkflowRunDetailLoading] = useState(false);
+  const [workflowDetailTab, setWorkflowDetailTab] = useState<'result' | 'detail' | 'tracing'>('result');
   const [annotationDetailTab, setAnnotationDetailTab] = useState<'reply' | 'history'>('reply');
   const [editingField, setEditingField] = useState<'question' | 'answer' | null>(null);
   const [editForm, setEditForm] = useState({ question: '', answer: '' });
@@ -253,14 +265,22 @@ const LogsPage: React.FC = () => {
       };
 
       let response;
-      if (isChatMode) {
+      if (app.type === '工作流应用') {
+        const workflowQuery = {
+          page: query.page,
+          limit: query.limit,
+          keyword: query.keyword || '',
+          status: query.status || 'all',
+        };
+        response = await monitoringService.getWorkflowLogs(app.id, workflowQuery);
+      } else if (isChatMode) {
         response = await monitoringService.getChatConversations(app.id, apiQuery);
       } else {
         response = await monitoringService.getCompletionConversations(app.id, apiQuery);
       }
 
       if (response && response.data) {
-        const mappedData = response.data.map((item: any) => ({
+        const mappedData = app.type === '工作流应用' ? response.data : response.data.map((item: any) => ({
           ...item,
           summary: item.summary || (item.message ? item.message.query : ''),
           message_count: item.message_count || 1,
@@ -308,7 +328,7 @@ const LogsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (app?.id) {
+    if (app?.id && app.type !== '工作流应用' && app.type !== '文本生成应用') {
       const fetchInitialConfig = async () => {
         try {
           const config = await monitoringService.getAnnotationConfig(app.id);
@@ -329,7 +349,7 @@ const LogsPage: React.FC = () => {
       };
       fetchInitialConfig();
     }
-  }, [app?.id]);
+  }, [app?.id, app?.type]);
 
   useEffect(() => {
     if (activeTab === 'logs') {
@@ -347,6 +367,19 @@ const LogsPage: React.FC = () => {
   const handleFilterChange = (key: keyof LogQuery, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
     setCurrentPage(1);
+  };
+
+  const fetchWorkflowRunDetail = async (runId: string) => {
+    if (!app?.id) return;
+    setWorkflowRunDetailLoading(true);
+    try {
+      const detail = await monitoringService.getWorkflowRunDetail(app.id, runId);
+      setWorkflowRunDetail(detail);
+    } catch (error) {
+      console.error('Failed to fetch workflow run detail:', error);
+    } finally {
+      setWorkflowRunDetailLoading(false);
+    }
   };
 
   const fetchMessages = async (conversationId: string) => {
@@ -502,6 +535,13 @@ const LogsPage: React.FC = () => {
   };
 
   const handleRowClick = (record: any) => {
+    if (app?.type === '工作流应用') {
+      setSelectedWorkflowLog(record);
+      setIsWorkflowDetailOpen(true);
+      setWorkflowDetailTab('result');
+      fetchWorkflowRunDetail(record.id);
+      return;
+    }
     if (activeTab === 'annotations') {
       setSelectedAnnotation(record as AnnotationItem);
       setIsAnnotationDetailOpen(true);
@@ -624,6 +664,63 @@ const LogsPage: React.FC = () => {
         </div>
       ),
     },
+  ];
+
+  const statusTdRender = (status: string) => {
+    if (status === 'succeeded') {
+      return <span className="text-emerald-500 flex items-center gap-1.5 text-xs font-medium"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>Success</span>;
+    }
+    if (status === 'failed') {
+      return <span className="text-red-500 flex items-center gap-1.5 text-xs font-medium"><div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>Fail</span>;
+    }
+    if (status === 'stopped') {
+      return <span className="text-yellow-500 flex items-center gap-1.5 text-xs font-medium"><div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>Stop</span>;
+    }
+    return <span className="text-blue-500 flex items-center gap-1.5 text-xs font-medium"><div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>Running</span>;
+  };
+
+  const workflowColumns = [
+    {
+      title: '',
+      key: 'read_status',
+      width: 24,
+      render: (record: any) => (
+        !record.read_at ? <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" /> : null
+      )
+    },
+    {
+      title: '开始时间',
+      key: 'created_at',
+      render: (record: any) => (
+        <span className="text-gray-500 text-sm">
+          {record.created_at ? dayjs(record.created_at * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}
+        </span>
+      )
+    },
+    {
+      title: '状态',
+      key: 'status',
+      render: (record: any) => statusTdRender(record.workflow_run?.status)
+    },
+    {
+      title: '运行时间',
+      key: 'elapsed_time',
+      render: (record: any) => <span className="text-gray-500 text-sm">{record.workflow_run?.elapsed_time ? `${record.workflow_run.elapsed_time.toFixed(3)}s` : '-'}</span>
+    },
+    {
+      title: 'TOKENS',
+      key: 'total_tokens',
+      render: (record: any) => <span className="text-gray-500 text-sm">{record.workflow_run?.total_tokens || 0}</span>
+    },
+    {
+      title: '用户或账户',
+      key: 'created_by',
+      render: (record: any) => (
+        <span className="text-gray-500 text-sm truncate max-w-[200px] block">
+          {record.created_by_account?.name || record.created_by_end_user?.id || '未知'}
+        </span>
+      )
+    }
   ];
   
   const annotationColumns = [
@@ -809,19 +906,21 @@ const LogsPage: React.FC = () => {
           日志
           {activeTab === 'logs' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
         </button>
-        <button 
-          onClick={() => setActiveTab('annotations')}
-          className={`pb-3 text-sm font-medium transition-all relative ${
-            activeTab === 'annotations' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          标注
-          {activeTab === 'annotations' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
-        </button>
+        {app?.type !== '工作流应用' && app?.type !== '文本生成应用' && (
+          <button 
+            onClick={() => setActiveTab('annotations')}
+            className={`pb-3 text-sm font-medium transition-all relative ${
+              activeTab === 'annotations' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            标注
+            {activeTab === 'annotations' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
+          </button>
+        )}
       </div>
 
       <div className="text-xs text-gray-400 mb-6">
-        日志记录了应用的运行情况，包括用户的输入和 AI 的回复。
+        {app?.type === '工作流应用' ? '日志记录了应用的执行情况' : '日志记录了应用的运行情况，包括用户的输入和 AI 的回复。'}
       </div>
 
       {/* Filters Area */}
@@ -829,25 +928,27 @@ const LogsPage: React.FC = () => {
         <div className="flex items-center gap-3">
           {activeTab === 'logs' && (
             <>
-              <TimeRangeSelector 
-                defaultPeriodValue={7}
-                onRangeChange={(start, end, period) => {
-                  setFilters(prev => ({ ...prev, start, end, period, page: 1 }));
-                  setCurrentPage(1);
-                }} 
-              />
+              {app?.type !== '工作流应用' && (
+                <TimeRangeSelector 
+                  defaultPeriodValue={7}
+                  onRangeChange={(start, end, period) => {
+                    setFilters(prev => ({ ...prev, start, end, period, page: 1 }));
+                    setCurrentPage(1);
+                  }} 
+                />
+              )}
               
               <Dropdown
                 trigger={['click']}
                 popupRender={() => (
                   <div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-48 z-50">
-                    {STATUS_OPTIONS.map(option => (
+                    {(app?.type === '工作流应用' ? WORKFLOW_STATUS_OPTIONS : STATUS_OPTIONS).map(option => (
                       <button
                         key={option.value}
                         onClick={() => handleFilterChange('status', option.value)}
                         className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.status === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
                       >
-                        <span>{option.label}{option.count !== undefined && ` (${option.count} 项)`}</span>
+                        <span>{option.label}{(option as any).count !== undefined && ` (${(option as any).count} 项)`}</span>
                         {filters.status === option.value && <Check className="w-4 h-4" />}
                       </button>
                     ))}
@@ -855,7 +956,7 @@ const LogsPage: React.FC = () => {
                 )}
               >
                 <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                  {STATUS_OPTIONS.find(o => o.value === filters.status)?.label || '全部'}
+                  {(app?.type === '工作流应用' ? WORKFLOW_STATUS_OPTIONS : STATUS_OPTIONS).find(o => o.value === filters.status)?.label || '全部'}
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
               </Dropdown>
@@ -865,7 +966,7 @@ const LogsPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
             <input 
               type="text" 
-              placeholder="搜索摘要或用户" 
+              placeholder={app?.type === '工作流应用' ? '搜索' : '搜索摘要或用户'} 
               className="pl-9 pr-4 py-1.5 bg-gray-50 border border-transparent rounded-lg text-sm w-72 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -875,39 +976,41 @@ const LogsPage: React.FC = () => {
 
         <div className="flex items-center gap-4">
           {activeTab === 'logs' ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-                <Dropdown
-                  trigger={['click']}
-                  popupRender={() => (
-                    <div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 z-50">
-                      {SORT_OPTIONS.map(option => (
-                        <button
-                          key={option.value}
-                          onClick={() => handleFilterChange('sort_by', option.value)}
-                          className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.sort_by === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                        >
-                          {option.label}
-                          {filters.sort_by === option.value && <Check className="w-4 h-4" />}
-                        </button>
-                      ))}
+            app?.type !== '工作流应用' && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+                  <Dropdown
+                    trigger={['click']}
+                    popupRender={() => (
+                      <div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 z-50">
+                        {SORT_OPTIONS.map(option => (
+                          <button
+                            key={option.value}
+                            onClick={() => handleFilterChange('sort_by', option.value)}
+                            className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.sort_by === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                          >
+                            {option.label}
+                            {filters.sort_by === option.value && <Check className="w-4 h-4" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  >
+                    <div className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-white rounded-md transition-all text-sm text-gray-600 font-medium">
+                      <span>排序：{SORT_OPTIONS.find(o => o.value === filters.sort_by)?.label}</span>
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
                     </div>
-                  )}
-                >
-                  <div className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-white rounded-md transition-all text-sm text-gray-600 font-medium">
-                    <span>排序：{SORT_OPTIONS.find(o => o.value === filters.sort_by)?.label}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                  </div>
-                </Dropdown>
-                <div className="w-px h-4 bg-gray-300 mx-1" />
-                <button 
-                  onClick={() => handleFilterChange('direction', filters.direction === 'asc' ? 'desc' : 'asc')}
-                  className="p-1.5 hover:bg-white rounded-md transition-all text-gray-500 hover:text-gray-900"
-                >
-                  {filters.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
-                </button>
+                  </Dropdown>
+                  <div className="w-px h-4 bg-gray-300 mx-1" />
+                  <button 
+                    onClick={() => handleFilterChange('direction', filters.direction === 'asc' ? 'desc' : 'asc')}
+                    className="p-1.5 hover:bg-white rounded-md transition-all text-gray-500 hover:text-gray-900"
+                  >
+                    {filters.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )
           ) : (
             <div className="flex items-center gap-5">
               <div className="flex items-center gap-2.5 px-3 py-1.5 bg-gray-50 rounded-lg">
@@ -962,15 +1065,20 @@ const LogsPage: React.FC = () => {
         <div className="flex-grow flex flex-col">
           <div className="flex-grow overflow-auto">
             <Table 
-              columns={activeTab === 'logs' ? columns : annotationColumns} 
+              columns={app?.type === '工作流应用' ? workflowColumns : (activeTab === 'logs' ? columns : annotationColumns)} 
               dataSource={(activeTab === 'logs' ? logs : annotations) as any[]} 
               rowKey="id"
               pagination={false}
               loading={loading}
               className="custom-table"
+              scroll={{ x: 440 }}
               onRow={(record) => ({
                 onClick: () => handleRowClick(record),
-                className: `cursor-pointer transition-colors ${record.annotated ? 'bg-blue-50/30 hover:bg-blue-50/50' : ''}`
+                className: `cursor-pointer transition-colors ${
+                  record.annotated ? 'bg-blue-50/30 hover:bg-blue-50/50' : ''
+                } ${
+                  app?.type === '工作流应用' && selectedWorkflowLog?.id === record.id ? 'selected-row' : ''
+                }`
               })}
             />
           </div>
@@ -1636,6 +1744,114 @@ const LogsPage: React.FC = () => {
         </div>
       </Drawer>
 
+      {/* Workflow Detail Drawer */}
+      <Drawer
+        title={
+          <div className="flex items-center gap-2 text-gray-800">
+            <span className="font-semibold text-base">工作流日志详情</span>
+            {selectedWorkflowLog && !selectedWorkflowLog.read_at && (
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+            )}
+            {selectedWorkflowLog && (
+              <span className="text-xs text-gray-400 font-normal">
+                {dayjs(selectedWorkflowLog.created_at * 1000).format('YYYY-MM-DD HH:mm:ss')}
+              </span>
+            )}
+          </div>
+        }
+        placement="right"
+        size={800}
+        onClose={() => setIsWorkflowDetailOpen(false)}
+        open={isWorkflowDetailOpen}
+        closeIcon={<X className="w-5 h-5 text-gray-400 hover:text-gray-600" />}
+        styles={{
+          header: { borderBottom: '1px solid #f3f4f6', padding: '16px 24px' },
+          body: { padding: 0, display: 'flex', flexDirection: 'column', background: '#f9fafb' }
+        }}
+      >
+        <div className="flex flex-col h-full">
+          {/* Tabs */}
+          <div className="flex items-center gap-6 px-6 pt-4 bg-white border-b border-gray-100">
+            {[
+              { id: 'result', label: '结果' },
+              { id: 'detail', label: '详情' },
+              { id: 'tracing', label: '追踪' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setWorkflowDetailTab(tab.id as any)}
+                className={`pb-3 text-sm font-medium transition-colors relative ${
+                  workflowDetailTab === tab.id 
+                    ? 'text-blue-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.label}
+                {workflowDetailTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-full" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {workflowRunDetailLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : workflowRunDetail ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                {workflowDetailTab === 'result' && (
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-800 mb-4">执行结果</h3>
+                    <pre className="bg-gray-50 p-4 rounded-lg text-xs text-gray-700 font-mono overflow-x-auto border border-gray-100">
+                      {JSON.stringify(workflowRunDetail.outputs, null, 2)}
+                    </pre>
+                  </div>
+                )}
+                {workflowDetailTab === 'detail' && (
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-800 mb-4">执行详情</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500 block mb-1">状态</span>
+                        <span className="font-medium">{workflowRunDetail.status}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 block mb-1">执行时间</span>
+                        <span className="font-medium">{workflowRunDetail.elapsed_time ? `${workflowRunDetail.elapsed_time.toFixed(3)}s` : '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 block mb-1">消耗 Token</span>
+                        <span className="font-medium">{workflowRunDetail.total_tokens || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 block mb-1">版本</span>
+                        <span className="font-medium">{workflowRunDetail.version || '-'}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {workflowDetailTab === 'tracing' && (
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-800 mb-4">执行追踪</h3>
+                    <div className="text-gray-500 text-sm">
+                      {/* Placeholder for tracing UI */}
+                      追踪详情将在此处显示
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <p>暂无详情数据</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Drawer>
+
       <style dangerouslySetInnerHTML={{ __html: `
         .custom-table .ant-table {
           background: transparent;
@@ -1653,7 +1869,8 @@ const LogsPage: React.FC = () => {
           padding: 16px;
           font-size: 13px;
         }
-        .custom-table .ant-table-tbody > tr:hover > td {
+        .custom-table .ant-table-tbody > tr:hover > td,
+        .custom-table .ant-table-tbody > tr.selected-row > td {
           background: #f9fafb !important;
         }
         .custom-pagination .ant-pagination-item {

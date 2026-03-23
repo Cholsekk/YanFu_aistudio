@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Header from './components/Header';
 import AppCard from './components/AppCard';
 import NewAppModal from './components/NewAppModal';
@@ -39,20 +39,24 @@ import { message } from 'antd';
 import { ConfirmDialog } from './components/ConfirmDialog';
 
 const App: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeNavTab, setActiveNavTab] = useState('app-dev');
 
   // Handle tab from query param
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tab = params.get('tab');
+    const tab = searchParams.get('tab');
     if (tab) {
       setActiveNavTab(tab);
       // Clear the query param after setting the tab
-      navigate(location.pathname, { replace: true });
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.delete('tab');
+      const newSearch = newSearchParams.toString();
+      const newUrl = pathname + (newSearch ? `?${newSearch}` : '');
+      router.replace(newUrl);
     }
-  }, [location.search, navigate]);
+  }, [searchParams, pathname, router]);
 
   const [activeFilterTab, setActiveFilterTab] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
@@ -956,79 +960,81 @@ const App: React.FC = () => {
     );
   };
 
-    return (
-    <Routes>
-      <Route path="/mcp-auth-callback" element={<McpAuthCallback />} />
-      <Route path="/api-doc/:appId" element={<ApiDocPage />} />
-      <Route path="*" element={
-        <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
-          <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
+  if (pathname === '/mcp-auth-callback') {
+    return <McpAuthCallback />;
+  }
 
-          <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-6 py-8'}`}>
-            {renderContent()}
-          </main>
+  if (pathname?.startsWith('/api-doc/')) {
+    return <ApiDocPage />;
+  }
 
-          <NewAppModal 
-            isOpen={isNewAppModalOpen} 
-            onClose={() => { setIsNewAppModalOpen(false); setEditingApp(null); }} 
-            onCreate={handleCreateOrUpdateApp}
-            initialData={editingApp}
-          />
-          <CustomAppModal 
-            isOpen={isCustomAppModalOpen} 
-            onClose={() => { setIsCustomAppModalOpen(false); setEditingApp(null); }} 
-            onCreate={() => { fetchApps(); setEditingApp(null); }}
-            initialData={editingApp}
-          />
-          <ImportAppModal 
-            isOpen={isImportAppModalOpen} 
-            onClose={() => setIsImportAppModalOpen(false)} 
-            onImport={() => fetchApps()}
-          />
-          <ManageTagsModal 
-            isOpen={isManageTagsModalOpen}
-            onClose={() => setIsManageTagsModalOpen(false)}
-            tags={tags}
-            onRenameTag={handleRenameTag}
-            onDeleteTag={handleDeleteTag}
-            onCreateTag={handleCreateTag}
-          />
-          <TokenConfigModal 
-            isOpen={isTokenModalOpen}
-            onClose={() => setIsTokenModalOpen(false)}
-          />
-          <ConvertToWorkflowModal
-            isOpen={isConvertToWorkflowModalOpen}
-            onClose={() => setIsConvertToWorkflowModalOpen(false)}
-            onConfirm={executeConvertToWorkflow}
-            app={appToConvert}
-          />
+  return (
+    <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+      <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
 
-          {/* Back to Top Button */}
-          {showBackToTop && (
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-primary-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
-              aria-label="Back to top"
-            >
-              <ArrowUp className="w-5 h-5" />
-            </button>
-          )}
+      <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-6 py-8'}`}>
+        {renderContent()}
+      </main>
 
-          <ConfirmDialog
-            isOpen={confirmDialog.isOpen}
-            title={confirmDialog.title}
-            message={confirmDialog.message}
-            type={confirmDialog.type}
-            onConfirm={() => {
-              confirmDialog.onConfirm();
-              setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-            }}
-            onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-          />
-        </div>
-      } />
-    </Routes>
+      <NewAppModal 
+        isOpen={isNewAppModalOpen} 
+        onClose={() => { setIsNewAppModalOpen(false); setEditingApp(null); }} 
+        onCreate={handleCreateOrUpdateApp}
+        initialData={editingApp}
+      />
+      <CustomAppModal 
+        isOpen={isCustomAppModalOpen} 
+        onClose={() => { setIsCustomAppModalOpen(false); setEditingApp(null); }} 
+        onCreate={() => { fetchApps(); setEditingApp(null); }}
+        initialData={editingApp}
+      />
+      <ImportAppModal 
+        isOpen={isImportAppModalOpen} 
+        onClose={() => setIsImportAppModalOpen(false)} 
+        onImport={() => fetchApps()}
+      />
+      <ManageTagsModal 
+        isOpen={isManageTagsModalOpen}
+        onClose={() => setIsManageTagsModalOpen(false)}
+        tags={tags}
+        onRenameTag={handleRenameTag}
+        onDeleteTag={handleDeleteTag}
+        onCreateTag={handleCreateTag}
+      />
+      <TokenConfigModal 
+        isOpen={isTokenModalOpen}
+        onClose={() => setIsTokenModalOpen(false)}
+      />
+      <ConvertToWorkflowModal
+        isOpen={isConvertToWorkflowModalOpen}
+        onClose={() => setIsConvertToWorkflowModalOpen(false)}
+        onConfirm={executeConvertToWorkflow}
+        app={appToConvert}
+      />
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-primary-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+        onConfirm={() => {
+          confirmDialog.onConfirm();
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        }}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
+    </div>
   );
 };
 
