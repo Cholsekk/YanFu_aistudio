@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Editor, { loader } from '@monaco-editor/react';
 import { 
   Search, 
   Calendar, 
@@ -122,11 +123,42 @@ const TracingNode = ({ trace, index }: { trace: any, index: number }) => {
       
       {isExpanded && (
         <div className="p-4 border-t border-gray-100 space-y-4 bg-gray-50/50">
-          {trace.inputs && Object.keys(trace.inputs).length > 0 && (
-            <CodeBlock title="输入" content={JSON.stringify(trace.inputs, null, 2)} />
+          {trace.inputs && (
+            <div>
+              <div className="text-xs font-bold text-gray-500 mb-2">输入 (Inputs)</div>
+              <Editor
+                height="150px"
+                defaultLanguage="json"
+                theme="vs-dark"
+                value={JSON.stringify(trace.inputs, null, 2)}
+                options={{ readOnly: true, minimap: { enabled: false } }}
+              />
+            </div>
           )}
-          {trace.outputs && Object.keys(trace.outputs).length > 0 && (
-            <CodeBlock title="输出" content={JSON.stringify(trace.outputs, null, 2)} />
+          {trace.process_data && (
+            <div>
+              <div className="text-xs font-bold text-gray-500 mb-2">处理数据 (Process Data)</div>
+              <Editor
+                height="150px"
+                defaultLanguage="json"
+                theme="vs-dark"
+                value={JSON.stringify(trace.process_data, null, 2)}
+                options={{ readOnly: true, minimap: { enabled: false } }}
+              />
+            </div>
+          )}
+          {trace.outputs && (
+            <div>
+              <div className="text-xs font-bold text-gray-500 mb-2">输出 (Outputs)</div>
+              {trace.error && <div className="text-red-500 text-xs mb-2">错误提示: {trace.error}</div>}
+              <Editor
+                height="150px"
+                defaultLanguage="json"
+                theme="vs-dark"
+                value={JSON.stringify(trace.outputs, null, 2)}
+                options={{ readOnly: true, minimap: { enabled: false } }}
+              />
+            </div>
           )}
         </div>
       )}
@@ -1956,7 +1988,7 @@ const LogsPage: React.FC = () => {
                 {workflowDetailTab === 'tracing' && (
                   <div className="space-y-4">
                     {workflowTracingList && workflowTracingList.length > 0 ? (
-  workflowTracingList.map((trace, index) => (
+  [...workflowTracingList].reverse().map((trace, index) => (
     <TracingNode key={trace.id || index} trace={trace} index={index} />
   ))
 ) : (

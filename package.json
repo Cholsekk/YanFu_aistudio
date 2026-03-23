@@ -12,6 +12,7 @@
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "@google/genai": "^1.40.0",
+    "@monaco-editor/react": "^4.7.0",
     "@types/node-fetch": "^2.6.11",
     "@types/react-datepicker": "^6.2.0",
     "antd": "^6.3.1",
