@@ -413,7 +413,11 @@ const LogsPage: React.FC = () => {
         monitoringService.fetchRunDetail(app.id, runId),
         monitoringService.fetchTracingList(app.id, runId)
       ]);
-      setWorkflowRunDetail(detail);
+      setWorkflowRunDetail({
+        ...detail,
+        detail: detail,
+        tracing: tracing.data
+      });
       setWorkflowTracingList(tracing.data);
     } catch (error) {
       console.error('Failed to fetch workflow run detail:', error);
@@ -580,7 +584,7 @@ const LogsPage: React.FC = () => {
       setSelectedWorkflowLog(record);
       setIsWorkflowDetailOpen(true);
       setWorkflowDetailTab('result');
-      fetchWorkflowRunDetail(record.id);
+      fetchWorkflowRunDetail(record.workflow_run.id);
       return;
     }
     if (activeTab === 'annotations') {
@@ -1870,7 +1874,7 @@ const LogsPage: React.FC = () => {
                   </div>
                 )}
                 {workflowDetailTab === 'tracing' && (
-                  <CodeBlock title="执行追踪" content={JSON.stringify(workflowRunDetail.tracing || {}, null, 2)} />
+                  <CodeBlock title="执行追踪" content={JSON.stringify(workflowTracingList || [], null, 2)} />
                 )}
               </div>
             ) : (
