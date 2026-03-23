@@ -86,9 +86,23 @@ const CodeBlock: React.FC<{ title: string, content: string }> = ({ title, conten
         </div>
       </div>
       {isExpanded && (
-        <pre className={`p-3 text-xs text-gray-800 bg-white overflow-y-auto font-mono ${isFullView ? 'max-h-none' : 'max-h-40'}`}>
-          {content}
-        </pre>
+        <div className="bg-white">
+          <Editor
+            height={isFullView ? "400px" : "150px"}
+            defaultLanguage="json"
+            theme="light"
+            value={content}
+            options={{ 
+              readOnly: true, 
+              minimap: { enabled: false }, 
+              scrollBeyondLastLine: false,
+              fontSize: 12,
+              lineNumbers: 'on',
+              folding: true,
+              renderLineHighlight: 'none'
+            }}
+          />
+        </div>
       )}
     </div>
   );
@@ -126,38 +140,65 @@ const TracingNode = ({ trace, index }: { trace: any, index: number }) => {
           {trace.inputs && (
             <div>
               <div className="text-xs font-bold text-gray-500 mb-2">输入 (Inputs)</div>
-              <Editor
-                height="150px"
-                defaultLanguage="json"
-                theme="vs-dark"
-                value={JSON.stringify(trace.inputs, null, 2)}
-                options={{ readOnly: true, minimap: { enabled: false } }}
-              />
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <Editor
+                  height="150px"
+                  defaultLanguage="json"
+                  theme="light"
+                  value={JSON.stringify(trace.inputs, null, 2)}
+                  options={{ 
+                    readOnly: true, 
+                    minimap: { enabled: false }, 
+                    scrollBeyondLastLine: false,
+                    fontSize: 12,
+                    lineNumbers: 'on',
+                    renderLineHighlight: 'none'
+                  }}
+                />
+              </div>
             </div>
           )}
           {trace.process_data && (
             <div>
               <div className="text-xs font-bold text-gray-500 mb-2">处理数据 (Process Data)</div>
-              <Editor
-                height="150px"
-                defaultLanguage="json"
-                theme="vs-dark"
-                value={JSON.stringify(trace.process_data, null, 2)}
-                options={{ readOnly: true, minimap: { enabled: false } }}
-              />
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <Editor
+                  height="150px"
+                  defaultLanguage="json"
+                  theme="light"
+                  value={JSON.stringify(trace.process_data, null, 2)}
+                  options={{ 
+                    readOnly: true, 
+                    minimap: { enabled: false }, 
+                    scrollBeyondLastLine: false,
+                    fontSize: 12,
+                    lineNumbers: 'on',
+                    renderLineHighlight: 'none'
+                  }}
+                />
+              </div>
             </div>
           )}
           {trace.outputs && (
             <div>
               <div className="text-xs font-bold text-gray-500 mb-2">输出 (Outputs)</div>
               {trace.error && <div className="text-red-500 text-xs mb-2">错误提示: {trace.error}</div>}
-              <Editor
-                height="150px"
-                defaultLanguage="json"
-                theme="vs-dark"
-                value={JSON.stringify(trace.outputs, null, 2)}
-                options={{ readOnly: true, minimap: { enabled: false } }}
-              />
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <Editor
+                  height="150px"
+                  defaultLanguage="json"
+                  theme="light"
+                  value={JSON.stringify(trace.outputs, null, 2)}
+                  options={{ 
+                    readOnly: true, 
+                    minimap: { enabled: false }, 
+                    scrollBeyondLastLine: false,
+                    fontSize: 12,
+                    lineNumbers: 'on',
+                    renderLineHighlight: 'none'
+                  }}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -1921,9 +1962,23 @@ const LogsPage: React.FC = () => {
             ) : workflowRunDetail ? (
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                 {workflowDetailTab === 'result' && (
-                  <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                    {JSON.stringify(workflowRunDetail.outputs || {}, null, 2)}
-                  </pre>
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <Editor
+                      height="500px"
+                      defaultLanguage="json"
+                      theme="light"
+                      value={JSON.stringify(workflowRunDetail.outputs || {}, null, 2)}
+                      options={{ 
+                        readOnly: true, 
+                        minimap: { enabled: false }, 
+                        scrollBeyondLastLine: false,
+                        fontSize: 13,
+                        lineNumbers: 'on',
+                        renderLineHighlight: 'none',
+                        padding: { top: 16, bottom: 16 }
+                      }}
+                    />
+                  </div>
                 )}
                 {workflowDetailTab === 'detail' && (
                   <div className="space-y-6">
