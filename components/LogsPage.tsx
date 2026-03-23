@@ -1848,33 +1848,119 @@ const LogsPage: React.FC = () => {
             ) : workflowRunDetail ? (
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                 {workflowDetailTab === 'result' && (
-                  <CodeBlock title="执行结果" content={JSON.stringify(workflowRunDetail.outputs || {}, null, 2)} />
+                  <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    {JSON.stringify(workflowRunDetail.outputs || {}, null, 2)}
+                  </pre>
                 )}
                 {workflowDetailTab === 'detail' && (
                   <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500 block mb-1">状态</span>
-                        <span className="font-medium">{workflowRunDetail.status}</span>
+                    {/* Status Card */}
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-emerald-700 font-bold text-lg uppercase">{workflowRunDetail.status}</span>
                       </div>
-                      <div>
-                        <span className="text-gray-500 block mb-1">执行时间</span>
-                        <span className="font-medium">{workflowRunDetail.elapsed_time ? `${workflowRunDetail.elapsed_time.toFixed(3)}s` : '-'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500 block mb-1">消耗 Token</span>
-                        <span className="font-medium">{workflowRunDetail.total_tokens || 0}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500 block mb-1">版本</span>
-                        <span className="font-medium">{workflowRunDetail.version || '-'}</span>
+                      <div className="flex gap-8 text-sm">
+                        <div>
+                          <span className="text-emerald-600/60 block text-xs uppercase">运行时间</span>
+                          <span className="font-medium text-emerald-900">{workflowRunDetail.elapsed_time ? `${workflowRunDetail.elapsed_time.toFixed(3)}s` : '-'}</span>
+                        </div>
+                        <div>
+                          <span className="text-emerald-600/60 block text-xs uppercase">总 TOKEN 数</span>
+                          <span className="font-medium text-emerald-900">{workflowRunDetail.total_tokens || 0} Tokens</span>
+                        </div>
                       </div>
                     </div>
-                    <CodeBlock title="详细日志" content={JSON.stringify(workflowRunDetail.detail || {}, null, 2)} />
+
+                    {/* Input/Output */}
+                    <div className="space-y-4">
+                      <div className="bg-white border border-gray-200 rounded-xl p-4">
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输入</div>
+                        <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words">
+                          {JSON.stringify(workflowRunDetail.inputs || {}, null, 2)}
+                        </pre>
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded-xl p-4">
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输出</div>
+                        <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words">
+                          {JSON.stringify(workflowRunDetail.outputs || {}, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+
+                    {/* Metadata */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">元数据</div>
+                      <div className="grid grid-cols-2 gap-y-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">状态</span>
+                          <span className="font-medium ml-2">{workflowRunDetail.status}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">执行人</span>
+                          <span className="font-medium ml-2 text-xs font-mono">
+                            {workflowRunDetail.created_by_account?.name || workflowRunDetail.created_by_end_user?.id || '-'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">开始时间</span>
+                          <span className="font-medium ml-2">{workflowRunDetail.created_at ? dayjs(workflowRunDetail.created_at * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">运行时间</span>
+                          <span className="font-medium ml-2">{workflowRunDetail.elapsed_time ? `${workflowRunDetail.elapsed_time.toFixed(3)}s` : '-'}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">总 token 数</span>
+                          <span className="font-medium ml-2">{workflowRunDetail.total_tokens || 0}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">运行步骤</span>
+                          <span className="font-medium ml-2">{workflowRunDetail.total_steps || 0}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
                 {workflowDetailTab === 'tracing' && (
-                  <CodeBlock title="执行追踪" content={JSON.stringify(workflowTracingList || [], null, 2)} />
+                  <div className="space-y-4">
+                    {workflowTracingList && workflowTracingList.length > 0 ? (
+                      workflowTracingList.map((trace, index) => (
+                        <div key={trace.id || index} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">
+                              {index + 1}
+                            </div>
+                            <h3 className="text-base font-bold text-gray-900">{trace.title}</h3>
+                            <span className="ml-auto text-xs text-gray-400 font-mono">{trace.node_type}</span>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            {trace.inputs && Object.keys(trace.inputs).length > 0 && (
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输入</div>
+                                <pre className="text-xs text-gray-700 font-mono whitespace-pre-wrap break-words">
+                                  {JSON.stringify(trace.inputs, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                            {trace.outputs && Object.keys(trace.outputs).length > 0 && (
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输出</div>
+                                <pre className="text-xs text-gray-700 font-mono whitespace-pre-wrap break-words">
+                                  {JSON.stringify(trace.outputs, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
+                        <p>暂无追踪记录</p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
