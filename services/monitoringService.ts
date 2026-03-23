@@ -29,10 +29,13 @@ import {
   EmbeddingModelConfig,
   AnnotationItemBasic,
   WorkflowLogsResponse,
-  WorkflowLogsRequest
+  WorkflowLogsRequest,
+  WorkflowRunDetailResponse,
+  NodeTracingListResponse
 } from '../types';
 
-const API_BASE = 'http://192.168.1.201:5005'; // Based on MonitoringPage.tsx
+import { getBaseUrl } from './apiService';
+
 const API_PREFIX = '/console/api';
 
 async function request<T>(path: string, params?: Record<string, string>, method: 'GET' | 'POST' | 'DELETE' = 'GET', body?: any): Promise<T> {
@@ -49,7 +52,7 @@ async function request<T>(path: string, params?: Record<string, string>, method:
 
   const isFormData = body instanceof FormData;
   const headers: Record<string, string> = {
-    'x-target-base-url': API_BASE,
+    'x-target-base-url': getBaseUrl(),
     'Authorization': `Bearer ${token}`,
   };
 
@@ -419,6 +422,14 @@ export const monitoringService = {
       console.warn('Failed to fetch workflow logs, using mock data instead.', error);
       return { data: [], total: 0, has_more: false, limit: params.limit, page: params.page } as WorkflowLogsResponse;
     }
+  },
+
+  fetchRunDetail: async (appId: string, runId: string) => {
+    return request<WorkflowRunDetailResponse>(`/apps/${appId}/workflow-runs/${runId}`);
+  },
+
+  fetchTracingList: async (appId: string, runId: string) => {
+    return request<NodeTracingListResponse>(`/apps/${appId}/workflow-runs/${runId}/node-executions`);
   },
 
   getWorkflowRunDetail: async (appId: string, runId: string) => {

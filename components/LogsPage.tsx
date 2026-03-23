@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import BatchImportModal from './BatchImportModal';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Calendar, 
@@ -25,7 +24,9 @@ import {
   Edit3,
   RefreshCw,
   Trash2,
-  History
+  History,
+  Copy,
+  ChevronUp
 } from 'lucide-react';
 import { 
   Select, 
@@ -46,11 +47,45 @@ import {
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
 import { apiService } from '../services/apiService';
-import { LogItem, LogQuery, Message, AnnotationEnableStatus, EmbeddingModelConfig, AnnotationItem, AnnotationItemBasic, ModelTypeEnum } from '../types';
+import { LogItem, LogQuery, Message, AnnotationEnableStatus, EmbeddingModelConfig, AnnotationItem, AnnotationItemBasic, ModelTypeEnum, WorkflowRunDetailResponse, NodeTracing } from '../types';
 import dayjs from 'dayjs';
 import TimeRangeSelector from './TimeRangeSelector';
 import Markdown from 'react-markdown';
 import ModelSelect from './ModelSelect';
+import BatchImportModal from './BatchImportModal';
+
+// CodeBlock component for copy and expand
+const CodeBlock: React.FC<{ title: string, content: string }> = ({ title, content }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden my-2">
+      <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+        <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+          <button onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          {title}
+        </div>
+        <button onClick={handleCopy} className="text-gray-400 hover:text-gray-600">
+          {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+        </button>
+      </div>
+      {isExpanded && (
+        <pre className="p-3 text-xs text-gray-800 bg-white overflow-x-auto font-mono">
+          {content}
+        </pre>
+      )}
+    </div>
+  );
+};
 
 const STATUS_OPTIONS = [
   { label: '全部', value: 'all' },
@@ -116,7 +151,8 @@ const LogsPage: React.FC = () => {
   const [isAnnotationDetailOpen, setIsAnnotationDetailOpen] = useState(false);
   const [isWorkflowDetailOpen, setIsWorkflowDetailOpen] = useState(false);
   const [selectedWorkflowLog, setSelectedWorkflowLog] = useState<any>(null);
-  const [workflowRunDetail, setWorkflowRunDetail] = useState<any>(null);
+  const [workflowRunDetail, setWorkflowRunDetail] = useState<WorkflowRunDetailResponse | null>(null);
+  const [workflowTracingList, setWorkflowTracingList] = useState<NodeTracing[]>([]);
   const [workflowRunDetailLoading, setWorkflowRunDetailLoading] = useState(false);
   const [workflowDetailTab, setWorkflowDetailTab] = useState<'result' | 'detail' | 'tracing'>('result');
   const [annotationDetailTab, setAnnotationDetailTab] = useState<'reply' | 'history'>('reply');
@@ -373,10 +409,15 @@ const LogsPage: React.FC = () => {
     if (!app?.id) return;
     setWorkflowRunDetailLoading(true);
     try {
-      const detail = await monitoringService.getWorkflowRunDetail(app.id, runId);
+      const [detail, tracing] = await Promise.all([
+        monitoringService.fetchRunDetail(app.id, runId),
+        monitoringService.fetchTracingList(app.id, runId)
+      ]);
       setWorkflowRunDetail(detail);
+      setWorkflowTracingList(tracing.data);
     } catch (error) {
       console.error('Failed to fetch workflow run detail:', error);
+      message.error('获取工作流详情失败');
     } finally {
       setWorkflowRunDetailLoading(false);
     }
@@ -1071,7 +1112,7 @@ const LogsPage: React.FC = () => {
               pagination={false}
               loading={loading}
               className="custom-table"
-              scroll={{ x: 440, y: 'calc(100vh - 300px)' }}
+              scroll={{ x: 440, y: 'calc(100vh - 450px)' }}
               onRow={(record) => ({
                 onClick: () => handleRowClick(record),
                 className: `cursor-pointer transition-colors ${
@@ -1803,16 +1844,10 @@ const LogsPage: React.FC = () => {
             ) : workflowRunDetail ? (
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                 {workflowDetailTab === 'result' && (
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-800 mb-4">执行结果</h3>
-                    <pre className="bg-gray-50 p-4 rounded-lg text-xs text-gray-700 font-mono overflow-x-auto border border-gray-100">
-                      {JSON.stringify(workflowRunDetail.outputs, null, 2)}
-                    </pre>
-                  </div>
+                  <CodeBlock title="执行结果" content={JSON.stringify(workflowRunDetail.outputs || {}, null, 2)} />
                 )}
                 {workflowDetailTab === 'detail' && (
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-800 mb-4">执行详情</h3>
+                  <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-500 block mb-1">状态</span>
@@ -1831,16 +1866,11 @@ const LogsPage: React.FC = () => {
                         <span className="font-medium">{workflowRunDetail.version || '-'}</span>
                       </div>
                     </div>
+                    <CodeBlock title="详细日志" content={JSON.stringify(workflowRunDetail.detail || {}, null, 2)} />
                   </div>
                 )}
                 {workflowDetailTab === 'tracing' && (
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-800 mb-4">执行追踪</h3>
-                    <div className="text-gray-500 text-sm">
-                      {/* Placeholder for tracing UI */}
-                      追踪详情将在此处显示
-                    </div>
-                  </div>
+                  <CodeBlock title="执行追踪" content={JSON.stringify(workflowRunDetail.tracing || {}, null, 2)} />
                 )}
               </div>
             ) : (
