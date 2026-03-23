@@ -768,7 +768,7 @@ const LogsPage: React.FC = () => {
       key: 'created_by',
       render: (record: any) => (
         <span className="text-gray-500 text-sm truncate max-w-[200px] block">
-          {record.created_by_account?.name || record.created_by_end_user?.id || '未知'}
+          {record.created_by_end_user ? record.created_by_end_user.session_id : record.created_by_account ? record.created_by_account.name : "N/A"}
         </span>
       )
     }
