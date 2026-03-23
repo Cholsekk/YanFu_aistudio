@@ -99,6 +99,41 @@ const STATUS_OPTIONS = [
   { label: '未标注', value: 'not_annotated' },
 ];
 
+const TracingNode = ({ trace, index }: { trace: any, index: number }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  return (
+    <div key={trace.id || index} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div 
+        className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        {isExpanded ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${trace.status === 'succeeded' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+          {index + 1}
+        </div>
+        <h3 className="text-base font-bold text-gray-900">{trace.title}</h3>
+        <div className="ml-auto flex items-center gap-4">
+          <span className="text-xs text-gray-500 font-mono">{trace.elapsed_time ? `${trace.elapsed_time.toFixed(3)}s` : '-'}</span>
+          <span className={`text-xs px-2 py-1 rounded-full ${trace.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+            {trace.status}
+          </span>
+        </div>
+      </div>
+      
+      {isExpanded && (
+        <div className="p-4 border-t border-gray-100 space-y-4 bg-gray-50/50">
+          {trace.inputs && Object.keys(trace.inputs).length > 0 && (
+            <CodeBlock title="输入" content={JSON.stringify(trace.inputs, null, 2)} />
+          )}
+          {trace.outputs && Object.keys(trace.outputs).length > 0 && (
+            <CodeBlock title="输出" content={JSON.stringify(trace.outputs, null, 2)} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const WORKFLOW_STATUS_OPTIONS = [
   { label: 'All', value: 'all' },
   { label: 'Success', value: 'succeeded' },
@@ -1921,41 +1956,10 @@ const LogsPage: React.FC = () => {
                 {workflowDetailTab === 'tracing' && (
                   <div className="space-y-4">
                     {workflowTracingList && workflowTracingList.length > 0 ? (
-                      workflowTracingList.map((trace, index) => {
-                        const [isExpanded, setIsExpanded] = useState(false);
-                        return (
-                          <div key={trace.id || index} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                            <div 
-                              className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                              onClick={() => setIsExpanded(!isExpanded)}
-                            >
-                              {isExpanded ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${trace.status === 'succeeded' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                {index + 1}
-                              </div>
-                              <h3 className="text-base font-bold text-gray-900">{trace.title}</h3>
-                              <div className="ml-auto flex items-center gap-4">
-                                <span className="text-xs text-gray-500 font-mono">{trace.elapsed_time ? `${trace.elapsed_time.toFixed(3)}s` : '-'}</span>
-                                <span className={`text-xs px-2 py-1 rounded-full ${trace.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                                  {trace.status}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {isExpanded && (
-                              <div className="p-4 border-t border-gray-100 space-y-4 bg-gray-50/50">
-                                {trace.inputs && Object.keys(trace.inputs).length > 0 && (
-                                  <CodeBlock title="输入" content={JSON.stringify(trace.inputs, null, 2)} />
-                                )}
-                                {trace.outputs && Object.keys(trace.outputs).length > 0 && (
-                                  <CodeBlock title="输出" content={JSON.stringify(trace.outputs, null, 2)} />
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                    ) : (
+  workflowTracingList.map((trace, index) => (
+    <TracingNode key={trace.id || index} trace={trace} index={index} />
+  ))
+) : (
                       <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
                         <p>暂无追踪记录</p>
                       </div>
