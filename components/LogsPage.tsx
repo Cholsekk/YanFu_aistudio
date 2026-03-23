@@ -1895,7 +1895,7 @@ const LogsPage: React.FC = () => {
                         <div>
                           <span className="text-gray-500">执行人</span>
                           <span className="font-medium ml-2 text-xs font-mono">
-                            {workflowRunDetail.created_by_account?.name || workflowRunDetail.created_by_end_user?.id || '-'}
+                            {workflowRunDetail.created_by_account?.name || workflowRunDetail.created_by_end_user?.session_id || '-'}
                           </span>
                         </div>
                         <div>
