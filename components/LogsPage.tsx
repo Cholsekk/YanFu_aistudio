@@ -57,6 +57,7 @@ import BatchImportModal from './BatchImportModal';
 // CodeBlock component for copy and expand
 const CodeBlock: React.FC<{ title: string, content: string }> = ({ title, content }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isFullView, setIsFullView] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -74,12 +75,17 @@ const CodeBlock: React.FC<{ title: string, content: string }> = ({ title, conten
           </button>
           {title}
         </div>
-        <button onClick={handleCopy} className="text-gray-400 hover:text-gray-600">
-          {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setIsFullView(!isFullView)} className="text-xs text-gray-500 hover:text-blue-600">
+            {isFullView ? '收起' : '展开'}
+          </button>
+          <button onClick={handleCopy} className="text-gray-400 hover:text-gray-600">
+            {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+          </button>
+        </div>
       </div>
       {isExpanded && (
-        <pre className="p-3 text-xs text-gray-800 bg-white overflow-x-auto font-mono">
+        <pre className={`p-3 text-xs text-gray-800 bg-white overflow-y-auto font-mono ${isFullView ? 'max-h-none' : 'max-h-40'}`}>
           {content}
         </pre>
       )}
@@ -1874,18 +1880,8 @@ const LogsPage: React.FC = () => {
 
                     {/* Input/Output */}
                     <div className="space-y-4">
-                      <div className="bg-white border border-gray-200 rounded-xl p-4">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输入</div>
-                        <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words">
-                          {JSON.stringify(workflowRunDetail.inputs || {}, null, 2)}
-                        </pre>
-                      </div>
-                      <div className="bg-white border border-gray-200 rounded-xl p-4">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输出</div>
-                        <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap break-words">
-                          {JSON.stringify(workflowRunDetail.outputs || {}, null, 2)}
-                        </pre>
-                      </div>
+                      <CodeBlock title="输入" content={JSON.stringify(workflowRunDetail.inputs || {}, null, 2)} />
+                      <CodeBlock title="输出" content={JSON.stringify(workflowRunDetail.outputs || {}, null, 2)} />
                     </div>
 
                     {/* Metadata */}
@@ -1925,36 +1921,40 @@ const LogsPage: React.FC = () => {
                 {workflowDetailTab === 'tracing' && (
                   <div className="space-y-4">
                     {workflowTracingList && workflowTracingList.length > 0 ? (
-                      workflowTracingList.map((trace, index) => (
-                        <div key={trace.id || index} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">
-                              {index + 1}
+                      workflowTracingList.map((trace, index) => {
+                        const [isExpanded, setIsExpanded] = useState(false);
+                        return (
+                          <div key={trace.id || index} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            <div 
+                              className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                              onClick={() => setIsExpanded(!isExpanded)}
+                            >
+                              {isExpanded ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${trace.status === 'succeeded' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                                {index + 1}
+                              </div>
+                              <h3 className="text-base font-bold text-gray-900">{trace.title}</h3>
+                              <div className="ml-auto flex items-center gap-4">
+                                <span className="text-xs text-gray-500 font-mono">{trace.elapsed_time ? `${trace.elapsed_time.toFixed(3)}s` : '-'}</span>
+                                <span className={`text-xs px-2 py-1 rounded-full ${trace.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                  {trace.status}
+                                </span>
+                              </div>
                             </div>
-                            <h3 className="text-base font-bold text-gray-900">{trace.title}</h3>
-                            <span className="ml-auto text-xs text-gray-400 font-mono">{trace.node_type}</span>
-                          </div>
-                          
-                          <div className="space-y-4">
-                            {trace.inputs && Object.keys(trace.inputs).length > 0 && (
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输入</div>
-                                <pre className="text-xs text-gray-700 font-mono whitespace-pre-wrap break-words">
-                                  {JSON.stringify(trace.inputs, null, 2)}
-                                </pre>
-                              </div>
-                            )}
-                            {trace.outputs && Object.keys(trace.outputs).length > 0 && (
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">输出</div>
-                                <pre className="text-xs text-gray-700 font-mono whitespace-pre-wrap break-words">
-                                  {JSON.stringify(trace.outputs, null, 2)}
-                                </pre>
+                            
+                            {isExpanded && (
+                              <div className="p-4 border-t border-gray-100 space-y-4 bg-gray-50/50">
+                                {trace.inputs && Object.keys(trace.inputs).length > 0 && (
+                                  <CodeBlock title="输入" content={JSON.stringify(trace.inputs, null, 2)} />
+                                )}
+                                {trace.outputs && Object.keys(trace.outputs).length > 0 && (
+                                  <CodeBlock title="输出" content={JSON.stringify(trace.outputs, null, 2)} />
+                                )}
                               </div>
                             )}
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
                         <p>暂无追踪记录</p>
