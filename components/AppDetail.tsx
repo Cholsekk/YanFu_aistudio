@@ -158,25 +158,25 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header Section */}
-      <div className="border-b border-gray-200/60 px-6 py-3 flex items-center justify-between bg-white sticky top-0 z-10">
-        <div className="flex items-center gap-6">
+      <div className="border-b border-gray-200/60 px-4 py-2 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="flex items-center gap-3">
           <button 
             onClick={onBack}
             className="p-1 hover:bg-gray-100 rounded text-gray-400 transition-colors"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {renderAppIcon()}
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold text-gray-900" title={app.name}>
+              <div className="flex items-center gap-1">
+                <h1 className="text-sm font-bold text-gray-900" title={app.name}>
                   {app.name.length > 6 ? `${app.name.substring(0, 6)}...` : app.name}
                 </h1>
               </div>
               <div className="mt-0.5">
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getTypeColor()}`}>
+                <span className={`px-1 py-0.5 rounded text-[9px] font-bold border ${getTypeColor()}`}>
                   {app.typeLabel}
                 </span>
               </div>
@@ -185,12 +185,12 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
         </div>
 
         {/* Navigation Menu */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === tab.id 
                   ? 'bg-primary-50 text-primary-600' 
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
@@ -206,7 +206,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
       </div>
 
       {/* Content Section */}
-      <div className={`flex-grow bg-white overflow-auto relative ${['orchestrate', 'config'].includes(activeTab) ? 'p-0' : 'p-8'}`}>
+      <div className={`flex-grow bg-white overflow-auto relative ${['orchestrate', 'config'].includes(activeTab) ? 'p-0' : 'p-4'}`}>
         <AppDevHubContext.Provider value={app}>
           {renderContent()}
         </AppDevHubContext.Provider>

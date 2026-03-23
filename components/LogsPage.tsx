@@ -1071,7 +1071,7 @@ const LogsPage: React.FC = () => {
               pagination={false}
               loading={loading}
               className="custom-table"
-              scroll={{ x: 440 }}
+              scroll={{ x: 440, y: 'calc(100vh - 300px)' }}
               onRow={(record) => ({
                 onClick: () => handleRowClick(record),
                 className: `cursor-pointer transition-colors ${
