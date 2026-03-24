@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Search, 
   FileText, 
@@ -8,39 +8,87 @@ import {
   LayoutGrid, 
   Check, 
   Folder,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
-import { Input, Button, Tabs, Badge } from 'antd';
+import { Input, Button, Tabs, Badge, Spin } from 'antd';
 import Modal from './Modal';
-
-interface KnowledgeBase {
-  id: string;
-  name: string;
-  type: 'document' | 'database' | 'graph';
-  quality: string;
-  searchType: string;
-  count?: number;
-}
+import { apiService } from '../services/apiService';
+import { DataSet } from '../types';
 
 interface KnowledgeBaseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (selected: KnowledgeBase[]) => void;
+  onAdd: (selected: DataSet[]) => void;
 }
-
-const MOCK_KNOWLEDGE_BASES: KnowledgeBase[] = [
-  { id: 'kb-1', name: '青少年体质情况', type: 'document', quality: '高质量', searchType: '混合检索' },
-  { id: 'kb-2', name: '青少年体质', type: 'document', quality: '高质量', searchType: '混合检索' },
-  { id: 'kb-3', name: 'iotdb', type: 'database', quality: '高质量', searchType: '混合检索' },
-  { id: 'kb-4', name: 'iotdb升级', type: 'database', quality: '高质量', searchType: '混合检索' },
-  { id: 'kb-5', name: 'iotdb-v2', type: 'database', quality: '高质量', searchType: '向量检索' },
-  { id: 'kb-6', name: 'test3', type: 'document', quality: '高质量', searchType: '向量检索' },
-  { id: 'kb-7', name: 'test1', type: 'document', quality: '高质量', searchType: '向量检索' },
-];
 
 const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose, onAdd }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [datasets, setDatasets] = useState<DataSet[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const fetchDatasets = useCallback(async (pageNum: number, isLoadMore: boolean = false) => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const type = activeTab === 'all' ? undefined : activeTab;
+      // Map tab keys to API types if necessary
+      // doc -> document, database -> database, graph -> knowledge_graph
+      let apiType = type;
+      if (type === 'document') apiType = 'doc';
+      if (type === 'graph') apiType = 'knowledge_graph';
+
+      const response = await apiService.fetchDatasets({
+        page: pageNum,
+        limit: 20,
+        type: apiType,
+        // search: searchQuery // Assuming API supports search, but fetchDatasets params didn't show it. 
+        // If it doesn't, we might need to filter client-side or check if I should add it.
+      });
+
+      if (isLoadMore) {
+        setDatasets(prev => [...prev, ...response.data]);
+      } else {
+        setDatasets(response.data);
+      }
+      setHasMore(response.has_more);
+      setPage(pageNum);
+    } catch (error) {
+      console.error('Failed to fetch datasets:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, isLoading]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchDatasets(1, false);
+    }
+  }, [isOpen, activeTab]);
+
+  // Handle search with debounce
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      fetchDatasets(1, false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleScroll = () => {
+    if (!scrollContainerRef.current || isLoading || !hasMore) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    if (scrollTop + clientHeight >= scrollHeight - 20) {
+      fetchDatasets(page + 1, true);
+    }
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => 
@@ -49,18 +97,14 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
   };
 
   const handleAdd = () => {
-    const selected = MOCK_KNOWLEDGE_BASES.filter(kb => selectedIds.includes(kb.id));
+    const selected = datasets.filter(kb => selectedIds.includes(kb.id));
     onAdd(selected);
     onClose();
   };
 
-  const [activeTab, setActiveTab] = useState('all');
-
-  const filteredKBs = MOCK_KNOWLEDGE_BASES.filter(kb => {
-    const matchesSearch = kb.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === 'all' || kb.type === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  const filteredDatasets = datasets.filter(ds => 
+    ds.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const tabItems = [
     { key: 'all', label: '全部', icon: <LayoutGrid className="w-4 h-4" /> },
@@ -106,8 +150,12 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
         </div>
       </div>
 
-      <div className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-1.5">
-        {filteredKBs.map((kb) => (
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-grow overflow-y-auto p-4 custom-scrollbar space-y-1.5"
+      >
+        {filteredDatasets.map((kb) => (
           <div
             key={kb.id}
             onClick={() => toggleSelect(kb.id)}
@@ -131,7 +179,7 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-gray-400 bg-gray-100 px-1 py-0 rounded uppercase font-medium">
-                    {kb.quality} · {kb.searchType}
+                    {kb.indexing_technique === 'high_quality' ? '高质量' : '经济型'} · {kb.data_source_type}
                   </span>
                 </div>
               </div>
@@ -148,7 +196,13 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
           </div>
         ))}
         
-        {filteredKBs.length === 0 && (
+        {isLoading && (
+          <div className="py-4 flex justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+          </div>
+        )}
+
+        {filteredDatasets.length === 0 && !isLoading && (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-2 py-12">
             <Search className="w-12 h-12 opacity-10" />
             <p className="text-sm">未找到匹配的知识库</p>

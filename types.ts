@@ -870,6 +870,12 @@ export enum ChunkingMode {
   parentChild = 'hierarchical_model', // Parent-Child
 }
 
+export enum MetadataFilteringModeEnum {
+  disabled = 'disabled',
+  automatic = 'automatic',
+  manual = 'manual',
+}
+
 export type DataSet = {
   graph_id?: string
   id: string

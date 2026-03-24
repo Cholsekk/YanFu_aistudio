@@ -56,7 +56,7 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import VariableEditModal, { Variable } from './VariableEditModal';
-import { ModelTypeEnum, ModelParameterRule, ModelModeType } from '../types';
+import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
 
@@ -158,7 +158,8 @@ const AppConfig: React.FC = () => {
     annotation: false,
     attachment: false,
   });
-  const [metadataFilter, setMetadataFilter] = useState('disabled');
+  const [metadataFilter, setMetadataFilter] = useState<MetadataFilteringModeEnum>(MetadataFilteringModeEnum.disabled);
+  const [metadataModelConfig, setMetadataModelConfig] = useState<any>(null);
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
 
   useEffect(() => {
@@ -177,7 +178,9 @@ const AppConfig: React.FC = () => {
         setMessages(initialMessages);
       }
       if (config.enabledFeatures) setEnabledFeatures(config.enabledFeatures);
-      if (config.variableValues) setVariableValues(config.variableValues);
+      if (config.metadataFilter) setMetadataFilter(config.metadataFilter);
+      if (config.metadataModelConfig) setMetadataModelConfig(config.metadataModelConfig);
+      if (config.manualFilters) setManualFilters(config.manualFilters);
       return;
     }
 
@@ -227,6 +230,39 @@ const AppConfig: React.FC = () => {
     fetchDefaultModel();
   }, [app]);
 
+  const updateMetadataModelParam = (param: keyof ModelConfig | 'model_info', value: any, extra?: { provider?: string; rules?: ModelParameterRule[] }) => {
+    setMetadataModelConfig((prev: any) => {
+      const m = prev || { ...DEFAULT_MODEL, id: 'metadata-model', name: '', provider: '' };
+      if (param === 'model_info') {
+        const { provider, rules } = extra || { provider: '' };
+        return { 
+          ...m, 
+          name: value, 
+          provider: provider || m.provider,
+          rules: rules || m.rules,
+          // Reset params to defaults if rules are provided
+          ...(rules ? rules.reduce((acc: any, rule: any) => {
+            if (rule.default !== undefined) {
+              const keyMap: Record<string, keyof ModelConfig> = {
+                'temperature': 'temperature',
+                'top_p': 'topP',
+                'presence_penalty': 'presencePenalty',
+                'frequency_penalty': 'frequencyPenalty',
+                'max_tokens': 'maxTokens'
+              };
+              const configKey = keyMap[rule.name];
+              if (configKey) {
+                acc[configKey] = rule.default as any;
+              }
+            }
+            return acc;
+          }, {} as any) : {})
+        };
+      }
+      return { ...m, [param]: value };
+    });
+  };
+
   const onPublish = async () => {
     if (!appId) return;
     const hide = message.loading('正在发布配置...', 0);
@@ -238,6 +274,24 @@ const AppConfig: React.FC = () => {
         models,
         enabledFeatures,
         variableValues,
+        metadataFilter,
+        metadataModelConfig,
+        manualFilters,
+        // Backfill to the requested structure
+        dataset_configs: {
+          metadata_model_config: metadataFilter === MetadataFilteringModeEnum.automatic && metadataModelConfig ? {
+            provider: metadataModelConfig.provider,
+            name: metadataModelConfig.name,
+            mode: 'chat',
+            completion_params: {
+              temperature: metadataModelConfig.temperature,
+              top_p: metadataModelConfig.topP,
+              presence_penalty: metadataModelConfig.presencePenalty,
+              frequency_penalty: metadataModelConfig.frequencyPenalty,
+              max_tokens: metadataModelConfig.maxTokens,
+            }
+          } : null
+        }
       };
       await apiService.updateApp(appId, {
         name: app.name,
@@ -260,11 +314,11 @@ const AppConfig: React.FC = () => {
     setIsKBModalOpen(true);
   };
 
-  const handleKBAdd = (selected: any[]) => {
+  const handleKBAdd = (selected: DataSet[]) => {
     const newKBs = selected.map(kb => ({
       id: kb.id,
       name: kb.name,
-      count: Math.floor(Math.random() * 100) + 10
+      count: kb.document_count || 0
     }));
     setKnowledgeBases([...knowledgeBases, ...newKBs]);
   };
@@ -970,9 +1024,9 @@ const AppConfig: React.FC = () => {
                   size="small"
                   className="w-32"
                   options={[
-                    { value: 'disabled', label: '禁用', title: '禁用元数据过滤' },
-                    { value: 'auto', label: '自动', title: '根据用户查询自动生成元数据过滤条件' },
-                    { value: 'manual', label: '手动', title: '手动添加元数据过滤条件' }
+                    { value: MetadataFilteringModeEnum.disabled, label: '禁用', title: '禁用元数据过滤' },
+                    { value: MetadataFilteringModeEnum.automatic, label: '自动', title: '根据用户查询自动生成元数据过滤条件' },
+                    { value: MetadataFilteringModeEnum.manual, label: '手动', title: '手动添加元数据过滤条件' }
                   ]}
                   optionRender={(option) => (
                     <div className="py-1">
@@ -984,7 +1038,63 @@ const AppConfig: React.FC = () => {
               </div>
               
               <AnimatePresence>
-                {metadataFilter === 'manual' && (
+                {metadataFilter === MetadataFilteringModeEnum.automatic && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden space-y-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">推理模型</span>
+                      <ModelSelect
+                        className="w-40"
+                        value={metadataModelConfig?.name || ''}
+                        modelType={ModelTypeEnum.textGeneration}
+                        onChange={(m, provider, rules) => updateMetadataModelParam('model_info', m, { provider, rules })}
+                      />
+                    </div>
+                    
+                    {metadataModelConfig && (
+                      <div className="space-y-4 pt-2 border-t border-gray-100">
+                        {(metadataModelConfig.rules || [
+                          { label: { zh_Hans: '温度 (Temperature)', en_US: 'Temperature' }, name: 'temperature', min: 0, max: 2, type: 'slider', precision: 1 },
+                        ]).filter((rule: any) => ['temperature', 'top_p', 'max_tokens'].includes(rule.name)).map((rule: any) => {
+                          const keyMap: Record<string, keyof ModelConfig> = {
+                            'temperature': 'temperature',
+                            'top_p': 'topP',
+                            'max_tokens': 'maxTokens',
+                          };
+                          const configKey = keyMap[rule.name];
+                          if (!configKey) return null;
+                          
+                          const label = typeof rule.label === 'string' ? rule.label : (rule.label?.zh_Hans || rule.label?.en_US || rule.name);
+                          
+                          return (
+                            <div key={rule.name} className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-medium text-gray-400">{label}</span>
+                                <span className="text-[10px] font-bold text-primary-600 font-mono">
+                                  {metadataModelConfig[configKey]}
+                                </span>
+                              </div>
+                              <Slider 
+                                min={rule.min ?? 0} 
+                                max={rule.max ?? 1} 
+                                step={rule.precision ? 1 / Math.pow(10, rule.precision) : (rule.name === 'max_tokens' ? 1 : 0.1)} 
+                                value={metadataModelConfig[configKey]} 
+                                onChange={v => updateMetadataModelParam(configKey, v)}
+                                tooltip={{ open: false }}
+                                className="m-0 h-4"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+                {metadataFilter === MetadataFilteringModeEnum.manual && (
                   <motion.div 
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
