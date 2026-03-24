@@ -29,7 +29,8 @@ import {
   FileText,
   ArrowUpRight,
   Paperclip,
-  Trash2
+  Trash2,
+  HelpCircle
 } from 'lucide-react';
 import { 
   Input, 
@@ -73,6 +74,10 @@ interface ModelConfig {
   frequencyPenalty: number;
   maxTokens: number;
   responseFormat: string;
+  samplingStrategy?: boolean;
+  googleSearch?: boolean;
+  reasoningMode?: boolean;
+  requiredParams?: Record<string, boolean>;
   rules?: ModelParameterRule[];
 }
 
@@ -87,7 +92,21 @@ const DEFAULT_MODEL: ModelConfig = {
   presencePenalty: 0,
   frequencyPenalty: 0,
   maxTokens: 512,
-  responseFormat: 'text'
+  responseFormat: 'text',
+  samplingStrategy: true,
+  googleSearch: false,
+  reasoningMode: false,
+  requiredParams: {
+    temperature: true,
+    topP: false,
+    presencePenalty: false,
+    frequencyPenalty: false,
+    maxTokens: false,
+    responseFormat: false,
+    samplingStrategy: false,
+    googleSearch: false,
+    reasoningMode: false
+  }
 };
 
 interface KnowledgeBase {
@@ -428,16 +447,35 @@ const AppConfig: React.FC = () => {
     }
   };
 
-  const updateModelParam = (id: string, param: keyof ModelConfig | 'model_info', value: any, extra?: { provider: string; rules?: ModelParameterRule[] }) => {
+  const updateModelParam = (id: string, param: keyof ModelConfig | 'model_info' | 'required_param', value: any, extra?: { provider?: string; rules?: ModelParameterRule[]; paramName?: string }) => {
     setModels(models.map(m => {
       if (m.id === id) {
         if (param === 'model_info') {
           const { provider, rules } = extra || { provider: '' };
+          const requiredParams = rules ? rules.reduce((acc, rule) => {
+            const keyMap: Record<string, string> = {
+              'temperature': 'temperature',
+              'top_p': 'topP',
+              'presence_penalty': 'presencePenalty',
+              'frequency_penalty': 'frequencyPenalty',
+              'max_tokens': 'maxTokens',
+              'sampling_strategy': 'samplingStrategy',
+              'google_search': 'googleSearch',
+              'reasoning_mode': 'reasoningMode'
+            };
+            const configKey = keyMap[rule.name];
+            if (configKey) {
+              acc[configKey] = rule.required ?? false;
+            }
+            return acc;
+          }, {} as Record<string, boolean>) : m.requiredParams;
+
           return { 
             ...m, 
             name: value, 
             provider: provider || m.provider,
             rules: rules || m.rules,
+            requiredParams: requiredParams || m.requiredParams,
             // Reset params to defaults if rules are provided
             ...(rules ? rules.reduce((acc, rule) => {
               if (rule.default !== undefined) {
@@ -455,6 +493,37 @@ const AppConfig: React.FC = () => {
               }
               return acc;
             }, {} as any) : {})
+          };
+        }
+        if (param === 'required_param') {
+          const paramName = extra?.paramName;
+          if (!paramName) return m;
+          
+          // Also update the rules array if it exists to keep it in sync
+          const updatedRules = m.rules?.map(rule => {
+            const keyMap: Record<string, string> = {
+              'temperature': 'temperature',
+              'top_p': 'topP',
+              'presence_penalty': 'presencePenalty',
+              'frequency_penalty': 'frequencyPenalty',
+              'max_tokens': 'maxTokens',
+              'sampling_strategy': 'samplingStrategy',
+              'google_search': 'googleSearch',
+              'reasoning_mode': 'reasoningMode'
+            };
+            if (keyMap[rule.name] === paramName) {
+              return { ...rule, required: value };
+            }
+            return rule;
+          });
+
+          return {
+            ...m,
+            rules: updatedRules,
+            requiredParams: {
+              ...(m.requiredParams || {}),
+              [paramName]: value
+            }
           };
         }
         if (param === 'name') {
@@ -479,9 +548,25 @@ const AppConfig: React.FC = () => {
     if (!prompt.trim() || isAutoGenerating) return;
     setIsAutoGenerating(true);
     try {
+      const modelConfig = models[0];
+      const formattedModelConfig = modelConfig ? {
+        mode: app?.mode || 'chat',
+        name: modelConfig.name,
+        provider: modelConfig.provider,
+        completion_params: {
+          temperature: modelConfig.temperature,
+          top_p: modelConfig.topP,
+          presence_penalty: modelConfig.presencePenalty,
+          frequency_penalty: modelConfig.frequencyPenalty,
+          max_tokens: modelConfig.maxTokens,
+          stop: []
+        }
+      } : undefined;
+
       const res = await apiService.generateRule({
         instruction: prompt,
-        app_mode: app?.mode || 'chat'
+        app_mode: app?.mode || 'chat',
+        model_config: formattedModelConfig
       });
       if (res && res.prompt) {
         setPrompt(res.prompt);
@@ -1193,53 +1278,103 @@ const AppConfig: React.FC = () => {
                       {(model.rules || [
                         { label: { zh_Hans: '温度 (Temperature)', en_US: 'Temperature' }, name: 'temperature', min: 0, max: 2, type: 'slider', precision: 1 },
                         { label: { zh_Hans: 'Top P', en_US: 'Top P' }, name: 'top_p', min: 0, max: 1, type: 'slider', precision: 2 },
-                        { label: { zh_Hans: '存在惩罚', en_US: 'Presence Penalty' }, name: 'presence_penalty', min: -2, max: 2, type: 'slider', precision: 1 },
-                        { label: { zh_Hans: '频率惩罚', en_US: 'Frequency Penalty' }, name: 'frequency_penalty', min: -2, max: 2, type: 'slider', precision: 1 },
+                        { label: { zh_Hans: '采样策略', en_US: 'Sampling Strategy' }, name: 'sampling_strategy', type: 'boolean' },
                         { label: { zh_Hans: '最大标记 (Max Tokens)', en_US: 'Max Tokens' }, name: 'max_tokens', min: 1, max: 4096, type: 'slider', precision: 0 },
+                        { label: { zh_Hans: '联网搜索', en_US: 'Google Search' }, name: 'google_search', type: 'boolean' },
+                        { label: { zh_Hans: '推理模式', en_US: 'Reasoning Mode' }, name: 'reasoning_mode', type: 'boolean' },
                       ]).map((rule: any) => {
                         const keyMap: Record<string, keyof ModelConfig> = {
                           'temperature': 'temperature',
                           'top_p': 'topP',
                           'presence_penalty': 'presencePenalty',
                           'frequency_penalty': 'frequencyPenalty',
-                          'max_tokens': 'maxTokens'
+                          'max_tokens': 'maxTokens',
+                          'sampling_strategy': 'samplingStrategy',
+                          'do_sample': 'samplingStrategy',
+                          'google_search': 'googleSearch',
+                          'web_search': 'googleSearch',
+                          'reasoning_mode': 'reasoningMode',
+                          'thinking': 'reasoningMode',
+                          'response_format': 'responseFormat'
                         };
                         const configKey = keyMap[rule.name];
                         if (!configKey) return null;
                         
                         const label = typeof rule.label === 'string' ? rule.label : (rule.label?.zh_Hans || rule.label?.en_US || rule.name);
+                        const help = typeof rule.help === 'string' ? rule.help : (rule.help?.zh_Hans || rule.help?.en_US);
+                        const isRequired = model.requiredParams?.[configKey] ?? rule.required ?? false;
 
                         return (
                           <div key={rule.name} className="space-y-3">
                             <div className="flex justify-between items-center">
-                              <span className="text-xs font-semibold text-gray-500">{label}</span>
-                              <span className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-bold font-mono border border-primary-100">
-                                {(model as any)[configKey]}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-gray-500">{label}</span>
+                                {help && (
+                                  <Tooltip title={help}>
+                                    <HelpCircle className="w-3 h-3 text-gray-400 cursor-help" />
+                                  </Tooltip>
+                                )}
+                                <Tooltip title="是否必填">
+                                  <Switch 
+                                    size="small" 
+                                    checked={isRequired}
+                                    onChange={checked => updateModelParam(model.id, 'required_param', checked, { paramName: configKey })}
+                                  />
+                                </Tooltip>
+                              </div>
+                              {(rule.type === 'slider' || rule.type === 'float' || rule.type === 'int') && rule.min !== null && rule.max !== null && (
+                                <span className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-bold font-mono border border-primary-100">
+                                  {(model as any)[configKey]}
+                                </span>
+                              )}
                             </div>
-                            <Slider 
-                              min={rule.min ?? 0} 
-                              max={rule.max ?? 1} 
-                              step={rule.precision ? 1 / Math.pow(10, rule.precision) : (rule.name === 'max_tokens' ? 1 : 0.1)} 
-                              value={(model as any)[configKey]} 
-                              onChange={v => updateModelParam(model.id, configKey, v)}
-                              tooltip={{ open: false }}
-                              className="m-0"
-                            />
+                            
+                            {(rule.type === 'slider' || rule.type === 'float' || rule.type === 'int') && rule.min !== null && rule.max !== null ? (
+                              <Slider 
+                                min={rule.min ?? 0} 
+                                max={rule.max ?? 1} 
+                                step={rule.precision ? 1 / Math.pow(10, rule.precision) : (rule.name === 'max_tokens' ? 1 : 0.1)} 
+                                value={(model as any)[configKey]} 
+                                onChange={v => updateModelParam(model.id, configKey, v)}
+                                tooltip={{ open: false }}
+                                className="m-0"
+                              />
+                            ) : rule.type === 'boolean' ? (
+                              <div className="flex gap-2">
+                                <Button 
+                                  size="small" 
+                                  className={`flex-grow rounded-lg text-xs ${ (model as any)[configKey] ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-100 text-gray-400' }`}
+                                  onClick={() => updateModelParam(model.id, configKey, true)}
+                                >
+                                  True
+                                </Button>
+                                <Button 
+                                  size="small" 
+                                  className={`flex-grow rounded-lg text-xs ${ !(model as any)[configKey] ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-100 text-gray-400' }`}
+                                  onClick={() => updateModelParam(model.id, configKey, false)}
+                                >
+                                  False
+                                </Button>
+                              </div>
+                            ) : rule.type === 'string' && rule.options?.length > 0 ? (
+                              <Select 
+                                size="small" 
+                                value={(model as any)[configKey]} 
+                                className="w-full"
+                                onChange={v => updateModelParam(model.id, configKey, v)}
+                                options={rule.options.map((opt: any) => ({ value: opt, label: opt }))}
+                              />
+                            ) : (
+                              <Input 
+                                size="small"
+                                value={(model as any)[configKey]}
+                                onChange={e => updateModelParam(model.id, configKey, e.target.value)}
+                              />
+                            )}
                           </div>
                         );
                       })}
                       <Divider className="my-2" />
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-500">回复格式</span>
-                        <Select 
-                          size="small" 
-                          value={model.responseFormat} 
-                          className="w-28"
-                          onChange={v => updateModelParam(model.id, 'responseFormat', v)}
-                          options={[{ value: 'text', label: '文本' }, { value: 'json', label: 'JSON' }]}
-                        />
-                      </div>
                     </div>
                   </>
                 );
@@ -1275,6 +1410,7 @@ const AppConfig: React.FC = () => {
         isOpen={isPromptModalOpen} 
         onClose={() => setIsPromptModalOpen(false)} 
         onGenerate={(newPrompt) => setPrompt(newPrompt)}
+        modelConfig={models[0]}
       />
       
       <KnowledgeBaseModal 

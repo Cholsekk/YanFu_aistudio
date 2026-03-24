@@ -27,9 +27,10 @@ interface PromptGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerate: (prompt: string) => void;
+  modelConfig?: any;
 }
 
-const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onClose, onGenerate }) => {
+const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onClose, onGenerate, modelConfig }) => {
   const app = useAppDevHub();
   const [instruction, setInstruction] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -38,9 +39,24 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
     if (!instruction.trim()) return;
     setIsGenerating(true);
     try {
+      const formattedModelConfig = modelConfig ? {
+        mode: app?.mode || 'chat',
+        name: modelConfig.name,
+        provider: modelConfig.provider,
+        completion_params: {
+          temperature: modelConfig.temperature,
+          top_p: modelConfig.topP,
+          presence_penalty: modelConfig.presencePenalty,
+          frequency_penalty: modelConfig.frequencyPenalty,
+          max_tokens: modelConfig.maxTokens,
+          stop: []
+        }
+      } : undefined;
+
       const res = await apiService.generateRule({
         instruction: instruction,
-        app_mode: app?.mode || 'chat'
+        app_mode: app?.mode || 'chat',
+        model_config: formattedModelConfig
       });
       if (res && res.prompt) {
         onGenerate(res.prompt);
