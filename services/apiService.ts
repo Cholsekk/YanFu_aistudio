@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
+import { DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 export const getBaseUrl = () => {
@@ -1375,6 +1375,21 @@ class ApiService {
   }) {
     return this.get<Promise<any>>(`/apps/${appId}/messages/${messageId}`);
   }
+
+  async fetchDatasets(params: { page: number; ids?: string[]; limit?: number; type?: string, permission?: string }) {
+    return this.get<DataSetListResponse>('/datasets', params);
+  }
 }
 
 export const apiService = new ApiService();
+
+export const fetchDatasets: Fetcher<DataSetListResponse, {
+  url: string;
+  params: { page: number; ids?: string[]; limit?: number; type?: string, permission?: string }
+}> = ({
+        url,
+        params
+      }) => {
+  // type分别为“doc” “database” “knowledge_graph”，对应选择知识库面板发三种分类，全部的时候不传type
+  return apiService.fetchDatasets(params);
+}

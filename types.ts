@@ -1,11 +1,11 @@
 
-import type { 
+import type {
   Edge as ReactFlowEdge,
   Node as ReactFlowNode,
   Viewport,
-  XYPosition } from 'reactflow'
+  XYPosition
+} from 'reactflow'
 
-// 以下类型由于路径不存在，暂时定义为 any，请根据实际情况补充
 export enum TransferMethod {
   all = 'all',
   local_file = 'local_file',
@@ -74,7 +74,7 @@ export interface AppItem {
 export type AppBasicInfo = {
   id: string
   mode: AppMode
-  icon_type: string| null
+  icon_type: string | null
   icon: string
   icon_background: string
   icon_url: string
@@ -97,8 +97,8 @@ export type ExploreApp = {
   installed: boolean
   editable: boolean
   is_agent: boolean,
-  label_type?:string,
-  label_name?:string,
+  label_type?: string,
+  label_name?: string,
 }
 
 export type InstalledApp = {
@@ -424,7 +424,7 @@ export type WorkflowDailyConversationsResponse = {
 }
 
 export type AppStatisticsResponse = {
-  data: Array<{ date: string; [key: string]: any }>
+  data: Array<{ date: string;[key: string]: any }>
 }
 
 export type AppDailyEndUsersResponse = {
@@ -796,6 +796,130 @@ export type DefaultModelResponse = {
   }
 }
 
+export enum IndexingType {
+  QUALIFIED = 'high_quality',
+  ECONOMICAL = 'economy',
+}
+export enum RETRIEVE_METHOD {
+  semantic = 'semantic_search',
+  fullText = 'full_text_search',
+  hybrid = 'hybrid_search',
+  invertedIndex = 'invertedIndex',
+  keywordSearch = 'keyword_search',
+}
+export enum RerankingModeEnum {
+  RerankingModel = 'reranking_model',
+  WeightedScore = 'weighted_score',
+}
+export enum WeightedScoreEnum {
+  SemanticFirst = 'semantic_first',
+  KeywordFirst = 'keyword_first',
+  Customized = 'customized',
+}
+export type RetrievalConfig = {
+  search_method: RETRIEVE_METHOD
+  reranking_enable: boolean
+  reranking_model: {
+    reranking_provider_name: string
+    reranking_model_name: string
+  }
+  top_k: number
+  score_threshold_enabled: boolean
+  score_threshold: number
+  reranking_mode?: RerankingModeEnum
+  weights?: {
+    weight_type: WeightedScoreEnum
+    vector_setting: {
+      vector_weight: number
+      embedding_provider_name: string
+      embedding_model_name: string
+    }
+    keyword_setting: {
+      keyword_weight: number
+    }
+  }
+}
+export enum MetadataFilteringVariableType {
+  string = 'string',
+  number = 'number',
+  time = 'time',
+}
+export type MetadataInDoc = {
+  value: string
+  id: string
+  type: MetadataFilteringVariableType
+  name: string
+}
+export type Fetcher<T, P> = (params: P) => Promise<T>
+
+export enum DataSourceType {
+  FILE = 'upload_file',
+  NOTION = 'notion_import',
+  WEB = 'website_crawl',
+}
+
+export enum DatasetPermission {
+  onlyMe = 'only_me',
+  allTeamMembers = 'all_team_members',
+  partialMembers = 'partial_members',
+}
+
+export enum ChunkingMode {
+  text = 'text_model', // General text
+  qa = 'qa_model', // General QA
+  parentChild = 'hierarchical_model', // Parent-Child
+}
+
+export type DataSet = {
+  graph_id?: string
+  id: string
+  name: string
+  icon: string
+  icon_background: string
+  description: string
+  permission: DatasetPermission
+  data_source_type: DataSourceType
+  indexing_technique: IndexingType
+  created_by: string
+  updated_by: string
+  updated_at: number
+  app_count: number
+  doc_form: ChunkingMode
+  document_count: number
+  word_count: number
+  provider: string
+  favorite?: string
+  embedding_model: string
+  embedding_model_provider: string
+  embedding_available: boolean
+  retrieval_model_dict: RetrievalConfig
+  retrieval_model: RetrievalConfig
+  tags: Tag[]
+  partial_member_list?: string[]
+  external_knowledge_info: {
+    external_knowledge_id: string
+    external_knowledge_api_id: string
+    external_knowledge_api_name: string
+    external_knowledge_api_endpoint: string
+  }
+  external_retrieval_model: {
+    top_k: number
+    score_threshold: number
+    score_threshold_enabled: boolean
+  }
+  built_in_field_enabled: boolean
+  doc_metadata?: MetadataInDoc[]
+}
+
+
+export type DataSetListResponse = {
+  data: DataSet[]
+  has_more: boolean
+  limit: number
+  page: number
+  total: number
+}
+
 export type DefaultModel = {
   provider: string
   model: string
@@ -1059,7 +1183,7 @@ export interface LogItem {
     dislike: number;
   };
   model_config: {
-    model: string | { name: string; [key: string]: any } | null;
+    model: string | { name: string;[key: string]: any } | null;
     pre_prompt: string;
   };
 }
@@ -1207,7 +1331,7 @@ export interface McpProvider {
   server_url: string;
   updated_at: number;
   server_identifier: string;
-  
+
   // Keep these optional fields for UI/other API endpoints compatibility
   icon_type?: string;
   icon_background?: string;
@@ -1559,7 +1683,7 @@ export type MessageContent = {
   }>
   message_files: VisionFile[]
   metadata: Metadata
-  agent_thoughts: any[] 
+  agent_thoughts: any[]
   workflow_run_id: string
   parent_message_id: string | null
 }
@@ -1633,7 +1757,7 @@ export type CompletionConversationsRequest = {
   end: string
   annotation_status: string
   page: number
-  limit: number 
+  limit: number
 }
 
 /**
@@ -1811,7 +1935,7 @@ export type WorkflowLogsRequest = {
   keyword: string
   status: string
   page: number
-  limit: number 
+  limit: number
 }
 
 /**
