@@ -30,6 +30,7 @@ import {
   ArrowUpRight,
   Paperclip,
   Trash2,
+  Edit2,
   HelpCircle
 } from 'lucide-react';
 import { 
@@ -113,6 +114,16 @@ interface KnowledgeBase {
   id: string;
   name: string;
   count: number;
+  retrieval_config?: {
+    search_method: string;
+    reranking_model?: {
+      provider: string;
+      model: string;
+    };
+    top_k: number;
+    score_threshold: number;
+    reranking_enable: boolean;
+  };
 }
 
 const features = [
@@ -134,6 +145,10 @@ const AppConfig: React.FC = () => {
   const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
+  const [isKBModalOpen, setIsKBModalOpen] = useState(false);
+  const [isKBSettingsOpen, setIsKBSettingsOpen] = useState(false);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const [editingKB, setEditingKB] = useState<KnowledgeBase | null>(null);
   const [isMultiModel, setIsMultiModel] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
 
@@ -318,9 +333,33 @@ const AppConfig: React.FC = () => {
     const newKBs = selected.map(kb => ({
       id: kb.id,
       name: kb.name,
-      count: kb.document_count || 0
+      count: kb.document_count || 0,
+      retrieval_config: {
+        search_method: 'hybrid',
+        top_k: 3,
+        score_threshold: 0.5,
+        reranking_enable: false
+      }
     }));
     setKnowledgeBases([...knowledgeBases, ...newKBs]);
+  };
+
+  const handleKBEdit = (kb: KnowledgeBase) => {
+    setEditingKB(kb);
+    setIsKBSettingsOpen(true);
+  };
+
+  const updateKBSettings = (config: any) => {
+    if (!editingKB) return;
+    const updatedKB = {
+      ...editingKB,
+      retrieval_config: {
+        ...editingKB.retrieval_config!,
+        ...config
+      }
+    };
+    setEditingKB(updatedKB);
+    setKnowledgeBases(knowledgeBases.map(kb => kb.id === updatedKB.id ? updatedKB : kb));
   };
 
   const loadPreset = (preset: string) => {
@@ -743,8 +782,6 @@ const AppConfig: React.FC = () => {
   };
 
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
-  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
-  const [isKBModalOpen, setIsKBModalOpen] = useState(false);
 
   const handleAutoGenerate = async () => {
     if (!prompt.trim() || isAutoGenerating) return;
@@ -993,6 +1030,12 @@ const AppConfig: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover/kb:opacity-100 transition-opacity">
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          icon={<Edit2 className="w-3.5 h-3.5 text-gray-300 hover:text-primary-500" />} 
+                          onClick={() => handleKBEdit(kb)}
+                        />
                         <Button 
                           type="text" 
                           size="small" 
@@ -1687,7 +1730,101 @@ const AppConfig: React.FC = () => {
         isOpen={isKBModalOpen} 
         onClose={() => setIsKBModalOpen(false)} 
         onAdd={handleKBAdd}
+        excludeIds={knowledgeBases.map(kb => kb.id)}
       />
+
+      <Drawer
+        title="知识库设置"
+        placement="right"
+        onClose={() => setIsKBSettingsOpen(false)}
+        open={isKBSettingsOpen}
+        width={400}
+        extra={
+          <Button type="primary" onClick={() => setIsKBSettingsOpen(false)}>
+            确定
+          </Button>
+        }
+      >
+        {editingKB && (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-primary-600" />
+                <span className="font-bold text-gray-900">{editingKB.name}</span>
+              </div>
+              <p className="text-xs text-gray-500">{editingKB.count} 个分段</p>
+            </div>
+
+            <Divider className="my-4" />
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">召回策略</label>
+                <Select
+                  className="w-full"
+                  value={editingKB.retrieval_config?.search_method}
+                  onChange={(v) => updateKBSettings({ search_method: v })}
+                  options={[
+                    { value: 'hybrid', label: '多路召回' },
+                    { value: 'semantic', label: '向量检索' },
+                    { value: 'keyword', label: '全文检索' },
+                  ]}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">Top K</label>
+                  <span className="text-xs text-gray-500">{editingKB.retrieval_config?.top_k}</span>
+                </div>
+                <Slider
+                  min={1}
+                  max={20}
+                  value={editingKB.retrieval_config?.top_k}
+                  onChange={(v) => updateKBSettings({ top_k: v })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">分值阈值</label>
+                  <span className="text-xs text-gray-500">{editingKB.retrieval_config?.score_threshold}</span>
+                </div>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={editingKB.retrieval_config?.score_threshold}
+                  onChange={(v) => updateKBSettings({ score_threshold: v })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">重排序模型</label>
+                  <Switch
+                    size="small"
+                    checked={editingKB.retrieval_config?.reranking_enable}
+                    onChange={(v) => updateKBSettings({ reranking_enable: v })}
+                  />
+                </div>
+                {editingKB.retrieval_config?.reranking_enable && (
+                  <Select
+                    className="w-full"
+                    placeholder="选择重排序模型"
+                    value={editingKB.retrieval_config?.reranking_model?.model}
+                    onChange={(v) => updateKBSettings({ reranking_model: { provider: 'OpenAI', model: v } })}
+                    options={[
+                      { value: 'cohere-rerank-v3', label: 'Cohere Rerank V3' },
+                      { value: 'bge-reranker-v2', label: 'BGE Reranker V2' },
+                    ]}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Drawer>
 
       <VariableEditModal 
         isOpen={isVariableModalOpen} 

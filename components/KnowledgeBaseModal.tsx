@@ -20,9 +20,10 @@ interface KnowledgeBaseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (selected: DataSet[]) => void;
+  excludeIds?: string[];
 }
 
-const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose, onAdd }) => {
+const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose, onAdd, excludeIds }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [datasets, setDatasets] = useState<DataSet[]>([]);
@@ -68,6 +69,7 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
 
   useEffect(() => {
     if (isOpen) {
+      setSelectedIds([]);
       fetchDatasets(1, false);
     }
   }, [isOpen, activeTab]);
@@ -103,7 +105,8 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
   };
 
   const filteredDatasets = datasets.filter(ds => 
-    ds.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ds.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    !(excludeIds || []).includes(ds.id)
   );
 
   const tabItems = [
