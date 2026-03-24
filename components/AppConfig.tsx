@@ -121,8 +121,10 @@ const AppConfig: React.FC = () => {
   const handleVariableChange = (id: string, value: any) => {
     setVariableValues(prev => ({ ...prev, [id]: value }));
   };
-  const [models, setModels] = useState<ModelConfig[]>([]);
-  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string }[]>>({});
+  const [models, setModels] = useState<ModelConfig[]>([DEFAULT_MODEL]);
+  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string }[]>>({
+    [DEFAULT_MODEL.id]: []
+  });
   const [isStreaming, setIsStreaming] = useState<Record<string, boolean>>({});
   const [inputValue, setInputValue] = useState('');
   const [showParams, setShowParams] = useState<string | null>(null);
@@ -147,9 +149,10 @@ const AppConfig: React.FC = () => {
       if (config.variables) setVariables(config.variables);
       if (config.knowledgeBases) setKnowledgeBases(config.knowledgeBases);
       if (config.models) {
-        setModels(config.models);
+        const validModels = config.models.filter((m: any) => m && m.id);
+        setModels(validModels);
         const initialMessages: Record<string, any> = {};
-        config.models.forEach((m: any) => {
+        validModels.forEach((m: any) => {
           initialMessages[m.id] = [];
         });
         setMessages(initialMessages);
@@ -874,13 +877,13 @@ const AppConfig: React.FC = () => {
             <span className="text-sm font-bold text-gray-900">调试与预览</span>
           </div>
           <div className="flex items-center gap-4">
-            {!isMultiModel ? (
+            {models.length > 0 && !isMultiModel ? (
               <div className="flex items-center gap-3">
                 <ModelSelect
                   className="w-48"
-                  value={models[0].name}
+                  value={models[0]?.name || ''}
                   modelType={ModelTypeEnum.textGeneration}
-                  onChange={(m, provider, rules) => updateModelParam(models[0].id, 'model_info', m, { provider, rules })}
+                  onChange={(m, provider, rules) => updateModelParam(models[0]?.id || '', 'model_info', m, { provider, rules })}
                 />
                 <Tooltip title="添加模型对比">
                   <Button 
@@ -889,6 +892,7 @@ const AppConfig: React.FC = () => {
                     icon={<Plus className="w-4 h-4" />}
                     className="text-gray-400 hover:text-primary-600 transition-colors"
                     onClick={() => {
+                      if (models.length === 0) return;
                       const newId = `model-${Date.now()}`;
                       const firstModel = models[0];
                       const secondModel = { ...DEFAULT_MODEL, id: newId, name: '' };
@@ -917,8 +921,8 @@ const AppConfig: React.FC = () => {
                     type="text" 
                     size="small" 
                     icon={<Settings2 className="w-4 h-4" />}
-                    className={`text-gray-400 hover:text-primary-600 transition-colors ${showParams === models[0].id ? 'text-primary-600 bg-primary-50' : ''}`}
-                    onClick={() => setShowParams(showParams === models[0].id ? null : models[0].id)}
+                    className={`text-gray-400 hover:text-primary-600 transition-colors ${models[0] && showParams === models[0].id ? 'text-primary-600 bg-primary-50' : ''}`}
+                    onClick={() => models[0] && setShowParams(showParams === models[0].id ? null : models[0].id)}
                   />
                 </Tooltip>
               </div>
@@ -1024,7 +1028,7 @@ const AppConfig: React.FC = () => {
           <div className={`flex-grow max-w-[1400px] w-full mx-auto ${
             isMultiModel ? 'grid gap-4 grid-cols-2' : 'flex flex-col'
           }`}>
-            {(isMultiModel ? models : [models[0]]).map((model, index) => (
+            {(isMultiModel ? models : models.slice(0, 1)).map((model, index) => (
               <div 
                 key={model.id} 
                 className={`flex flex-col min-h-[400px] relative ${
