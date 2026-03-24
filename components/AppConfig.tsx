@@ -331,17 +331,134 @@ const AppConfig: React.FC = () => {
         query: query,
         conversation_id: '',
         model_config: {
-          provider: model.provider,
-          model: model.name,
-          completion_params: {
-            temperature: model.temperature,
-            top_p: model.topP,
-            presence_penalty: model.presencePenalty,
-            frequency_penalty: model.frequencyPenalty,
-            max_tokens: model.maxTokens,
-            response_format: model.responseFormat,
+          pre_prompt: prompt,
+          prompt_type: 'simple',
+          chat_prompt_config: {},
+          completion_prompt_config: {},
+          user_input_form: variables.map(v => ({
+            [v.type]: {
+              label: v.displayName || v.name,
+              variable: v.name,
+              required: v.required,
+              options: v.options || []
+            }
+          })),
+          dataset_query_variable: '',
+          opening_statement: '',
+          more_like_this: {
+            enabled: false
+          },
+          suggested_questions: [],
+          suggested_questions_after_answer: {
+            enabled: !!enabledFeatures.suggestion
+          },
+          text_to_speech: {
+            enabled: !!enabledFeatures.tts,
+            voice: '',
+            language: ''
+          },
+          speech_to_text: {
+            enabled: !!enabledFeatures.stt
+          },
+          retriever_resource: {
+            enabled: true
+          },
+          sensitive_word_avoidance: {
+            enabled: !!enabledFeatures.content_check,
+            type: '',
+            configs: []
+          },
+          agent_mode: {
+            enabled: false,
+            max_iteration: 5,
+            strategy: 'function_call',
+            tools: []
+          },
+          dataset_configs: {
+            retrieval_model: 'multiple',
+            top_k: 4,
+            reranking_mode: 'weighted_score',
+            weights: {
+              vector_setting: {
+                vector_weight: 1,
+                embedding_provider_name: 'ollama',
+                embedding_model_name: 'bge-m3:latest'
+              },
+              keyword_setting: {
+                keyword_weight: 0
+              }
+            },
+            reranking_enable: false,
+            datasets: {
+              datasets: knowledgeBases.map(kb => ({
+                dataset: {
+                  id: kb.id,
+                  name: kb.name
+                }
+              }))
+            }
+          },
+          file_upload: {
+            image: {
+              detail: 'high',
+              enabled: !!enabledFeatures.attachment,
+              number_limits: 3,
+              transfer_methods: [
+                'remote_url',
+                'local_file'
+              ]
+            },
+            enabled: !!enabledFeatures.attachment,
+            allowed_file_types: [
+              'image'
+            ],
+            allowed_file_extensions: [
+              '.JPG',
+              '.JPEG',
+              '.PNG',
+              '.GIF',
+              '.WEBP',
+              '.SVG'
+            ],
+            allowed_file_upload_methods: [
+              'remote_url',
+              'local_file'
+            ],
+            number_limits: 3,
+            fileUploadConfig: {
+              file_size_limit: 25,
+              batch_count_limit: 5,
+              image_file_size_limit: 10,
+              video_file_size_limit: 100,
+              audio_file_size_limit: 50
+            }
+          },
+          annotation_reply: {
+            enabled: !!enabledFeatures.annotation,
+            score_threshold: 0.9,
+            embedding_model: {
+              embedding_provider_name: 'zhipuai',
+              embedding_model_name: 'text_embedding'
+            }
+          },
+          supportAnnotation: !!enabledFeatures.annotation,
+          appId: appId,
+          supportCitationHitInfo: !!enabledFeatures.citation,
+          model: {
+            provider: model.provider,
+            name: model.name,
+            mode: app?.mode || 'chat',
+            completion_params: {
+              temperature: model.temperature,
+              top_p: model.topP,
+              presence_penalty: model.presencePenalty,
+              frequency_penalty: model.frequencyPenalty,
+              max_tokens: model.maxTokens,
+              response_format: model.responseFormat,
+            }
           }
-        }
+        },
+        parent_message_id: null
       };
 
       try {
