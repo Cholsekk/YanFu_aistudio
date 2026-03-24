@@ -1526,7 +1526,13 @@ const AppConfig: React.FC = () => {
       <PromptGeneratorModal 
         isOpen={isPromptModalOpen} 
         onClose={() => setIsPromptModalOpen(false)} 
-        onGenerate={(newPrompt) => setPrompt(newPrompt)}
+        onGenerate={(data) => {
+          setPrompt(data.prompt);
+          // Optionally handle variables and opening_statement if the app supports them
+          if (data.opening_statement) {
+            setEnabledFeatures(prev => ({ ...prev, opening: true }));
+          }
+        }}
         modelConfig={models[0]}
       />
       
