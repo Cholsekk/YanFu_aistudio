@@ -68,6 +68,7 @@ export interface AppItem {
   menuItems?: MenuItem[];
   mode?: AppMode;
   builtIn?: boolean;
+  config?: any;
 }
 
 export type AppBasicInfo = {
@@ -1912,4 +1913,119 @@ export type AgentLogDetailResponse = {
   meta: AgentLogMeta
   iterations: AgentIteration[]
   files: AgentLogFile[]
+}
+
+/**
+ * 自动化规则生成响应
+ */
+export type AutomaticRes = {
+  prompt: string // 提示文本
+  variables: string[] // 变量数组
+  opening_statement: string // 开场白
+  error?: string // 错误信息（可选）
+}
+
+/**
+ * 规则代码生成响应
+ */
+export type CodeGenRes = {
+  code: string // 生成的代码
+  language: string[] // 语言数组（注意：这里原定义可能有问题，应该是string而不是string[]）
+  error?: string // 错误信息（可选）
+}
+
+export type IOnDataMoreInfo = {
+  conversationId?: string
+  taskId?: string
+  messageId: string
+  errorMessage?: string
+  errorCode?: string
+}
+
+export type FileEntity = {
+  id: string
+  name: string
+  size: number
+  type: string
+  progress: number
+  transferMethod: TransferMethod
+  supportFileType: string
+  originalFile?: File
+  uploadedId?: string
+  base64Url?: string
+  url?: string
+}
+
+export type ThoughtItem = {
+  id: string
+  tool: string // plugin or dataset. May has multi.
+  thought: string
+  tool_input: string
+  tool_labels?: { [key: string]: TypeWithI18N }
+  message_id: string
+  observation: string
+  position: number
+  files?: string[]
+  message_files?: FileEntity[]
+}
+
+export type FileResponse = {
+  related_id: string
+  extension: string
+  filename: string
+  size: number
+  mime_type: string
+  transfer_method: TransferMethod
+  type: string
+  url: string
+  upload_file_id: string
+  remote_url: string
+}
+
+export type MessageEnd = {
+  id: string
+  metadata: Metadata
+  files?: FileResponse[]
+}
+
+export type MessageReplace = {
+  id: string
+  task_id: string
+  answer: string
+  conversation_id: string
+}
+
+export enum PromptRole {
+  system = 'system',
+  user = 'user',
+  assistant = 'assistant',
+}
+
+export type PromptItem = {
+  role?: PromptRole
+  text: string
+}
+
+export type IOnData = (message: string, isFirstMessage: boolean, moreInfo: IOnDataMoreInfo) => void
+export type IOnCompleted = (hasError?: boolean, errorMessage?: string) => void
+export type IOnFile = (file: VisionFile) => void
+export type IOnThought = (though: ThoughtItem) => void
+export type IOnMessageEnd = (messageEnd: MessageEnd) => void
+export type IOnMessageReplace = (messageReplace: MessageReplace) => void
+export type IOnError = (msg: string, code?: string) => void
+export type ChatPromptConfig = {
+  prompt: PromptItem[]
+}
+export type ConversationHistoriesRole = {
+  user_prefix: string
+  assistant_prefix: string
+}
+export type CompletionPromptConfig = {
+  prompt: PromptItem
+  conversation_histories_role: ConversationHistoriesRole
+}
+export enum ModelModeType {
+  'chat' = 'chat',
+  'completion' = 'completion',
+  'unset' = '',
 }

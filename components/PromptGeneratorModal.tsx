@@ -4,8 +4,10 @@ import {
   Sparkles, 
   Cpu
 } from 'lucide-react';
-import { Input, Button } from 'antd';
+import { Input, Button, message } from 'antd';
 import Modal from './Modal';
+import { apiService } from '../services/apiService';
+import { useAppDevHub } from '../context/AppContext';
 
 const { TextArea } = Input;
 
@@ -28,18 +30,28 @@ interface PromptGeneratorModalProps {
 }
 
 const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onClose, onGenerate }) => {
+  const app = useAppDevHub();
   const [instruction, setInstruction] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!instruction.trim()) return;
     setIsGenerating(true);
-    // Simulate generation
-    setTimeout(() => {
-      onGenerate(`[已优化提示词] ${instruction}`);
+    try {
+      const res = await apiService.generateRule({
+        instruction: instruction,
+        app_mode: app?.mode || 'chat'
+      });
+      if (res && res.prompt) {
+        onGenerate(res.prompt);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Failed to generate prompt:', error);
+      message.error('生成失败');
+    } finally {
       setIsGenerating(false);
-      onClose();
-    }, 1500);
+    }
   };
 
   return (

@@ -55,8 +55,9 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import VariableEditModal, { Variable } from './VariableEditModal';
-import { ModelTypeEnum, ModelParameterRule } from '../types';
+import { ModelTypeEnum, ModelParameterRule, ModelModeType } from '../types';
 import { apiService } from '../services/apiService';
+import { useAppDevHub } from '../context/AppContext';
 
 const { TextArea } = Input;
 
@@ -107,6 +108,8 @@ const features = [
 ];
 
 const AppConfig: React.FC = () => {
+  const app = useAppDevHub();
+  const appId = app?.id;
   const [prompt, setPrompt] = useState('');
   const [variables, setVariables] = useState<Variable[]>([]);
   const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
@@ -118,10 +121,8 @@ const AppConfig: React.FC = () => {
   const handleVariableChange = (id: string, value: any) => {
     setVariableValues(prev => ({ ...prev, [id]: value }));
   };
-  const [models, setModels] = useState<ModelConfig[]>([DEFAULT_MODEL]);
-  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string }[]>>({
-    [DEFAULT_MODEL.id]: []
-  });
+  const [models, setModels] = useState<ModelConfig[]>([]);
+  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string }[]>>({});
   const [isStreaming, setIsStreaming] = useState<Record<string, boolean>>({});
   const [inputValue, setInputValue] = useState('');
   const [showParams, setShowParams] = useState<string | null>(null);
@@ -140,6 +141,24 @@ const AppConfig: React.FC = () => {
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
 
   useEffect(() => {
+    if (app?.config) {
+      const config = app.config;
+      if (config.prompt) setPrompt(config.prompt);
+      if (config.variables) setVariables(config.variables);
+      if (config.knowledgeBases) setKnowledgeBases(config.knowledgeBases);
+      if (config.models) {
+        setModels(config.models);
+        const initialMessages: Record<string, any> = {};
+        config.models.forEach((m: any) => {
+          initialMessages[m.id] = [];
+        });
+        setMessages(initialMessages);
+      }
+      if (config.enabledFeatures) setEnabledFeatures(config.enabledFeatures);
+      if (config.variableValues) setVariableValues(config.variableValues);
+      return;
+    }
+
     const fetchDefaultModel = async () => {
       try {
         const res = await apiService.fetchDefaultModal(ModelTypeEnum.textGeneration);
@@ -184,14 +203,35 @@ const AppConfig: React.FC = () => {
       }
     };
     fetchDefaultModel();
-  }, []);
+  }, [app]);
 
-  const onPublish = () => {
+  const onPublish = async () => {
+    if (!appId) return;
     const hide = message.loading('正在发布配置...', 0);
-    setTimeout(() => {
-      hide();
+    try {
+      const config = {
+        prompt,
+        variables,
+        knowledgeBases,
+        models,
+        enabledFeatures,
+        variableValues,
+      };
+      await apiService.updateApp(appId, {
+        name: app.name,
+        icon_type: app.iconType,
+        icon: app.icon,
+        icon_background: app.iconBgColor,
+        description: app.description,
+        config: config
+      });
       message.success('配置发布成功！');
-    }, 1500);
+    } catch (error) {
+      console.error('Failed to publish:', error);
+      message.error('发布失败');
+    } finally {
+      hide();
+    }
   };
 
   const addKnowledgeBase = () => {
@@ -235,10 +275,10 @@ const AppConfig: React.FC = () => {
     models.forEach(model => scrollToBottom(model.id));
   }, [messages, models]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim() || Object.values(isStreaming).some(s => s)) return;
 
-    const userContent = inputValue;
+    const query = inputValue.trim();
     setInputValue('');
 
     // Add user message to configured models
@@ -246,14 +286,14 @@ const AppConfig: React.FC = () => {
       const next = { ...prev };
       models.forEach(model => {
         if (model.name) {
-          next[model.id] = [...(next[model.id] || []), { role: 'user', content: userContent }];
+          next[model.id] = [...(next[model.id] || []), { role: 'user', content: query }];
         }
       });
       return next;
     });
 
     // Start streaming for each configured model
-    models.forEach(model => {
+    models.forEach(async (model) => {
       if (!model.name) return;
       
       setIsStreaming(prev => ({ ...prev, [model.id]: true }));
@@ -264,31 +304,103 @@ const AppConfig: React.FC = () => {
         [model.id]: [...(prev[model.id] || []), { role: 'assistant', content: '' }]
       }));
 
-      const targetResponse = `这是来自 ${model.name} 的流式回复。为了模拟真实效果，我会逐字输出。在实际应用中，这里将对接真实的流式 API 接口。`;
-      let currentContent = "";
-      let charIndex = 0;
-
-      const interval = setInterval(() => {
-        setMessages(prev => {
-          const modelMsgs = [...(prev[model.id] || [])];
-          if (modelMsgs.length > 0) {
-            const lastMsg = modelMsgs[modelMsgs.length - 1];
-            if (lastMsg.role === 'assistant') {
-              // Append next character
-              const nextChar = targetResponse[charIndex];
-              if (nextChar !== undefined) {
-                currentContent += nextChar;
-                modelMsgs[modelMsgs.length - 1] = { ...lastMsg, content: currentContent };
-                charIndex++;
-              } else {
-                clearInterval(interval);
-                setIsStreaming(p => ({ ...p, [model.id]: false }));
-              }
-            }
+      const body = {
+        inputs: variableValues,
+        query: query,
+        conversation_id: '',
+        model_config: {
+          provider: model.provider,
+          model: model.name,
+          completion_params: {
+            temperature: model.temperature,
+            top_p: model.topP,
+            presence_penalty: model.presencePenalty,
+            frequency_penalty: model.frequencyPenalty,
+            max_tokens: model.maxTokens,
+            response_format: model.responseFormat,
           }
-          return { ...prev, [model.id]: modelMsgs };
-        });
-      }, 30);
+        }
+      };
+
+      try {
+        if (app?.mode === 'completion') {
+          await apiService.sendCompletionMessage(appId!, body, {
+            onData: (text) => {
+              setMessages(prev => {
+                const modelMsgs = [...(prev[model.id] || [])];
+                if (modelMsgs.length > 0) {
+                  const lastMsg = modelMsgs[modelMsgs.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    modelMsgs[modelMsgs.length - 1] = { ...lastMsg, content: lastMsg.content + text };
+                  }
+                }
+                return { ...prev, [model.id]: modelMsgs };
+              });
+            },
+            onCompleted: () => {
+              setIsStreaming(p => ({ ...p, [model.id]: false }));
+            },
+            onError: (err: any) => {
+              const errMsg = typeof err === 'string' ? err : (err?.message || 'Unknown error');
+              message.error(`Error: ${errMsg}`);
+              setIsStreaming(p => ({ ...p, [model.id]: false }));
+            },
+            onMessageReplace: (data) => {
+              setMessages(prev => {
+                const modelMsgs = [...(prev[model.id] || [])];
+                if (modelMsgs.length > 0) {
+                  const lastMsg = modelMsgs[modelMsgs.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    modelMsgs[modelMsgs.length - 1] = { ...lastMsg, content: data.answer || '' };
+                  }
+                }
+                return { ...prev, [model.id]: modelMsgs };
+              });
+            }
+          });
+        } else {
+          await apiService.sendChatMessage(appId!, body, {
+            onData: (text) => {
+              setMessages(prev => {
+                const modelMsgs = [...(prev[model.id] || [])];
+                if (modelMsgs.length > 0) {
+                  const lastMsg = modelMsgs[modelMsgs.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    modelMsgs[modelMsgs.length - 1] = { ...lastMsg, content: lastMsg.content + text };
+                  }
+                }
+                return { ...prev, [model.id]: modelMsgs };
+              });
+            },
+            onCompleted: () => {
+              setIsStreaming(p => ({ ...p, [model.id]: false }));
+            },
+            onThought: (data) => console.log('Thought:', data),
+            onFile: (data) => console.log('File:', data),
+            onError: (err: any) => {
+              const errMsg = typeof err === 'string' ? err : (err?.message || 'Unknown error');
+              message.error(`Error: ${errMsg}`);
+              setIsStreaming(p => ({ ...p, [model.id]: false }));
+            },
+            onMessageEnd: (data) => console.log('Message End:', data),
+            onMessageReplace: (data) => {
+              setMessages(prev => {
+                const modelMsgs = [...(prev[model.id] || [])];
+                if (modelMsgs.length > 0) {
+                  const lastMsg = modelMsgs[modelMsgs.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    modelMsgs[modelMsgs.length - 1] = { ...lastMsg, content: data.answer || '' };
+                  }
+                }
+                return { ...prev, [model.id]: modelMsgs };
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        setIsStreaming(p => ({ ...p, [model.id]: false }));
+      }
     });
   };
 
@@ -360,23 +472,24 @@ const AppConfig: React.FC = () => {
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [isKBModalOpen, setIsKBModalOpen] = useState(false);
 
-  const handleAutoGenerate = () => {
-    if (isAutoGenerating) return;
+  const handleAutoGenerate = async () => {
+    if (!prompt.trim() || isAutoGenerating) return;
     setIsAutoGenerating(true);
-    const targetPrompt = "你是一个专业的人工智能助手。请根据用户的输入，提供准确、简洁且有帮助的回答。你可以处理各种任务，包括代码编写、文本翻译、创意写作和逻辑分析。";
-    let currentText = "";
-    let index = 0;
-    
-    const interval = setInterval(() => {
-      if (index < targetPrompt.length) {
-        currentText += targetPrompt[index];
-        setPrompt(currentText);
-        index++;
-      } else {
-        clearInterval(interval);
-        setIsAutoGenerating(false);
+    try {
+      const res = await apiService.generateRule({
+        instruction: prompt,
+        app_mode: app?.mode || 'chat'
+      });
+      if (res && res.prompt) {
+        setPrompt(res.prompt);
+        message.success('提示词已优化');
       }
-    }, 30);
+    } catch (error) {
+      console.error('Failed to auto generate:', error);
+      message.error('优化失败');
+    } finally {
+      setIsAutoGenerating(false);
+    }
   };
 
   const resetChat = () => {

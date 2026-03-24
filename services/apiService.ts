@@ -1,4 +1,4 @@
-import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule } from '../types';
+import { ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 export const getBaseUrl = () => {
@@ -105,6 +105,93 @@ class ApiService {
       }
       
       throw error;
+    }
+  }
+
+  private async get<T>(endpoint: string, params: any = {}, options: any = {}): Promise<T> {
+    const queryString = new URLSearchParams(params as any).toString();
+    const fullUrl = queryString ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}` : endpoint;
+    return this.request(fullUrl, { ...options, method: 'GET' });
+  }
+
+  private async post<T>(endpoint: string, options: any = {}): Promise<T> {
+    return this.request(endpoint, { ...options, method: 'POST' });
+  }
+
+  private async ssePost(endpoint: string, options: any, callbacks: any) {
+    const { onData, onCompleted, onThought, onFile, onError, getAbortController, onMessageEnd, onMessageReplace } = callbacks;
+    const fullEndpoint = endpoint.startsWith(API_PREFIX) ? endpoint : `${API_PREFIX}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+    const baseUrl = getBaseUrl();
+    const url = `/api-proxy${fullEndpoint}`;
+    
+    const abortController = new AbortController();
+    if (getAbortController) {
+      getAbortController(abortController);
+    }
+
+    const headers = {
+      'x-target-base-url': baseUrl,
+      ...this.getAuthHeader(),
+      ...options.headers,
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+    } as Record<string, string>;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(options.body),
+        signal: abortController.signal,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `SSE Request Failed: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('ReadableStream not supported');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            if (dataStr === '[DONE]') {
+              if (onCompleted) onCompleted();
+              continue;
+            }
+            try {
+              const data = JSON.parse(dataStr);
+              // Handle different event types based on PDF callbacks
+              if (data.event === 'thought' && onThought) onThought(data);
+              else if (data.event === 'file' && onFile) onFile(data);
+              else if (data.event === 'message_end' && onMessageEnd) onMessageEnd(data);
+              else if (data.event === 'message_replace' && onMessageReplace) onMessageReplace(data);
+              else if (onData) onData(data);
+            } catch (e) {
+              console.error('Failed to parse SSE data:', e);
+            }
+          }
+        }
+      }
+      if (onCompleted) onCompleted();
+    } catch (error: any) {
+      if (error.name === 'AbortError') return;
+      if (onError) onError(error);
+      else throw error;
     }
   }
 
@@ -796,7 +883,8 @@ class ApiService {
     icon_background?: string; 
     description: string; 
     use_icon_as_answer_icon?: boolean; 
-    built_in?: boolean 
+    built_in?: boolean;
+    config?: any;
   }): Promise<any> {
     return this.request(`/apps/${appID}`, {
       method: 'PUT',
@@ -1187,6 +1275,105 @@ class ApiService {
   async fetchModelParameterRules(provider: string, model: string): Promise<{ data: ModelParameterRule[] }> {
     const response = await this.request(`/workspaces/current/model-providers/${provider}/models/parameter-rules?model=${model}`);
     return response;
+  }
+
+  // --- Chat and Completion APIs ---
+
+  async sendChatMessage(
+    appId: string,
+    body: Record<string, any>,
+    callbacks: {
+      onData: IOnData;
+      onCompleted: IOnCompleted;
+      onThought: IOnThought;
+      onFile: IOnFile;
+      onError: IOnError;
+      getAbortController?: (abortController: AbortController) => void;
+      onMessageEnd: IOnMessageEnd;
+      onMessageReplace: IOnMessageReplace;
+    }
+  ) {
+    return this.ssePost(`apps/${appId}/chat-messages`, {
+      body: {
+        ...body,
+        response_mode: 'streaming',
+      },
+    }, callbacks);
+  }
+
+  async stopChatMessageResponding(appId: string, taskId: string) {
+    return this.post(`apps/${appId}/chat-messages/${taskId}/stop`);
+  }
+
+  async sendCompletionMessage(
+    appId: string,
+    body: Record<string, any>,
+    callbacks: {
+      onData: IOnData;
+      onCompleted: IOnCompleted;
+      onError: IOnError;
+      onMessageReplace: IOnMessageReplace;
+    }
+  ) {
+    return this.ssePost(`apps/${appId}/completion-messages`, {
+      body: {
+        ...body,
+        response_mode: 'streaming',
+      },
+    }, callbacks);
+  }
+
+  async fetchSuggestedQuestions(appId: string, messageId: string, getAbortController?: any) {
+    return this.get(`apps/${appId}/chat-messages/${messageId}/suggested-questions`, {}, { getAbortController });
+  }
+
+  async fetchConversationMessages(appId: string, conversation_id: string, getAbortController?: any) {
+    return this.get(`apps/${appId}/chat-messages`, { conversation_id }, { getAbortController });
+  }
+
+  async generateRule(body: Record<string, any>) {
+    return this.post<AutomaticRes>('/rule-generate', { body });
+  }
+
+  async generateRuleCode(body: Record<string, any>) {
+    return this.post<CodeGenRes>('/rule-code-generate', { body });
+  }
+
+  async fetchModelParams(providerName: string, modelId: string) {
+    return this.get(`workspaces/current/model-providers/${providerName}/models/parameter-rules`, { model: modelId }) as Promise<{ data: ModelParameterRule[] }>;
+  }
+
+  async fetchPromptTemplate({
+    appMode,
+    mode,
+    modelName,
+    hasSetDataSet,
+  }: {
+    appMode: string;
+    mode: ModelModeType;
+    modelName: string;
+    hasSetDataSet: boolean;
+  }) {
+    return this.get<Promise<{
+      chat_prompt_config: ChatPromptConfig;
+      completion_prompt_config: CompletionPromptConfig;
+      stop: [];
+    }>>('/app/prompt-templates', {
+      app_mode: appMode,
+      model_mode: mode,
+      model_name: modelName,
+      has_context: hasSetDataSet,
+    });
+  }
+
+  async fetchTextGenerationMessage({
+    appId,
+    messageId,
+  }: {
+    appId: string;
+    messageId: string;
+  }) {
+    return this.get<Promise<any>>(`/apps/${appId}/messages/${messageId}`);
   }
 }
 
