@@ -359,12 +359,19 @@ const AppConfig: React.FC = () => {
               default: v.default || ''
             };
             
+            let typeKey = 'text-input';
             if (v.type === 'select') {
+              typeKey = 'select';
               baseConfig.options = v.options || [];
+            } else if (v.type === 'paragraph') {
+              typeKey = 'paragraph';
+            } else {
+              typeKey = 'text-input';
+              baseConfig.max_length = v.maxLength || 48;
             }
             
             return {
-              [v.type]: baseConfig
+              [typeKey]: baseConfig
             };
           }),
           dataset_query_variable: '',
@@ -803,7 +810,7 @@ const AppConfig: React.FC = () => {
                     id: `var-${Date.now()}`,
                     name: 'key',
                     displayName: '',
-                    type: 'text',
+                    type: 'text-input',
                     maxLength: 48,
                     required: true
                   });
@@ -836,10 +843,9 @@ const AppConfig: React.FC = () => {
                     >
                       <div className="col-span-4 flex items-center gap-2 text-sm text-gray-500">
                         <div className="flex items-center justify-center w-6 h-6 rounded bg-blue-50 text-blue-500">
-                          {v.type === 'text' && <Type className="w-3.5 h-3.5" />}
+                          {v.type === 'text-input' && <Type className="w-3.5 h-3.5" />}
                           {v.type === 'paragraph' && <AlignLeft className="w-3.5 h-3.5" />}
                           {v.type === 'select' && <CheckSquare className="w-3.5 h-3.5" />}
-                          {v.type === 'number' && <Hash className="w-3.5 h-3.5" />}
                         </div>
                         <span className="font-mono text-gray-700">{v.name || 'key'}</span>
                       </div>
@@ -1210,7 +1216,7 @@ const AppConfig: React.FC = () => {
                       {v.displayName || v.name}
                       {!v.required && <span className="text-gray-400 font-normal ml-1">(选填)</span>}
                     </div>
-                    {v.type === 'text' && (
+                    {v.type === 'text-input' && (
                       <Input 
                         placeholder={v.displayName || v.name} 
                         value={variableValues[v.id] || ''}
@@ -1225,15 +1231,6 @@ const AppConfig: React.FC = () => {
                         onChange={(e) => handleVariableChange(v.id, e.target.value)}
                         autoSize={{ minRows: 3, maxRows: 6 }}
                         className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-blue-500 rounded-lg transition-colors"
-                      />
-                    )}
-                    {v.type === 'number' && (
-                      <Input 
-                        type="number"
-                        placeholder={v.displayName || v.name} 
-                        value={variableValues[v.id] || ''}
-                        onChange={(e) => handleVariableChange(v.id, e.target.value)}
-                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-blue-500 h-10 rounded-lg transition-colors"
                       />
                     )}
                     {v.type === 'select' && (
@@ -1564,7 +1561,7 @@ const AppConfig: React.FC = () => {
                   id: `var-${Math.random().toString(36).substring(7)}`,
                   name: varName,
                   displayName: varName,
-                  type: 'text',
+                  type: 'text-input',
                   required: true,
                   maxLength: 48
                 });

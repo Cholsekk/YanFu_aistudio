@@ -23,7 +23,7 @@ interface VariableEditModalProps {
 
 const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, variable, onSave }) => {
   const [formData, setFormData] = useState<Partial<Variable>>({
-    type: 'text',
+    type: 'text-input',
     name: '',
     displayName: '',
     maxLength: 48,
@@ -42,7 +42,7 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
       });
     } else {
       setFormData({
-        type: 'text',
+        type: 'text-input',
         name: '',
         displayName: '',
         maxLength: 48,
@@ -61,7 +61,7 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
       id: variable?.id || Math.random().toString(36).substring(7),
       name: formData.name,
       displayName: formData.displayName,
-      type: formData.type || 'text',
+      type: formData.type || 'text-input',
       required: isRequired,
       maxLength: formData.maxLength,
       options: isSelect ? formData.options : undefined,
@@ -87,10 +87,9 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
   };
 
   const types = [
-    { id: 'text', label: '文本', icon: <Type className="w-5 h-5 mb-1" /> },
+    { id: 'text-input', label: '文本', icon: <Type className="w-5 h-5 mb-1" /> },
     { id: 'paragraph', label: '段落', icon: <AlignLeft className="w-5 h-5 mb-1" /> },
     { id: 'select', label: '下拉选项', icon: <CheckSquare className="w-5 h-5 mb-1" /> },
-    { id: 'number', label: '数字', icon: <Hash className="w-5 h-5 mb-1" /> },
   ];
 
   return (
