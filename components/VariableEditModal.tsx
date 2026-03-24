@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input, Checkbox, Button } from 'antd';
-import { Type, AlignLeft, CheckSquare, Hash } from 'lucide-react';
+import { Type, AlignLeft, CheckSquare, Hash, GripVertical, Trash2, Plus } from 'lucide-react';
 
 export interface Variable {
   id: string;
@@ -11,6 +11,7 @@ export interface Variable {
   options?: string[];
   required?: boolean;
   maxLength?: number;
+  default?: any;
 }
 
 interface VariableEditModalProps {
@@ -27,6 +28,7 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
     displayName: '',
     maxLength: 48,
     required: true,
+    options: [],
   });
 
   useEffect(() => {
@@ -35,6 +37,8 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
         ...variable,
         required: variable.required !== false,
         maxLength: variable.maxLength || 48,
+        options: variable.options || [],
+        default: variable.default || '',
       });
     } else {
       setFormData({
@@ -43,22 +47,43 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
         displayName: '',
         maxLength: 48,
         required: true,
+        options: [],
+        default: '',
       });
     }
   }, [variable, isOpen]);
 
   const handleSave = () => {
     if (!formData.name) return;
+    const isSelect = formData.type === 'select';
+    const isRequired = formData.required;
     onSave({
       id: variable?.id || Math.random().toString(36).substring(7),
       name: formData.name,
       displayName: formData.displayName,
       type: formData.type || 'text',
-      required: formData.required,
+      required: isRequired,
       maxLength: formData.maxLength,
-      options: formData.options,
+      options: isSelect ? formData.options : undefined,
+      default: (!isSelect && isRequired) ? (formData.default || '') : '',
     });
     onClose();
+  };
+
+  const addOption = () => {
+    const newOptions = [...(formData.options || []), `选项${(formData.options?.length || 0) + 1}`];
+    setFormData({ ...formData, options: newOptions });
+  };
+
+  const removeOption = (index: number) => {
+    const newOptions = formData.options?.filter((_, i) => i !== index);
+    setFormData({ ...formData, options: newOptions });
+  };
+
+  const updateOption = (index: number, value: string) => {
+    const newOptions = [...(formData.options || [])];
+    newOptions[index] = value;
+    setFormData({ ...formData, options: newOptions });
   };
 
   const types = [
@@ -87,7 +112,7 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
                 onClick={() => setFormData({ ...formData, type: t.id })}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
                   formData.type === t.id
-                    ? 'border-blue-500 bg-blue-50 text-blue-600'
+                    ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-[0_0_0_1px_rgba(59,130,246,0.5)]'
                     : 'border-gray-100 bg-gray-50/50 text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -118,27 +143,41 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
           />
         </div>
 
-        <div className="flex items-center gap-2 pt-2">
-          <Checkbox
-            checked={formData.required}
-            onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
-            className="font-bold text-gray-700"
-          >
-            必填
-          </Checkbox>
-        </div>
-
-        {formData.type === 'select' ? (
+        {formData.type === 'select' && (
           <div>
-            <div className="text-sm font-bold text-gray-700 mb-2">选项 (用逗号分隔)</div>
-            <Input
-              placeholder="选项1, 选项2, 选项3"
-              value={formData.options?.join(', ')}
-              onChange={(e) => setFormData({ ...formData, options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-              className="bg-gray-50 border-none h-10 rounded-lg focus:bg-white"
-            />
+            <div className="text-sm font-bold text-gray-700 mb-2">选项</div>
+            <div className="space-y-2">
+              {formData.options?.map((option, index) => (
+                <div key={index} className="flex items-center gap-2 group">
+                  <div className="flex items-center justify-center w-8 h-10 text-gray-400 cursor-grab active:cursor-grabbing">
+                    <GripVertical className="w-4 h-4" />
+                  </div>
+                  <Input
+                    value={option}
+                    onChange={(e) => updateOption(index, e.target.value)}
+                    className="flex-grow bg-white border-gray-200 h-10 rounded-lg focus:border-blue-500"
+                  />
+                  <Button
+                    type="text"
+                    icon={<Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-500" />}
+                    onClick={() => removeOption(index)}
+                    className="flex items-center justify-center w-10 h-10"
+                  />
+                </div>
+              ))}
+              <Button
+                type="text"
+                icon={<Plus className="w-4 h-4" />}
+                onClick={addOption}
+                className="w-full h-10 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 flex items-center justify-start px-4 border-none"
+              >
+                添加选项
+              </Button>
+            </div>
           </div>
-        ) : (
+        )}
+
+        {formData.type !== 'select' && formData.type !== 'number' && (
           <div>
             <div className="text-sm font-bold text-gray-700 mb-2">最大长度</div>
             <Input
@@ -149,6 +188,28 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
             />
           </div>
         )}
+
+        {formData.type !== 'select' && formData.required && (
+          <div>
+            <div className="text-sm font-bold text-gray-700 mb-2">默认值</div>
+            <Input
+              placeholder="请输入"
+              value={formData.default}
+              onChange={(e) => setFormData({ ...formData, default: e.target.value })}
+              className="bg-gray-50 border-none h-10 rounded-lg focus:bg-white"
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 pt-2">
+          <Checkbox
+            checked={formData.required}
+            onChange={(e) => setFormData({ ...formData, required: e.target.checked })}
+            className="font-bold text-gray-700"
+          >
+            必填
+          </Checkbox>
+        </div>
 
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
           <Button onClick={onClose} className="h-10 px-6 rounded-lg text-gray-600 hover:text-gray-900 border-gray-200">

@@ -300,6 +300,17 @@ const AppConfig: React.FC = () => {
   const handleSendMessage = async () => {
     if (!inputValue.trim() || Object.values(isStreaming).some(s => s)) return;
 
+    // Validate required variables
+    for (const v of variables) {
+      if (v.required) {
+        const val = variableValues[v.id];
+        if (val === undefined || val === null || val === '') {
+          message.error(`${v.displayName || v.name} 必填`);
+          return;
+        }
+      }
+    }
+
     const query = inputValue.trim();
     setInputValue('');
 
@@ -326,8 +337,13 @@ const AppConfig: React.FC = () => {
         [model.id]: [...(prev[model.id] || []), { role: 'assistant', content: '' }]
       }));
 
+      const inputs: Record<string, any> = {};
+      variables.forEach(v => {
+        inputs[v.name] = variableValues[v.id] || v.default || '';
+      });
+
       const body = {
-        inputs: variableValues,
+        inputs: inputs,
         query: query,
         conversation_id: '',
         model_config: {
@@ -335,14 +351,22 @@ const AppConfig: React.FC = () => {
           prompt_type: 'simple',
           chat_prompt_config: {},
           completion_prompt_config: {},
-          user_input_form: variables.map(v => ({
-            [v.type]: {
+          user_input_form: variables.map(v => {
+            const baseConfig: any = {
               label: v.displayName || v.name,
               variable: v.name,
               required: v.required,
-              options: v.options || []
+              default: v.default || ''
+            };
+            
+            if (v.type === 'select') {
+              baseConfig.options = v.options || [];
             }
-          })),
+            
+            return {
+              [v.type]: baseConfig
+            };
+          }),
           dataset_query_variable: '',
           opening_statement: '',
           more_like_this: {
@@ -1528,9 +1552,25 @@ const AppConfig: React.FC = () => {
         onClose={() => setIsPromptModalOpen(false)} 
         onGenerate={(data) => {
           setPrompt(data.prompt);
-          // Optionally handle variables and opening_statement if the app supports them
           if (data.opening_statement) {
             setEnabledFeatures(prev => ({ ...prev, opening: true }));
+          }
+          if (data.variables && data.variables.length > 0) {
+            // Add new variables that don't exist yet
+            const newVars: Variable[] = [...variables];
+            data.variables.forEach(varName => {
+              if (!newVars.find(v => v.name === varName)) {
+                newVars.push({
+                  id: `var-${Math.random().toString(36).substring(7)}`,
+                  name: varName,
+                  displayName: varName,
+                  type: 'text',
+                  required: true,
+                  maxLength: 48
+                });
+              }
+            });
+            setVariables(newVars);
           }
         }}
         modelConfig={models[0]}
@@ -1542,108 +1582,26 @@ const AppConfig: React.FC = () => {
         onAdd={handleKBAdd}
       />
 
-      <Modal
-        title={<span className="text-base font-bold text-gray-900">编辑变量</span>}
-        open={isVariableModalOpen}
-        onCancel={() => setIsVariableModalOpen(false)}
-        footer={null}
-        width={480}
-        className="custom-modal"
-      >
-        {editingVariable && (
-          <div className="space-y-6 pt-4">
-            {/* Field Type */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">字段类型</div>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { id: 'text', label: '文本', icon: <Type className="w-5 h-5 mb-1" /> },
-                  { id: 'paragraph', label: '段落', icon: <AlignLeft className="w-5 h-5 mb-1" /> },
-                  { id: 'select', label: '下拉选项', icon: <CheckSquare className="w-5 h-5 mb-1" /> },
-                  { id: 'number', label: '数字', icon: <Hash className="w-5 h-5 mb-1" /> }
-                ].map(type => (
-                  <div 
-                    key={type.id}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
-                      editingVariable.type === type.id 
-                        ? 'border-blue-500 bg-blue-50/50 text-blue-600' 
-                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                    }`}
-                    onClick={() => setEditingVariable({ ...editingVariable, type: type.id })}
-                  >
-                    {type.icon}
-                    <span className="text-xs">{type.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Variable Name */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">变量名称</div>
-              <Input 
-                placeholder="请输入" 
-                value={editingVariable.name}
-                onChange={e => setEditingVariable({ ...editingVariable, name: e.target.value })}
-                className="bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 hover:bg-gray-100 h-10 rounded-lg"
-              />
-            </div>
-
-            {/* Display Name */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">显示名称</div>
-              <Input 
-                placeholder="请输入" 
-                value={editingVariable.displayName}
-                onChange={e => setEditingVariable({ ...editingVariable, displayName: e.target.value })}
-                className="bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 hover:bg-gray-100 h-10 rounded-lg"
-              />
-            </div>
-
-            {/* Max Length */}
-            <div>
-              <div className="text-sm font-medium text-gray-700 mb-2">最大长度</div>
-              <Input 
-                type="number"
-                value={editingVariable.maxLength}
-                onChange={e => setEditingVariable({ ...editingVariable, maxLength: parseInt(e.target.value) || 0 })}
-                className="bg-gray-50 border-transparent focus:bg-white focus:border-blue-500 hover:bg-gray-100 h-10 rounded-lg"
-              />
-            </div>
-
-            {/* Required */}
-            <div className="flex items-center gap-2">
-              <Checkbox 
-                checked={editingVariable.required}
-                onChange={e => setEditingVariable({ ...editingVariable, required: e.target.checked })}
-              />
-              <span className="text-sm font-medium text-gray-700">必填</span>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-              <Button onClick={() => setIsVariableModalOpen(false)} className="h-9 rounded-lg px-5">取消</Button>
-              <Button 
-                type="primary" 
-                className="bg-blue-600 h-9 rounded-lg px-5"
-                onClick={() => {
-                  const existingIndex = variables.findIndex(v => v.id === editingVariable.id);
-                  if (existingIndex >= 0) {
-                    const newVars = [...variables];
-                    newVars[existingIndex] = editingVariable;
-                    setVariables(newVars);
-                  } else {
-                    setVariables([...variables, editingVariable]);
-                  }
-                  setIsVariableModalOpen(false);
-                }}
-              >
-                保存
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <VariableEditModal 
+        isOpen={isVariableModalOpen} 
+        onClose={() => setIsVariableModalOpen(false)} 
+        variable={editingVariable}
+        onSave={(updatedVar) => {
+          const existingIndex = variables.findIndex(v => v.id === updatedVar.id);
+          if (existingIndex >= 0) {
+            const newVars = [...variables];
+            newVars[existingIndex] = updatedVar;
+            setVariables(newVars);
+          } else {
+            setVariables([...variables, updatedVar]);
+            // Set default value if it exists
+            if (updatedVar.default !== undefined) {
+              setVariableValues(prev => ({ ...prev, [updatedVar.id]: updatedVar.default }));
+            }
+          }
+          setIsVariableModalOpen(false);
+        }}
+      />
     </div>
   );
 };

@@ -60,7 +60,8 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
       const res = await apiService.generateRule({
         instruction: instruction,
         app_mode: app?.mode || 'chat',
-        model_config: formattedModelConfig
+        model_config: formattedModelConfig,
+        no_variable: false
       });
       if (res && res.prompt) {
         setResult({
