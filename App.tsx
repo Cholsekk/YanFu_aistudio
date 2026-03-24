@@ -139,6 +139,8 @@ const App: React.FC = () => {
   };
 
   const lastRequestId = React.useRef(0);
+  const sentinelRef = React.useRef<HTMLDivElement>(null);
+  const topRef = React.useRef<HTMLDivElement>(null);
 
   const fetchApps = async (isLoadMore = false) => {
     if (activeNavTab !== 'app-dev') return;
@@ -313,18 +315,33 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [activeNavTab, activeFilterTab, searchQuery]);
 
-  // Infinite scroll and Back to Top listener
+  // Infinite scroll using IntersectionObserver for better compatibility in nested scroll contexts
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+        fetchApps(true);
+      }
+    }, {
+      rootMargin: '100px',
+    });
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
+
+    return () => {
+      if (sentinelRef.current) {
+        observer.unobserve(sentinelRef.current);
+      }
+    };
+  }, [hasMore, isLoading, isLoadingMore, activeNavTab, activeFilterTab, searchQuery, page]);
+
+  // Back to Top listener
   useEffect(() => {
     const handleScroll = () => {
-      // Infinite scroll
-      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100) {
-        if (hasMore && !isLoading && !isLoadingMore) {
-          fetchApps(true);
-        }
-      }
-
-      // Back to Top visibility (show after 2 screens)
-      if (window.scrollY > window.innerHeight * 2) {
+      // Use window.scrollY or document.documentElement.scrollTop for compatibility
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      if (scrollY > window.innerHeight * 2) {
         setShowBackToTop(true);
       } else {
         setShowBackToTop(false);
@@ -333,7 +350,7 @@ const App: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, isLoading, isLoadingMore, activeNavTab, activeFilterTab, searchQuery, page]);
+  }, []);
 
   // Check if any filter or non-default sort is active
   const isFiltered = useMemo(() => {
@@ -955,6 +972,7 @@ const App: React.FC = () => {
               加载更多...
             </div>
           )}
+          <div ref={sentinelRef} className="h-4 w-full" />
         </div>
       </>
     );
@@ -970,6 +988,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+      <div ref={topRef} />
       <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
 
       <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-6 py-8'}`}>
@@ -1015,7 +1034,7 @@ const App: React.FC = () => {
       {/* Back to Top Button */}
       {showBackToTop && (
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => topRef.current?.scrollIntoView({ behavior: 'smooth' })}
           className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-primary-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
           aria-label="Back to top"
         >
