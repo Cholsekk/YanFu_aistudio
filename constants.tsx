@@ -261,6 +261,33 @@ export const MOCK_TASKS: ScheduledTask[] = [
   },
 ];
 
+export const MOCK_DEPARTMENTS = [
+  { value: 'dept-1', label: '研发部' },
+  { value: 'dept-2', label: '产品部' },
+  { value: 'dept-3', label: '市场部' },
+];
+
+export const MOCK_ROLES = [
+  { value: 'role-1', label: '管理员' },
+  { value: 'role-2', label: '成员' },
+  { value: 'role-3', label: '访客' },
+];
+
+export const MOCK_MEMBERS = [
+  { id: 'user-1', name: 'szyl (你)', email: 'szyl@sl.hn.cn', role: 'role-1', dept: 'dept-1' },
+  { id: 'user-2', name: 'dddd', email: 'dddd@sl.hn.cn', role: 'role-2', dept: 'dept-2' },
+  { id: 'user-3', name: 'rrr', email: 'rrr@sl.hn.cn', role: 'role-2', dept: 'dept-1' },
+  { id: 'user-4', name: 'fenxi11111', email: 'fenxi@sl.hn.cn', role: 'role-3', dept: 'dept-3' },
+  { id: 'user-5', name: 'admin', email: 'admin@sl.hn.cn', role: 'role-1', dept: 'dept-1' },
+  { id: 'user-6', name: 'micky123', email: 'micky@sl.hn.cn', role: 'role-2', dept: 'dept-2' },
+];
+
+export interface PartialTeamData {
+  roles: string[];
+  departments: string[];
+  members: string[];
+}
+
 export const getIcon = (name: string, className?: string) => {
   const IconComponent = (LucideIcons as any)[name];
   if (IconComponent) {

@@ -31,7 +31,11 @@ import {
   Paperclip,
   Trash2,
   Edit2,
-  HelpCircle
+  HelpCircle,
+  Check,
+  BookOpen,
+  Sun,
+  LayoutGrid
 } from 'lucide-react';
 import { 
   Input, 
@@ -60,6 +64,8 @@ import VariableEditModal, { Variable } from './VariableEditModal';
 import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
+
+import { PartialTeamMembersSelector } from './PartialTeamMembersSelector';
 
 const { TextArea } = Input;
 
@@ -1827,26 +1833,24 @@ const AppConfig: React.FC = () => {
           <div className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <Database className="w-4 h-4 text-blue-500" /> 知识库名称
-                </label>
+                <label className="text-sm font-medium text-gray-900">知识库名称</label>
                 <Input 
                   value={editingKB.name} 
                   onChange={(e) => updateKBSettings({ name: e.target.value })}
+                  className="bg-gray-50 border-gray-200"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-blue-500" /> 知识库描述
-                </label>
+                <label className="text-sm font-medium text-gray-900">知识库描述</label>
                 <Input.TextArea 
                   value={editingKB.description} 
                   onChange={(e) => updateKBSettings({ description: e.target.value })}
                   rows={3}
                   placeholder="请输入知识库描述..."
+                  className="bg-gray-50 border-gray-200"
                 />
-                <div className="text-xs text-gray-400 flex items-center gap-1">
-                  <span className="i-lucide-book-open w-3 h-3" /> 了解如何编写更好的知识库描述。
+                <div className="text-xs text-gray-500 flex items-center gap-1">
+                  <BookOpen className="w-3 h-3" /> 了解如何编写更好的知识库描述。
                 </div>
               </div>
             </div>
@@ -1855,9 +1859,7 @@ const AppConfig: React.FC = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <span className="i-lucide-shield-check w-4 h-4 text-green-500" /> 可见权限
-                </label>
+                <label className="text-sm font-medium text-gray-900">可见权限</label>
                 <Select
                   className="w-full"
                   value={editingKB.permission}
@@ -1872,56 +1874,84 @@ const AppConfig: React.FC = () => {
 
               {editingKB.permission === 'partial_members' && (
                 <div className="p-4 bg-blue-50 rounded-lg space-y-4 border border-blue-100">
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-blue-600 uppercase">部门</label>
-                    <Select
-                      mode="multiple"
-                      className="w-full"
-                      placeholder="选择部门"
-                      value={editingKB.partial_team_data?.departments}
-                      onChange={(v) => updateKBSettings({ 
-                        partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), departments: v } 
-                      })}
-                      options={[
-                        { value: 'dept-1', label: '研发部' },
-                        { value: 'dept-2', label: '产品部' },
-                        { value: 'dept-3', label: '市场部' },
-                      ]}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-blue-600 uppercase">角色</label>
+                      <Select
+                        mode="multiple"
+                        className="w-full"
+                        placeholder="选择角色"
+                        value={editingKB.partial_team_data?.roles}
+                        onChange={(v) => {
+                          // TODO: 补充从接口获取角色列表的逻辑
+                          // TODO: 补充根据角色/部门自动勾选成员的逻辑
+                          updateKBSettings({ 
+                            partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), roles: v } 
+                          });
+                        }}
+                        options={[
+                          { value: 'role-1', label: '管理员' },
+                          { value: 'role-2', label: '成员' },
+                        ]}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-blue-600 uppercase">部门</label>
+                      <Select
+                        mode="multiple"
+                        className="w-full"
+                        placeholder="选择部门"
+                        value={editingKB.partial_team_data?.departments}
+                        onChange={(v) => {
+                          // TODO: 补充从接口获取部门列表的逻辑
+                          // TODO: 补充根据角色/部门自动勾选成员的逻辑
+                          updateKBSettings({ 
+                            partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), departments: v } 
+                          });
+                        }}
+                        options={[
+                          { value: 'dept-1', label: '研发部' },
+                          { value: 'dept-2', label: '产品部' },
+                        ]}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-blue-600 uppercase">角色</label>
-                    <Select
-                      mode="multiple"
-                      className="w-full"
-                      placeholder="选择角色"
-                      value={editingKB.partial_team_data?.roles}
-                      onChange={(v) => updateKBSettings({ 
-                        partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), roles: v } 
-                      })}
-                      options={[
-                        { value: 'role-1', label: '管理员' },
-                        { value: 'role-2', label: '成员' },
-                        { value: 'role-3', label: '访客' },
-                      ]}
-                    />
-                  </div>
+                  
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-blue-600 uppercase">成员</label>
-                    <Select
-                      mode="multiple"
-                      className="w-full"
-                      placeholder="选择成员"
-                      value={editingKB.partial_team_data?.members}
-                      onChange={(v) => updateKBSettings({ 
-                        partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), members: v } 
-                      })}
-                      options={[
-                        { value: 'user-1', label: 'szyl (你)' },
-                        { value: 'user-2', label: 'dddd' },
-                        { value: 'user-3', label: 'rrr' },
-                      ]}
-                    />
+                    <Input.Search placeholder="搜索用户" className="mb-2" />
+                    <div className="max-h-60 overflow-y-auto custom-scrollbar border rounded-md bg-white p-2 space-y-1">
+                      {/* TODO: 补充从接口获取成员列表的逻辑 */}
+                      {[
+                        { id: 'user-1', name: 'szyl (你)', email: 'szyl@sl.hn.cn' },
+                        { id: 'user-2', name: 'dddd', email: '' },
+                        { id: 'user-3', name: 'rrr', email: 'jiaoxu043@gmail.com' },
+                      ].map(user => (
+                        <div 
+                          key={user.id}
+                          className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-gray-100 ${editingKB.partial_team_data?.members?.includes(user.id) ? 'bg-blue-50' : ''}`}
+                          onClick={() => {
+                            const newMembers = editingKB.partial_team_data?.members?.includes(user.id)
+                              ? editingKB.partial_team_data.members.filter(m => m !== user.id)
+                              : [...(editingKB.partial_team_data?.members || []), user.id];
+                            updateKBSettings({ 
+                              partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), members: newMembers } 
+                            });
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs">
+                              {user.name.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{user.name}</div>
+                              <div className="text-xs text-gray-400">{user.email}</div>
+                            </div>
+                          </div>
+                          {editingKB.partial_team_data?.members?.includes(user.id) && <Check className="w-4 h-4 text-blue-500" />}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1931,45 +1961,75 @@ const AppConfig: React.FC = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <span className="i-lucide-layers w-4 h-4 text-purple-500" /> 索引模式
-                </label>
+                <label className="text-sm font-medium text-gray-900">索引模式</label>
                 <div className="grid grid-cols-2 gap-4">
                   <div 
-                    className={`p-3 border rounded-lg cursor-pointer ${editingKB.indexing_technique === 'high_quality' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.indexing_technique === 'high_quality' ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
                     onClick={() => updateKBSettings({ indexing_technique: 'high_quality' })}
                   >
-                    <div className="font-medium text-sm text-gray-900 flex items-center gap-1">
-                      <span className="i-lucide-sun w-4 h-4 text-orange-500" /> 高质量
+                    <div className="flex items-center gap-2 font-medium text-sm text-gray-900 mb-1">
+                      <Sun className="w-4 h-4 text-orange-500" /> 高质量
+                      {editingKB.indexing_technique === 'high_quality' && <Check className="w-4 h-4 text-blue-600 ml-auto" />}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">调用 Embedding 模型进行处理，在用户查询时提供更高的准确度。</div>
+                    <div className="text-xs text-gray-500">调用 Embedding 模型进行处理，在用户查询时提供更高的准确度。</div>
                   </div>
                   <div 
-                    className={`p-3 border rounded-lg cursor-pointer ${editingKB.indexing_technique === 'economy' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.indexing_technique === 'economy' ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
                     onClick={() => updateKBSettings({ indexing_technique: 'economy' })}
                   >
-                    <div className="font-medium text-sm text-gray-900 flex items-center gap-1">
-                      <span className="i-lucide-box w-4 h-4 text-blue-500" /> 经济
+                    <div className="flex items-center gap-2 font-medium text-sm text-gray-900 mb-1">
+                      <Database className="w-4 h-4 text-blue-500" /> 经济
+                      {editingKB.indexing_technique === 'economy' && <Check className="w-4 h-4 text-blue-600 ml-auto" />}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">使用离线的向量引擎、关键词索引等方式，降低了准确度但无需花费 Token。</div>
+                    <div className="text-xs text-gray-500">使用离线的向量引擎、关键词索引等方式，降低了准确度但无需花费 Token。</div>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Embedding 模型</label>
-                <Input value={editingKB.embedding_model} disabled className="bg-gray-50" />
-                <div className="text-xs text-gray-400">修改 Embedding 模型，请去<a href="#" className="text-blue-500">设置</a></div>
+                <label className="text-sm font-medium text-gray-900">Embedding 模型</label>
+                <Input value={editingKB.embedding_model} disabled className="bg-gray-50 border-gray-200" />
+                <div className="text-xs text-gray-500">修改 Embedding 模型，请去<a href="#" className="text-blue-500 hover:underline">设置</a></div>
               </div>
             </div>
 
             <Divider className="my-4" />
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <span className="i-lucide-search w-4 h-4 text-orange-500" /> 检索设置
-                </label>
-                <a href="#" className="text-xs text-blue-500">了解更多关于检索方法。</a>
+              <label className="text-sm font-medium text-gray-900">检索设置</label>
+              <div className="text-xs text-blue-500 hover:underline cursor-pointer mb-2">了解更多关于检索方法。</div>
+              <div className="border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 font-medium text-sm text-gray-900 mb-4">
+                  <LayoutGrid className="w-4 h-4 text-blue-600" /> 向量检索
+                </div>
+                <div className="text-xs text-gray-500 mb-4">通过生成查询嵌入并查询与其向量表示最相似的文本分段</div>
+                
+                <div className="flex items-center gap-2 mb-4">
+                  <Switch size="small" />
+                  <span className="text-sm text-gray-900">Rerank 模型</span>
+                </div>
+                
+                <Select
+                  className="w-full mb-4"
+                  defaultValue="gte-rerank"
+                  options={[{ value: 'gte-rerank', label: 'gte-rerank' }]}
+                />
+                
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>Top K</span>
+                      <span>3</span>
+                    </div>
+                    <Slider defaultValue={3} min={1} max={10} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>Score 阈值</span>
+                      <span>0.5</span>
+                    </div>
+                    <Slider defaultValue={0.5} min={0} max={1} step={0.1} />
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-3">
