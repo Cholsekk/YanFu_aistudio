@@ -217,7 +217,14 @@ const AppConfig: React.FC = () => {
             const kbIds = config.dataset_configs.datasets.datasets.map((d: any) => d.dataset.id);
             if (kbIds.length > 0) {
               try {
-                const kbListResponse = await apiService.fetchDatasets({ page: 1, ids: kbIds, limit: kbIds.length });
+                // Construct params with multiple 'ids' fields
+                const queryParams = new URLSearchParams();
+                queryParams.append('page', '1');
+                queryParams.append('limit', kbIds.length.toString());
+                kbIds.forEach(id => queryParams.append('ids', id));
+                
+                // Call the API directly using the constructed query string to ensure multiple 'ids' are passed
+                const kbListResponse = await (apiService as any).get('/datasets', queryParams);
                 if (kbListResponse && kbListResponse.data) {
                   const kbList = kbListResponse.data.map((d: any) => ({
                     id: d.id,
