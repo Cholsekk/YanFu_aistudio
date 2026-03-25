@@ -759,7 +759,8 @@ const AppConfig: React.FC = () => {
       try {
         if (app?.mode === 'completion') {
           await apiService.sendCompletionMessage(appId!, body, {
-            onData: (text) => {
+            onData: (data) => {
+              const text = data.answer || '';
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
                 if (modelMsgs.length > 0) {
@@ -794,7 +795,8 @@ const AppConfig: React.FC = () => {
           });
         } else {
           await apiService.sendChatMessage(appId!, body, {
-            onData: (text) => {
+            onData: (data) => {
+              const text = data.answer || '';
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
                 if (modelMsgs.length > 0) {
