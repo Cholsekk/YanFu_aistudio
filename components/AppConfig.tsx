@@ -1896,10 +1896,11 @@ const AppConfig: React.FC = () => {
         onClose={() => setIsKBSettingsOpen(false)}
         open={isKBSettingsOpen}
         size="large"
-        extra={
-          <Button type="primary" onClick={() => setIsKBSettingsOpen(false)}>
-            确定
-          </Button>
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsKBSettingsOpen(false)}>取消</Button>
+            <Button type="primary" onClick={() => setIsKBSettingsOpen(false)}>确定</Button>
+          </div>
         }
       >
         {editingKB && (
@@ -1922,9 +1923,6 @@ const AppConfig: React.FC = () => {
                   placeholder="请输入知识库描述..."
                   className="bg-gray-50 border-gray-200"
                 />
-                <div className="text-xs text-gray-500 flex items-center gap-1">
-                  <BookOpen className="w-3 h-3" /> 了解如何编写更好的知识库描述。
-                </div>
               </div>
             </div>
 
@@ -2060,8 +2058,12 @@ const AppConfig: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-900">Embedding 模型</label>
-                <Input value={editingKB.embedding_model} disabled className="bg-gray-50 border-gray-200" />
-                <div className="text-xs text-gray-500">修改 Embedding 模型，请去<a href="#" className="text-blue-500 hover:underline">设置</a></div>
+                <ModelSelect
+                  value={editingKB.embedding_model}
+                  onChange={(model) => updateKBSettings({ embedding_model: model })}
+                  modelType={ModelTypeEnum.textEmbedding}
+                  className="bg-gray-50 border-gray-200"
+                />
               </div>
             </div>
 
@@ -2069,7 +2071,6 @@ const AppConfig: React.FC = () => {
 
             <div className="space-y-4">
               <label className="text-sm font-medium text-gray-900">检索设置</label>
-              <div className="text-xs text-blue-500 hover:underline cursor-pointer mb-2">了解更多关于检索方法。</div>
               <div className="border border-gray-200 rounded-xl p-4">
                 <div className="flex items-center gap-2 font-medium text-sm text-gray-900 mb-4">
                   <LayoutGrid className="w-4 h-4 text-blue-600" /> 向量检索
