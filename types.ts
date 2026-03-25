@@ -315,14 +315,200 @@ export type App = {
   }
 }
 
-export type ModelConfig = {
-  provider: string
-  model_id: string
-  configs: {
-    prompt_template: string
-    prompt_variables: Array<PromptVariable>
-    completion_params: CompletionParam
+export enum PromptMode {
+  simple = 'simple',
+  advanced = 'advanced',
+}
+export type TextTypeFormItem = {
+  default: string
+  label: string
+  variable: string
+  required: boolean
+  max_length: number
+}
+
+export type SelectTypeFormItem = {
+  default: string
+  label: string
+  variable: string
+  required: boolean
+  options: string[]
+}
+export type UserInputFormItem = {
+  'text-input': TextTypeFormItem
+} | {
+  'select': SelectTypeFormItem
+} | {
+  'paragraph': TextTypeFormItem
+}
+export enum TtsAutoPlay {
+  enabled = 'enabled',
+  disabled = 'disabled',
+}
+export type AnnotationReplyConfig = {
+  id: string
+  enabled: boolean
+  score_threshold: number
+  embedding_model: {
+    embedding_provider_name: string
+    embedding_model_name: string
   }
+}
+export enum AgentStrategy {
+  functionCall = 'function_call',
+  react = 'react',
+}
+export enum RETRIEVE_TYPE {
+  oneWay = 'single',
+  multiWay = 'multiple',
+}
+export enum LogicalOperator {
+  and = 'and',
+  or = 'or',
+}
+export enum ComparisonOperator {
+  contains = 'contains',
+  notContains = 'not contains',
+  startWith = 'start with',
+  endWith = 'end with',
+  is = 'is',
+  isNot = 'is not',
+  empty = 'empty',
+  notEmpty = 'not empty',
+  equal = '=',
+  notEqual = '≠',
+  largerThan = '>',
+  lessThan = '<',
+  largerThanOrEqual = '≥',
+  lessThanOrEqual = '≤',
+  isNull = 'is null',
+  isNotNull = 'is not null',
+  in = 'in',
+  notIn = 'not in',
+  allOf = 'all of',
+  exists = 'exists',
+  notExists = 'not exists',
+  before = 'before',
+  after = 'after',
+}
+export type MetadataFilteringCondition = {
+  id: string
+  name: string
+  comparison_operator: ComparisonOperator
+  value?: string | number
+}
+export type MetadataFilteringConditions = {
+  logical_operator: LogicalOperator
+  conditions: MetadataFilteringCondition[]
+}
+export type NodeModelConfig = {
+  provider: string
+  name: string
+  mode: string
+  completion_params: Record<string, any>
+}
+
+export type DatasetConfigs = {
+  retrieval_model: RETRIEVE_TYPE
+  reranking_model: {
+    reranking_provider_name: string
+    reranking_model_name: string
+  }
+  top_k: number
+  score_threshold_enabled: boolean
+  score_threshold: number | null | undefined
+  datasets: {
+    datasets: {
+      enabled: boolean
+      id: string
+    }[]
+  }
+  reranking_mode?: RerankingModeEnum
+  weights?: {
+    vector_setting: {
+      vector_weight: number
+      embedding_provider_name: string
+      embedding_model_name: string
+    }
+    keyword_setting: {
+      keyword_weight: number
+    }
+  }
+  reranking_enable?: boolean
+  metadata_filtering_mode?: MetadataFilteringModeEnum
+  metadata_filtering_conditions?: MetadataFilteringConditions
+  metadata_model_config?: NodeModelConfig
+}
+export enum Resolution {
+  low = 'low',
+  high = 'high',
+}
+export type VisionSettings = {
+  enabled: boolean
+  number_limits: number
+  detail: Resolution
+  transfer_methods: TransferMethod[]
+  image_file_size_limit?: number | string
+}
+export enum SupportUploadFileTypes {
+  image = 'image',
+  document = 'document',
+  audio = 'audio',
+  video = 'video',
+  custom = 'custom',
+}
+export type UploadFileSetting = {
+  allowed_file_upload_methods: TransferMethod[]
+  allowed_file_types: SupportUploadFileTypes[]
+  allowed_file_extensions?: string[]
+  max_length: number
+  number_limits?: number
+}
+
+export type ModelConfig = {
+  opening_statement: string
+  suggested_questions?: string[]
+  pre_prompt: string
+  prompt_type: PromptMode
+  chat_prompt_config: ChatPromptConfig | {}
+  completion_prompt_config: CompletionPromptConfig | {}
+  user_input_form: UserInputFormItem[]
+  dataset_query_variable?: string
+  more_like_this: {
+    enabled?: boolean
+  }
+  suggested_questions_after_answer: {
+    enabled: boolean
+  }
+  speech_to_text: {
+    enabled: boolean
+  }
+  text_to_speech: {
+    enabled: boolean
+    voice?: string
+    language?: string
+    autoPlay?: TtsAutoPlay
+  }
+  retriever_resource: {
+    enabled: boolean
+  }
+  sensitive_word_avoidance: {
+    enabled: boolean
+  }
+  annotation_reply?: AnnotationReplyConfig
+  agent_mode: {
+    enabled: boolean
+    strategy?: AgentStrategy
+    tools: ToolItem[]
+  }
+  model: Model
+  dataset_configs: DatasetConfigs
+  file_upload?: {
+    image: VisionSettings
+  } & UploadFileSetting
+  files?: VisionFile[]
+  created_at?: number
+  updated_at?: number
 }
 
 export type PromptVariable = {
@@ -435,7 +621,7 @@ export type AppTokenCostsResponse = {
   data: Array<{ date: string; token_count: number; total_price: number; currency: string }>
 }
 
-export type UpdateAppModelConfigResponse = { result: string }
+export type UpdateModelConfigResponse = { result: string }
 
 export type ApiKeyItemResponse = {
   id: string

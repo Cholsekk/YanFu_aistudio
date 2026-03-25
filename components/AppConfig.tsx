@@ -204,6 +204,37 @@ const AppConfig: React.FC = () => {
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
 
   useEffect(() => {
+    if (!appId) return;
+    const fetchAppDetail = async () => {
+      try {
+        const detail = await apiService.getAppDetail(appId);
+        if (detail && detail.config) {
+          const config = detail.config;
+          if (config.prompt) setPrompt(config.prompt);
+          if (config.variables) setVariables(config.variables);
+          if (config.knowledgeBases) setKnowledgeBases(config.knowledgeBases);
+          if (config.models) {
+            const validModels = config.models.filter((m: any) => m && m.id);
+            setModels(validModels);
+            const initialMessages: Record<string, any> = {};
+            validModels.forEach((m: any) => {
+              initialMessages[m.id] = [];
+            });
+            setMessages(initialMessages);
+          }
+          if (config.enabledFeatures) setEnabledFeatures(config.enabledFeatures);
+          if (config.metadataFilter) setMetadataFilter(config.metadataFilter);
+          if (config.metadataModelConfig) setMetadataModelConfig(config.metadataModelConfig);
+          if (config.manualFilters) setManualFilters(config.manualFilters);
+        }
+      } catch (e) {
+        console.error('Failed to fetch app detail:', e);
+      }
+    };
+    fetchAppDetail();
+  }, [appId]);
+
+  useEffect(() => {
     if (app?.config) {
       const config = app.config;
       if (config.prompt) setPrompt(config.prompt);
