@@ -140,6 +140,7 @@ interface KnowledgeBase {
     };
     top_k: number;
     score_threshold: number;
+    score_threshold_enabled?: boolean;
     reranking_enable: boolean;
     weights?: {
       vector_setting: {
@@ -217,7 +218,7 @@ const AppConfig: React.FC = () => {
           if (config.user_input_form) setVariables(config.user_input_form);
           
           if (config.dataset_configs && config.dataset_configs.datasets && config.dataset_configs.datasets.datasets) {
-            const kbIds = config.dataset_configs.datasets.datasets.map((d: any) => d.dataset.id);
+            const kbIds = config.dataset_configs.datasets.datasets.map((d: any) => d.dataset ? d.dataset.id : d.id);
             if (kbIds.length > 0) {
               try {
                 // Construct params with multiple 'ids' fields
@@ -237,7 +238,10 @@ const AppConfig: React.FC = () => {
                     permission: d.permission,
                     indexing_technique: d.indexing_technique,
                     embedding_model: d.embedding_model,
-                    retrieval_config: config.dataset_configs.retrieval_model_dict
+                    retrieval_config: {
+                      ...d.retrieval_model_dict,
+                      ...(config.dataset_configs.datasets.datasets.find((ds: any) => (ds.dataset ? ds.dataset.id : ds.id) === d.id)?.dataset?.retrieval_model || {})
+                    }
                   }));
                   setKnowledgeBases(kbList);
                 }
@@ -267,7 +271,18 @@ const AppConfig: React.FC = () => {
             setModels([model]);
             setMessages({ [model.id]: [] });
           }
-          // Mapping other features...
+          
+          // Map features from model_config to enabledFeatures state
+          setEnabledFeatures({
+            opening: true, // Always true or map from opening_statement if needed
+            suggestion: !!config.suggested_questions_after_answer?.enabled,
+            tts: !!config.text_to_speech?.enabled,
+            stt: !!config.speech_to_text?.enabled,
+            citation: !!config.retriever_resource?.enabled,
+            content_check: !!config.sensitive_word_avoidance?.enabled,
+            annotation: !!config.annotation_reply?.enabled,
+            attachment: !!config.file_upload?.enabled || !!config.file_upload?.image?.enabled,
+          });
         }
       } catch (e) {
         console.error('Failed to fetch app detail:', e);
@@ -481,6 +496,7 @@ const AppConfig: React.FC = () => {
         search_method: kb.retrieval_model_dict?.search_method || 'hybrid',
         top_k: kb.retrieval_model_dict?.top_k || 3,
         score_threshold: kb.retrieval_model_dict?.score_threshold || 0.5,
+        score_threshold_enabled: kb.retrieval_model_dict?.score_threshold_enabled || false,
         reranking_enable: kb.retrieval_model_dict?.reranking_enable || false,
         reranking_model: kb.retrieval_model_dict?.reranking_model,
         weights: kb.retrieval_model_dict?.weights,
@@ -632,7 +648,7 @@ const AppConfig: React.FC = () => {
             enabled: !!enabledFeatures.stt
           },
           retriever_resource: {
-            enabled: true
+            enabled: !!enabledFeatures.citation
           },
           sensitive_word_avoidance: {
             enabled: !!enabledFeatures.content_check,
@@ -656,20 +672,8 @@ const AppConfig: React.FC = () => {
             reranking_enable: false,
             datasets: {
               datasets: knowledgeBases.map(kb => ({
-                dataset: {
-                  enabled: true,
-                  id: kb.id,
-                  name: kb.name,
-                  retrieval_model: kb.retrieval_config ? {
-                    search_method: kb.retrieval_config.search_method,
-                    top_k: kb.retrieval_config.top_k,
-                    score_threshold: kb.retrieval_config.score_threshold,
-                    reranking_enable: kb.retrieval_config.reranking_enable,
-                    reranking_model: kb.retrieval_config.reranking_model,
-                    weights: kb.retrieval_config.weights,
-                    reranking_mode: kb.retrieval_config.reranking_mode
-                  } : undefined
-                }
+                enabled: true,
+                id: kb.id
               }))
             },
             metadata_filtering_mode: metadataFilter,
@@ -2361,6 +2365,7 @@ const AppConfig: React.FC = () => {
                           onChange={(v) => updateKBSettings({ 
                             retrieval_config: { 
                               weights: {
+                                weight_type: 'customized',
                                 vector_setting: { 
                                   vector_weight: v,
                                   embedding_provider_name: editingKB.retrieval_config?.weights?.vector_setting?.embedding_provider_name || '',
