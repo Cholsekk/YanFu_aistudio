@@ -207,7 +207,7 @@ const AppConfig: React.FC = () => {
     if (!appId) return;
     const fetchAppDetail = async () => {
       try {
-        const detail = await apiService.getAppDetail(appId);
+        const detail = await apiService.fetchAppDetail(appId);
         if (detail && detail.model_config) {
           const config = detail.model_config;
           if (config.pre_prompt) setPrompt(config.pre_prompt);
@@ -1023,6 +1023,7 @@ const AppConfig: React.FC = () => {
             <div className="relative group">
               <TextArea
                 value={prompt}
+                defaultValue={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="在这里写你的提示词，输入 '{' 插入变量、输入 '/' 插入提示内容块"
                 autoSize={{ minRows: 8, maxRows: 15 }}
@@ -1164,7 +1165,7 @@ const AppConfig: React.FC = () => {
               </div>
             </div>
             {knowledgeBases.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-1 max-h-48 overflow-y-auto pr-2">
                 <AnimatePresence>
                   {knowledgeBases.map((kb, i) => (
                     <motion.div 
@@ -1172,28 +1173,30 @@ const AppConfig: React.FC = () => {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100 group/kb"
+                      className="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-gray-100 group/kb"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600">
-                          <Database className="w-4 h-4" />
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-md bg-primary-50 flex items-center justify-center text-primary-600">
+                          <Database className="w-3 h-3" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-gray-700">{kb.name}</p>
-                          <p className="text-[10px] text-gray-400">{kb.count} 个分段</p>
+                          <p className="text-[11px] font-bold text-gray-700">{kb.name}</p>
+                          <p className="text-[9px] text-gray-400">{kb.count} 个分段</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover/kb:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover/kb:opacity-100 transition-opacity">
                         <Button 
                           type="text" 
                           size="small" 
-                          icon={<Edit2 className="w-3.5 h-3.5 text-gray-300 hover:text-primary-500" />} 
+                          className="w-6 h-6 p-0"
+                          icon={<Edit2 className="w-3 h-3 text-gray-300 hover:text-primary-500" />} 
                           onClick={() => handleKBEdit(kb)}
                         />
                         <Button 
                           type="text" 
                           size="small" 
-                          icon={<Trash2 className="w-3.5 h-3.5 text-gray-300 hover:text-red-500" />} 
+                          className="w-6 h-6 p-0"
+                          icon={<Trash2 className="w-3 h-3 text-gray-300 hover:text-red-500" />} 
                           onClick={() => setKnowledgeBases(knowledgeBases.filter(item => item.id !== kb.id))}
                         />
                       </div>
@@ -1892,7 +1895,7 @@ const AppConfig: React.FC = () => {
         placement="right"
         onClose={() => setIsKBSettingsOpen(false)}
         open={isKBSettingsOpen}
-        width={500}
+        size="large"
         extra={
           <Button type="primary" onClick={() => setIsKBSettingsOpen(false)}>
             确定
