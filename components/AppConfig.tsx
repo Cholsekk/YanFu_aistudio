@@ -1827,19 +1827,27 @@ const AppConfig: React.FC = () => {
           <div className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">知识库名称</label>
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Database className="w-4 h-4 text-blue-500" /> 知识库名称
+                </label>
                 <Input 
                   value={editingKB.name} 
                   onChange={(e) => updateKBSettings({ name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">知识库描述</label>
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-500" /> 知识库描述
+                </label>
                 <Input.TextArea 
                   value={editingKB.description} 
                   onChange={(e) => updateKBSettings({ description: e.target.value })}
                   rows={3}
+                  placeholder="请输入知识库描述..."
                 />
+                <div className="text-xs text-gray-400 flex items-center gap-1">
+                  <span className="i-lucide-book-open w-3 h-3" /> 了解如何编写更好的知识库描述。
+                </div>
               </div>
             </div>
 
@@ -1847,7 +1855,9 @@ const AppConfig: React.FC = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">可见权限</label>
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <span className="i-lucide-shield-check w-4 h-4 text-green-500" /> 可见权限
+                </label>
                 <Select
                   className="w-full"
                   value={editingKB.permission}
@@ -1861,9 +1871,9 @@ const AppConfig: React.FC = () => {
               </div>
 
               {editingKB.permission === 'partial_members' && (
-                <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                <div className="p-4 bg-blue-50 rounded-lg space-y-4 border border-blue-100">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-500 uppercase">部门</label>
+                    <label className="text-xs font-medium text-blue-600 uppercase">部门</label>
                     <Select
                       mode="multiple"
                       className="w-full"
@@ -1880,7 +1890,7 @@ const AppConfig: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-500 uppercase">角色</label>
+                    <label className="text-xs font-medium text-blue-600 uppercase">角色</label>
                     <Select
                       mode="multiple"
                       className="w-full"
@@ -1897,7 +1907,7 @@ const AppConfig: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-500 uppercase">成员</label>
+                    <label className="text-xs font-medium text-blue-600 uppercase">成员</label>
                     <Select
                       mode="multiple"
                       className="w-full"
@@ -1921,38 +1931,75 @@ const AppConfig: React.FC = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">索引模式</label>
-                <Select
-                  className="w-full"
-                  value={editingKB.indexing_technique}
-                  onChange={(v) => updateKBSettings({ indexing_technique: v })}
-                  options={[
-                    { value: 'high_quality', label: '高质量' },
-                    { value: 'economy', label: '经济' },
-                  ]}
-                />
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <span className="i-lucide-layers w-4 h-4 text-purple-500" /> 索引模式
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div 
+                    className={`p-3 border rounded-lg cursor-pointer ${editingKB.indexing_technique === 'high_quality' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}
+                    onClick={() => updateKBSettings({ indexing_technique: 'high_quality' })}
+                  >
+                    <div className="font-medium text-sm text-gray-900 flex items-center gap-1">
+                      <span className="i-lucide-sun w-4 h-4 text-orange-500" /> 高质量
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">调用 Embedding 模型进行处理，在用户查询时提供更高的准确度。</div>
+                  </div>
+                  <div 
+                    className={`p-3 border rounded-lg cursor-pointer ${editingKB.indexing_technique === 'economy' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}`}
+                    onClick={() => updateKBSettings({ indexing_technique: 'economy' })}
+                  >
+                    <div className="font-medium text-sm text-gray-900 flex items-center gap-1">
+                      <span className="i-lucide-box w-4 h-4 text-blue-500" /> 经济
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">使用离线的向量引擎、关键词索引等方式，降低了准确度但无需花费 Token。</div>
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Embedding 模型</label>
-                <Input value={editingKB.embedding_model} disabled />
+                <Input value={editingKB.embedding_model} disabled className="bg-gray-50" />
+                <div className="text-xs text-gray-400">修改 Embedding 模型，请去<a href="#" className="text-blue-500">设置</a></div>
               </div>
             </div>
 
             <Divider className="my-4" />
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">检索设置</label>
-                <Select
-                  className="w-full"
-                  value={editingKB.retrieval_config?.search_method}
-                  onChange={(v) => updateKBSettings({ retrieval_config: { search_method: v } })}
-                  options={[
-                    { value: 'hybrid', label: '混合检索' },
-                    { value: 'semantic', label: '向量检索' },
-                    { value: 'keyword', label: '全文检索' },
-                  ]}
-                />
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <span className="i-lucide-search w-4 h-4 text-orange-500" /> 检索设置
+                </label>
+                <a href="#" className="text-xs text-blue-500">了解更多关于检索方法。</a>
+              </div>
+              
+              <div className="space-y-3">
+                <div 
+                  className={`p-3 border rounded-lg cursor-pointer ${editingKB.retrieval_config?.search_method === 'semantic' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
+                  onClick={() => updateKBSettings({ retrieval_config: { search_method: 'semantic' } })}
+                >
+                  <div className="font-medium text-sm text-gray-900 flex items-center gap-2">
+                    <span className="i-lucide-grid w-4 h-4 text-orange-500" /> 向量检索
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">通过生成查询嵌入并查询与其向量表示最相似的文本分段</div>
+                </div>
+                <div 
+                  className={`p-3 border rounded-lg cursor-pointer ${editingKB.retrieval_config?.search_method === 'keyword' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
+                  onClick={() => updateKBSettings({ retrieval_config: { search_method: 'keyword' } })}
+                >
+                  <div className="font-medium text-sm text-gray-900 flex items-center gap-2">
+                    <span className="i-lucide-file-text w-4 h-4 text-blue-500" /> 全文检索
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">索引文档中的所有词汇，从而允许用户查询任意词汇，并返回包含这些词汇的文本片段</div>
+                </div>
+                <div 
+                  className={`p-3 border rounded-lg cursor-pointer ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
+                  onClick={() => updateKBSettings({ retrieval_config: { search_method: 'hybrid' } })}
+                >
+                  <div className="font-medium text-sm text-gray-900 flex items-center gap-2">
+                    <span className="i-lucide-layers w-4 h-4 text-purple-500" /> 混合检索 <Badge count="推荐" />
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">同时执行全文检索和向量检索，并应用重排序步骤。</div>
+                </div>
               </div>
 
               {editingKB.retrieval_config?.search_method === 'hybrid' && (
