@@ -2070,41 +2070,79 @@ const AppConfig: React.FC = () => {
             <Divider className="my-4" />
 
             <div className="space-y-4">
+            <div className="space-y-4">
               <label className="text-sm font-medium text-gray-900">检索设置</label>
-              <div className="border border-gray-200 rounded-xl p-4">
-                <div className="flex items-center gap-2 font-medium text-sm text-gray-900 mb-4">
-                  <LayoutGrid className="w-4 h-4 text-blue-600" /> 向量检索
-                </div>
-                <div className="text-xs text-gray-500 mb-4">通过生成查询嵌入并查询与其向量表示最相似的文本分段</div>
-                
-                <div className="flex items-center gap-2 mb-4">
-                  <Switch size="small" />
-                  <span className="text-sm text-gray-900">Rerank 模型</span>
-                </div>
-                
-                <Select
-                  className="w-full mb-4"
-                  defaultValue="gte-rerank"
-                  options={[{ value: 'gte-rerank', label: 'gte-rerank' }]}
-                />
-                
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>Top K</span>
-                      <span>3</span>
-                    </div>
-                    <Slider defaultValue={3} min={1} max={10} />
+              
+              {/* Vector Search Option */}
+              <div className="border border-blue-500 rounded-xl p-4 bg-blue-50/30">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
+                    <LayoutGrid className="w-4 h-4 text-blue-600" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>Score 阈值</span>
-                      <span>0.5</span>
+                  <div>
+                    <div className="font-medium text-sm text-gray-900">向量检索</div>
+                    <div className="text-xs text-gray-500">通过生成查询嵌入并查询与其向量表示最相似的文本分段</div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 pl-11">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Switch size="small" />
+                    <span className="text-sm text-gray-900">Rerank 模型</span>
+                  </div>
+                  <Select
+                    className="w-full mb-4"
+                    defaultValue="gte-rerank"
+                    options={[{ value: 'gte-rerank', label: 'gte-rerank' }]}
+                  />
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>Top K</span>
+                        <span>3</span>
+                      </div>
+                      <Slider defaultValue={3} min={1} max={10} />
                     </div>
-                    <Slider defaultValue={0.5} min={0} max={1} step={0.1} />
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>Score 阈值</span>
+                        <span>0.5</span>
+                      </div>
+                      <Slider defaultValue={0.5} min={0} max={1} step={0.1} />
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Full Text Search Option */}
+              <div className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
+                    <Database className="w-4 h-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm text-gray-900">全文检索</div>
+                    <div className="text-xs text-gray-500">索引文档中的所有词汇，从而允许用户查询任意词汇，并返回包含这些词汇的文本片段</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hybrid Search Option */}
+              <div className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
+                    <LayoutGrid className="w-4 h-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium text-sm text-gray-900">混合检索</div>
+                      <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">推荐</span>
+                    </div>
+                    <div className="text-xs text-gray-500">同时执行全文检索和向量检索，并应用重排序步骤...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
               
               <div className="space-y-3">
                 <div 
