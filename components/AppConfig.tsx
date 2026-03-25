@@ -113,16 +113,36 @@ const DEFAULT_MODEL: ModelConfig = {
 interface KnowledgeBase {
   id: string;
   name: string;
+  description?: string;
   count: number;
+  permission?: string;
+  partial_team_data?: {
+    roles: string[];
+    departments: string[];
+    members: string[];
+  };
+  indexing_technique?: string;
+  embedding_model?: string;
   retrieval_config?: {
     search_method: string;
     reranking_model?: {
-      provider: string;
-      model: string;
+      reranking_provider_name: string;
+      reranking_model_name: string;
     };
     top_k: number;
     score_threshold: number;
     reranking_enable: boolean;
+    weights?: {
+      vector_setting: {
+        vector_weight: number;
+        embedding_provider_name: string;
+        embedding_model_name: string;
+      };
+      keyword_setting: {
+        keyword_weight: number;
+      };
+    };
+    reranking_mode?: string;
   };
 }
 
@@ -294,18 +314,48 @@ const AppConfig: React.FC = () => {
         manualFilters,
         // Backfill to the requested structure
         dataset_configs: {
-          metadata_model_config: metadataFilter === MetadataFilteringModeEnum.automatic && metadataModelConfig ? {
-            provider: metadataModelConfig.provider,
-            name: metadataModelConfig.name,
-            mode: 'chat',
-            completion_params: {
-              temperature: metadataModelConfig.temperature,
-              top_p: metadataModelConfig.topP,
-              presence_penalty: metadataModelConfig.presencePenalty,
-              frequency_penalty: metadataModelConfig.frequencyPenalty,
-              max_tokens: metadataModelConfig.maxTokens,
+          retrieval_model: 'multiple',
+          top_k: 4,
+          reranking_mode: 'reranking_model',
+          reranking_model: {
+            reranking_provider_name: 'tongyi',
+            reranking_model_name: 'gte-rerank'
+          },
+          reranking_enable: false,
+          datasets: {
+            datasets: knowledgeBases.map(kb => ({
+              dataset: {
+                enabled: true,
+                id: kb.id,
+                name: kb.name,
+                retrieval_model: kb.retrieval_config ? {
+                  search_method: kb.retrieval_config.search_method,
+                  top_k: kb.retrieval_config.top_k,
+                  score_threshold: kb.retrieval_config.score_threshold,
+                  reranking_enable: kb.retrieval_config.reranking_enable,
+                  reranking_model: kb.retrieval_config.reranking_model,
+                  weights: kb.retrieval_config.weights,
+                  reranking_mode: kb.retrieval_config.reranking_mode
+                } : undefined
+              }
+            }))
+          },
+          metadata_filtering_mode: metadataFilter,
+          ...(metadataFilter === MetadataFilteringModeEnum.automatic && metadataModelConfig ? {
+            metadata_model_config: {
+              provider: metadataModelConfig.provider,
+              name: metadataModelConfig.name,
+              mode: 'chat',
+              completion_params: {
+                temperature: metadataModelConfig.temperature,
+                top_p: metadataModelConfig.topP,
+                presence_penalty: metadataModelConfig.presencePenalty,
+                frequency_penalty: metadataModelConfig.frequencyPenalty,
+                max_tokens: metadataModelConfig.maxTokens,
+              }
             }
-          } : null
+          } : {}),
+          manual_filters: metadataFilter === MetadataFilteringModeEnum.manual ? manualFilters : []
         }
       };
       await apiService.updateApp(appId, {
@@ -333,12 +383,19 @@ const AppConfig: React.FC = () => {
     const newKBs = selected.map(kb => ({
       id: kb.id,
       name: kb.name,
+      description: kb.description,
       count: kb.document_count || 0,
+      permission: kb.permission,
+      indexing_technique: kb.indexing_technique,
+      embedding_model: kb.embedding_model,
       retrieval_config: {
-        search_method: 'hybrid',
-        top_k: 3,
-        score_threshold: 0.5,
-        reranking_enable: false
+        search_method: kb.retrieval_model_dict?.search_method || 'hybrid',
+        top_k: kb.retrieval_model_dict?.top_k || 3,
+        score_threshold: kb.retrieval_model_dict?.score_threshold || 0.5,
+        reranking_enable: kb.retrieval_model_dict?.reranking_enable || false,
+        reranking_model: kb.retrieval_model_dict?.reranking_model,
+        weights: kb.retrieval_model_dict?.weights,
+        reranking_mode: kb.retrieval_model_dict?.reranking_mode
       }
     }));
     setKnowledgeBases([...knowledgeBases, ...newKBs]);
@@ -353,9 +410,10 @@ const AppConfig: React.FC = () => {
     if (!editingKB) return;
     const updatedKB = {
       ...editingKB,
+      ...config,
       retrieval_config: {
         ...editingKB.retrieval_config!,
-        ...config
+        ...(config.retrieval_config || {})
       }
     };
     setEditingKB(updatedKB);
@@ -501,26 +559,46 @@ const AppConfig: React.FC = () => {
           dataset_configs: {
             retrieval_model: 'multiple',
             top_k: 4,
-            reranking_mode: 'weighted_score',
-            weights: {
-              vector_setting: {
-                vector_weight: 1,
-                embedding_provider_name: 'ollama',
-                embedding_model_name: 'bge-m3:latest'
-              },
-              keyword_setting: {
-                keyword_weight: 0
-              }
+            reranking_mode: 'reranking_model',
+            reranking_model: {
+              reranking_provider_name: 'tongyi',
+              reranking_model_name: 'gte-rerank'
             },
             reranking_enable: false,
             datasets: {
               datasets: knowledgeBases.map(kb => ({
                 dataset: {
+                  enabled: true,
                   id: kb.id,
-                  name: kb.name
+                  name: kb.name,
+                  retrieval_model: kb.retrieval_config ? {
+                    search_method: kb.retrieval_config.search_method,
+                    top_k: kb.retrieval_config.top_k,
+                    score_threshold: kb.retrieval_config.score_threshold,
+                    reranking_enable: kb.retrieval_config.reranking_enable,
+                    reranking_model: kb.retrieval_config.reranking_model,
+                    weights: kb.retrieval_config.weights,
+                    reranking_mode: kb.retrieval_config.reranking_mode
+                  } : undefined
                 }
               }))
-            }
+            },
+            metadata_filtering_mode: metadataFilter,
+            ...(metadataFilter === MetadataFilteringModeEnum.automatic && metadataModelConfig ? {
+              metadata_model_config: {
+                provider: metadataModelConfig.provider,
+                name: metadataModelConfig.name,
+                mode: 'chat',
+                completion_params: {
+                  temperature: metadataModelConfig.temperature,
+                  top_p: metadataModelConfig.topP,
+                  presence_penalty: metadataModelConfig.presencePenalty,
+                  frequency_penalty: metadataModelConfig.frequencyPenalty,
+                  max_tokens: metadataModelConfig.maxTokens,
+                }
+              }
+            } : {}),
+            manual_filters: metadataFilter === MetadataFilteringModeEnum.manual ? manualFilters : []
           },
           file_upload: {
             image: {
@@ -1738,7 +1816,7 @@ const AppConfig: React.FC = () => {
         placement="right"
         onClose={() => setIsKBSettingsOpen(false)}
         open={isKBSettingsOpen}
-        width={400}
+        width={500}
         extra={
           <Button type="primary" onClick={() => setIsKBSettingsOpen(false)}>
             确定
@@ -1747,30 +1825,214 @@ const AppConfig: React.FC = () => {
       >
         {editingKB && (
           <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-primary-600" />
-                <span className="font-bold text-gray-900">{editingKB.name}</span>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">知识库名称</label>
+                <Input 
+                  value={editingKB.name} 
+                  onChange={(e) => updateKBSettings({ name: e.target.value })}
+                />
               </div>
-              <p className="text-xs text-gray-500">{editingKB.count} 个分段</p>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">知识库描述</label>
+                <Input.TextArea 
+                  value={editingKB.description} 
+                  onChange={(e) => updateKBSettings({ description: e.target.value })}
+                  rows={3}
+                />
+              </div>
             </div>
 
             <Divider className="my-4" />
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">召回策略</label>
+                <label className="text-sm font-medium text-gray-700">可见权限</label>
+                <Select
+                  className="w-full"
+                  value={editingKB.permission}
+                  onChange={(v) => updateKBSettings({ permission: v })}
+                  options={[
+                    { value: 'only_me', label: '只有我' },
+                    { value: 'all_team_members', label: '所有团队成员' },
+                    { value: 'partial_members', label: '部分团队成员' },
+                  ]}
+                />
+              </div>
+
+              {editingKB.permission === 'partial_members' && (
+                <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-gray-500 uppercase">部门</label>
+                    <Select
+                      mode="multiple"
+                      className="w-full"
+                      placeholder="选择部门"
+                      value={editingKB.partial_team_data?.departments}
+                      onChange={(v) => updateKBSettings({ 
+                        partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), departments: v } 
+                      })}
+                      options={[
+                        { value: 'dept-1', label: '研发部' },
+                        { value: 'dept-2', label: '产品部' },
+                        { value: 'dept-3', label: '市场部' },
+                      ]}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-gray-500 uppercase">角色</label>
+                    <Select
+                      mode="multiple"
+                      className="w-full"
+                      placeholder="选择角色"
+                      value={editingKB.partial_team_data?.roles}
+                      onChange={(v) => updateKBSettings({ 
+                        partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), roles: v } 
+                      })}
+                      options={[
+                        { value: 'role-1', label: '管理员' },
+                        { value: 'role-2', label: '成员' },
+                        { value: 'role-3', label: '访客' },
+                      ]}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-gray-500 uppercase">成员</label>
+                    <Select
+                      mode="multiple"
+                      className="w-full"
+                      placeholder="选择成员"
+                      value={editingKB.partial_team_data?.members}
+                      onChange={(v) => updateKBSettings({ 
+                        partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), members: v } 
+                      })}
+                      options={[
+                        { value: 'user-1', label: 'szyl (你)' },
+                        { value: 'user-2', label: 'dddd' },
+                        { value: 'user-3', label: 'rrr' },
+                      ]}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Divider className="my-4" />
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">索引模式</label>
+                <Select
+                  className="w-full"
+                  value={editingKB.indexing_technique}
+                  onChange={(v) => updateKBSettings({ indexing_technique: v })}
+                  options={[
+                    { value: 'high_quality', label: '高质量' },
+                    { value: 'economy', label: '经济' },
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Embedding 模型</label>
+                <Input value={editingKB.embedding_model} disabled />
+              </div>
+            </div>
+
+            <Divider className="my-4" />
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">检索设置</label>
                 <Select
                   className="w-full"
                   value={editingKB.retrieval_config?.search_method}
-                  onChange={(v) => updateKBSettings({ search_method: v })}
+                  onChange={(v) => updateKBSettings({ retrieval_config: { search_method: v } })}
                   options={[
-                    { value: 'hybrid', label: '多路召回' },
+                    { value: 'hybrid', label: '混合检索' },
                     { value: 'semantic', label: '向量检索' },
                     { value: 'keyword', label: '全文检索' },
                   ]}
                 />
               </div>
+
+              {editingKB.retrieval_config?.search_method === 'hybrid' && (
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">召回策略</label>
+                    <Select
+                      className="w-full"
+                      value={editingKB.retrieval_config?.reranking_mode || 'weighted_score'}
+                      onChange={(v) => updateKBSettings({ retrieval_config: { reranking_mode: v } })}
+                      options={[
+                        { value: 'weighted_score', label: '权重设置' },
+                        { value: 'reranking_model', label: 'Rerank 模型' },
+                      ]}
+                    />
+                  </div>
+
+                  {editingKB.retrieval_config?.reranking_mode === 'weighted_score' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-gray-500">权重设置</label>
+                        <div className="flex gap-4 text-[10px] text-gray-400">
+                          <span>语义: {editingKB.retrieval_config?.weights?.vector_setting?.vector_weight || 0.5}</span>
+                          <span>全文: {editingKB.retrieval_config?.weights?.keyword_setting?.keyword_weight || 0.5}</span>
+                        </div>
+                      </div>
+                      <Slider
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={editingKB.retrieval_config?.weights?.vector_setting?.vector_weight || 0.5}
+                        onChange={(v) => updateKBSettings({ 
+                          retrieval_config: { 
+                            weights: {
+                              vector_setting: { 
+                                vector_weight: v,
+                                embedding_provider_name: editingKB.retrieval_config?.weights?.vector_setting?.embedding_provider_name || '',
+                                embedding_model_name: editingKB.retrieval_config?.weights?.vector_setting?.embedding_model_name || ''
+                              },
+                              keyword_setting: { keyword_weight: parseFloat((1 - v).toFixed(1)) }
+                            }
+                          } 
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  {editingKB.retrieval_config?.reranking_mode === 'reranking_model' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-gray-500">Rerank 模型</label>
+                        <Switch
+                          size="small"
+                          checked={editingKB.retrieval_config?.reranking_enable}
+                          onChange={(v) => updateKBSettings({ retrieval_config: { reranking_enable: v } })}
+                        />
+                      </div>
+                      {editingKB.retrieval_config?.reranking_enable && (
+                        <Select
+                          className="w-full"
+                          placeholder="选择 Rerank 模型"
+                          value={editingKB.retrieval_config?.reranking_model?.reranking_model_name}
+                          onChange={(v) => updateKBSettings({ 
+                            retrieval_config: { 
+                              reranking_model: { 
+                                reranking_provider_name: 'tongyi', 
+                                reranking_model_name: v 
+                              } 
+                            } 
+                          })}
+                          options={[
+                            { value: 'gte-rerank', label: 'GTE Rerank' },
+                            { value: 'bge-reranker-v2', label: 'BGE Reranker V2' },
+                          ]}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -1781,13 +2043,13 @@ const AppConfig: React.FC = () => {
                   min={1}
                   max={20}
                   value={editingKB.retrieval_config?.top_k}
-                  onChange={(v) => updateKBSettings({ top_k: v })}
+                  onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">分值阈值</label>
+                  <label className="text-sm font-medium text-gray-700">Score 阈值</label>
                   <span className="text-xs text-gray-500">{editingKB.retrieval_config?.score_threshold}</span>
                 </div>
                 <Slider
@@ -1795,31 +2057,8 @@ const AppConfig: React.FC = () => {
                   max={1}
                   step={0.01}
                   value={editingKB.retrieval_config?.score_threshold}
-                  onChange={(v) => updateKBSettings({ score_threshold: v })}
+                  onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">重排序模型</label>
-                  <Switch
-                    size="small"
-                    checked={editingKB.retrieval_config?.reranking_enable}
-                    onChange={(v) => updateKBSettings({ reranking_enable: v })}
-                  />
-                </div>
-                {editingKB.retrieval_config?.reranking_enable && (
-                  <Select
-                    className="w-full"
-                    placeholder="选择重排序模型"
-                    value={editingKB.retrieval_config?.reranking_model?.model}
-                    onChange={(v) => updateKBSettings({ reranking_model: { provider: 'OpenAI', model: v } })}
-                    options={[
-                      { value: 'cohere-rerank-v3', label: 'Cohere Rerank V3' },
-                      { value: 'bge-reranker-v2', label: 'BGE Reranker V2' },
-                    ]}
-                  />
-                )}
               </div>
             </div>
           </div>
