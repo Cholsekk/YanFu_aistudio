@@ -35,7 +35,9 @@ import {
   Check,
   BookOpen,
   Sun,
-  LayoutGrid
+  LayoutGrid,
+  Layers,
+  SlidersHorizontal
 } from 'lucide-react';
 import { 
   Input, 
@@ -54,7 +56,8 @@ import {
   Popover,
   Modal,
   Checkbox,
-  Drawer
+  Drawer,
+  InputNumber
 } from 'antd';
 import { motion, AnimatePresence } from 'motion/react';
 import PromptGeneratorModal from './PromptGeneratorModal';
@@ -2066,13 +2069,14 @@ const AppConfig: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 opacity-50 pointer-events-none">
                 <label className="text-sm font-medium text-gray-900">Embedding 模型</label>
                 <ModelSelect
                   value={editingKB.embedding_model}
                   onChange={(model) => updateKBSettings({ embedding_model: model })}
                   modelType={ModelTypeEnum.textEmbedding}
-                  className="bg-gray-50 border-gray-200"
+                  className="bg-gray-100 border-gray-200 cursor-not-allowed"
+                  disabled={true}
                 />
               </div>
             </div>
@@ -2080,214 +2084,371 @@ const AppConfig: React.FC = () => {
             <Divider className="my-4" />
 
             <div className="space-y-4">
-            <div className="space-y-4">
               <label className="text-sm font-medium text-gray-900">检索设置</label>
               
               {/* Vector Search Option */}
-              <div className="border border-blue-500 rounded-xl p-4 bg-blue-50/30">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
-                    <LayoutGrid className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm text-gray-900">向量检索</div>
-                    <div className="text-xs text-gray-500">通过生成查询嵌入并查询与其向量表示最相似的文本分段</div>
+              <div 
+                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'semantic' ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                onClick={() => updateKBSettings({ retrieval_config: { search_method: 'semantic' } })}
+              >
+                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'semantic' ? 'bg-blue-50/30 rounded-t-xl' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
+                      <LayoutGrid className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'semantic' ? 'text-blue-600' : 'text-gray-600'}`} />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm text-gray-900">向量检索</div>
+                      <div className="text-xs text-gray-500 mt-0.5">通过生成查询嵌入并查询与其向量表示最相似的文本分段</div>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="mt-4 pl-11">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Switch size="small" />
-                    <span className="text-sm text-gray-900">Rerank 模型</span>
-                  </div>
-                  <Select
-                    className="w-full mb-4"
-                    defaultValue="gte-rerank"
-                    options={[{ value: 'gte-rerank', label: 'gte-rerank' }]}
-                  />
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Top K</span>
-                        <span>3</span>
-                      </div>
-                      <Slider defaultValue={3} min={1} max={10} />
+                {editingKB.retrieval_config?.search_method === 'semantic' && (
+                  <div className="p-4 pt-0 bg-blue-50/30 rounded-b-xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Switch 
+                        size="small" 
+                        checked={editingKB.retrieval_config?.reranking_enable}
+                        onChange={(v) => updateKBSettings({ retrieval_config: { reranking_enable: v } })}
+                      />
+                      <span className="text-sm font-medium text-gray-900">Rerank 模型</span>
+                      <Tooltip title="重排序模型配置"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Score 阈值</span>
-                        <span>0.5</span>
+                    
+                    <ModelSelect
+                      className="w-full mb-6"
+                      modelType={ModelTypeEnum.rerank}
+                      value={editingKB.retrieval_config?.reranking_model?.reranking_model_name || 'gte-rerank'}
+                      onChange={(model, provider) => updateKBSettings({ 
+                        retrieval_config: { 
+                          reranking_model: { 
+                            reranking_provider_name: provider, 
+                            reranking_model_name: model 
+                          } 
+                        } 
+                      })}
+                      disabled={!editingKB.retrieval_config?.reranking_enable}
+                    />
+                    
+                    <div className="flex items-center gap-8">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
+                          Top K <Tooltip title="返回的文档数量"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <InputNumber 
+                            min={1} 
+                            max={20} 
+                            value={editingKB.retrieval_config?.top_k || 3}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
+                            className="w-16"
+                          />
+                          <Slider 
+                            className="flex-1"
+                            min={1} 
+                            max={20} 
+                            value={editingKB.retrieval_config?.top_k || 3}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
+                          />
+                        </div>
                       </div>
-                      <Slider defaultValue={0.5} min={0} max={1} step={0.1} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <Switch 
+                            size="small" 
+                            checked={editingKB.retrieval_config?.score_threshold_enabled}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold_enabled: v } })}
+                          />
+                          Score 阈值 <Tooltip title="相似度阈值"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <InputNumber 
+                            min={0} 
+                            max={1} 
+                            step={0.01}
+                            value={editingKB.retrieval_config?.score_threshold || 0.5}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
+                            className="w-16"
+                            disabled={!editingKB.retrieval_config?.score_threshold_enabled}
+                          />
+                          <Slider 
+                            className="flex-1"
+                            min={0} 
+                            max={1} 
+                            step={0.01}
+                            value={editingKB.retrieval_config?.score_threshold || 0.5}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
+                            disabled={!editingKB.retrieval_config?.score_threshold_enabled}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Full Text Search Option */}
-              <div className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
-                    <Database className="w-4 h-4 text-gray-600" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm text-gray-900">全文检索</div>
-                    <div className="text-xs text-gray-500">索引文档中的所有词汇，从而允许用户查询任意词汇，并返回包含这些词汇的文本片段</div>
+              <div 
+                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'keyword' ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                onClick={() => updateKBSettings({ retrieval_config: { search_method: 'keyword' } })}
+              >
+                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'keyword' ? 'bg-blue-50/30 rounded-t-xl' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
+                      <Database className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'keyword' ? 'text-blue-600' : 'text-gray-600'}`} />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm text-gray-900">全文检索</div>
+                      <div className="text-xs text-gray-500 mt-0.5">索引文档中的所有词汇，从而允许用户查询任意词汇，并返回包含这些词汇的文本片段</div>
+                    </div>
                   </div>
                 </div>
+                
+                {editingKB.retrieval_config?.search_method === 'keyword' && (
+                  <div className="p-4 pt-0 bg-blue-50/30 rounded-b-xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Switch 
+                        size="small" 
+                        checked={editingKB.retrieval_config?.reranking_enable}
+                        onChange={(v) => updateKBSettings({ retrieval_config: { reranking_enable: v } })}
+                      />
+                      <span className="text-sm font-medium text-gray-900">Rerank 模型</span>
+                      <Tooltip title="重排序模型配置"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
+                    </div>
+                    
+                    <ModelSelect
+                      className="w-full mb-6"
+                      modelType={ModelTypeEnum.rerank}
+                      value={editingKB.retrieval_config?.reranking_model?.reranking_model_name || 'gte-rerank'}
+                      onChange={(model, provider) => updateKBSettings({ 
+                        retrieval_config: { 
+                          reranking_model: { 
+                            reranking_provider_name: provider, 
+                            reranking_model_name: model 
+                          } 
+                        } 
+                      })}
+                      disabled={!editingKB.retrieval_config?.reranking_enable}
+                    />
+                    
+                    <div className="flex items-center gap-8">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
+                          Top K <Tooltip title="返回的文档数量"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <InputNumber 
+                            min={1} 
+                            max={20} 
+                            value={editingKB.retrieval_config?.top_k || 3}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
+                            className="w-16"
+                          />
+                          <Slider 
+                            className="flex-1"
+                            min={1} 
+                            max={20} 
+                            value={editingKB.retrieval_config?.top_k || 3}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <Switch 
+                            size="small" 
+                            checked={editingKB.retrieval_config?.score_threshold_enabled}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold_enabled: v } })}
+                          />
+                          Score 阈值 <Tooltip title="相似度阈值"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <InputNumber 
+                            min={0} 
+                            max={1} 
+                            step={0.01}
+                            value={editingKB.retrieval_config?.score_threshold || 0.5}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
+                            className="w-16"
+                            disabled={!editingKB.retrieval_config?.score_threshold_enabled}
+                          />
+                          <Slider 
+                            className="flex-1"
+                            min={0} 
+                            max={1} 
+                            step={0.01}
+                            value={editingKB.retrieval_config?.score_threshold || 0.5}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
+                            disabled={!editingKB.retrieval_config?.score_threshold_enabled}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Hybrid Search Option */}
-              <div className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
-                    <LayoutGrid className="w-4 h-4 text-gray-600" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <div className="font-medium text-sm text-gray-900">混合检索</div>
-                      <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">推荐</span>
+              <div 
+                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                onClick={() => updateKBSettings({ retrieval_config: { search_method: 'hybrid' } })}
+              >
+                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'bg-blue-50/30 rounded-t-xl' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
+                      <LayoutGrid className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'text-blue-600' : 'text-gray-600'}`} />
                     </div>
-                    <div className="text-xs text-gray-500">同时执行全文检索和向量检索，并应用重排序步骤...</div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-sm text-gray-900">混合检索</div>
+                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">推荐</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">同时执行全文检索和向量检索，并应用重排序步骤，从两类查询结果中选择匹配用户问题的最佳结果，用户可以选择设置权重或配置重新排序模型。</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-              
-              <div className="space-y-3">
-                <div 
-                  className={`p-3 border rounded-lg cursor-pointer ${editingKB.retrieval_config?.search_method === 'semantic' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
-                  onClick={() => updateKBSettings({ retrieval_config: { search_method: 'semantic' } })}
-                >
-                  <div className="font-medium text-sm text-gray-900 flex items-center gap-2">
-                    <span className="i-lucide-grid w-4 h-4 text-orange-500" /> 向量检索
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">通过生成查询嵌入并查询与其向量表示最相似的文本分段</div>
-                </div>
-                <div 
-                  className={`p-3 border rounded-lg cursor-pointer ${editingKB.retrieval_config?.search_method === 'keyword' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
-                  onClick={() => updateKBSettings({ retrieval_config: { search_method: 'keyword' } })}
-                >
-                  <div className="font-medium text-sm text-gray-900 flex items-center gap-2">
-                    <span className="i-lucide-file-text w-4 h-4 text-blue-500" /> 全文检索
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">索引文档中的所有词汇，从而允许用户查询任意词汇，并返回包含这些词汇的文本片段</div>
-                </div>
-                <div 
-                  className={`p-3 border rounded-lg cursor-pointer ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
-                  onClick={() => updateKBSettings({ retrieval_config: { search_method: 'hybrid' } })}
-                >
-                  <div className="font-medium text-sm text-gray-900 flex items-center gap-2">
-                    <span className="i-lucide-layers w-4 h-4 text-purple-500" /> 混合检索 <Badge count="推荐" />
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">同时执行全文检索和向量检索，并应用重排序步骤。</div>
-                </div>
-              </div>
-
-              {editingKB.retrieval_config?.search_method === 'hybrid' && (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">召回策略</label>
-                    <Select
-                      className="w-full"
-                      value={editingKB.retrieval_config?.reranking_mode || 'weighted_score'}
-                      onChange={(v) => updateKBSettings({ retrieval_config: { reranking_mode: v } })}
-                      options={[
-                        { value: 'weighted_score', label: '权重设置' },
-                        { value: 'reranking_model', label: 'Rerank 模型' },
-                      ]}
-                    />
-                  </div>
-
-                  {editingKB.retrieval_config?.reranking_mode === 'weighted_score' && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-medium text-gray-500">权重设置</label>
-                        <div className="flex gap-4 text-[10px] text-gray-400">
-                          <span>语义: {editingKB.retrieval_config?.weights?.vector_setting?.vector_weight || 0.5}</span>
-                          <span>全文: {editingKB.retrieval_config?.weights?.keyword_setting?.keyword_weight || 0.5}</span>
+                
+                {editingKB.retrieval_config?.search_method === 'hybrid' && (
+                  <div className="p-4 pt-0 bg-blue-50/30 rounded-b-xl">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div 
+                        className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'border-blue-500 bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}
+                        onClick={(e) => { e.stopPropagation(); updateKBSettings({ retrieval_config: { reranking_mode: 'weighted_score' } }); }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5">
+                            <Layers className={`w-4 h-4 ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'text-blue-600' : 'text-gray-400'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900 mb-1">权重设置</div>
+                            <div className="text-xs text-gray-500 leading-relaxed">通过调整分配的权重，重新排序策略确定是优先进行语义匹配还是关键字匹配。</div>
+                          </div>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'border-blue-600' : 'border-gray-300'}`}>
+                            {editingKB.retrieval_config?.reranking_mode === 'weighted_score' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                          </div>
                         </div>
                       </div>
-                      <Slider
-                        min={0}
-                        max={1}
-                        step={0.1}
-                        value={editingKB.retrieval_config?.weights?.vector_setting?.vector_weight || 0.5}
-                        onChange={(v) => updateKBSettings({ 
+                      <div 
+                        className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'border-blue-500 bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}
+                        onClick={(e) => { e.stopPropagation(); updateKBSettings({ retrieval_config: { reranking_mode: 'reranking_model' } }); }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5">
+                            <SlidersHorizontal className={`w-4 h-4 ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'text-blue-600' : 'text-gray-400'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900 mb-1">Rerank 模型</div>
+                            <div className="text-xs text-gray-500 leading-relaxed">重排序模型将根据候选文档列表与用户问题语义匹配度进行重新排序，从而改进语义排序的结果</div>
+                          </div>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'border-blue-600' : 'border-gray-300'}`}>
+                            {editingKB.retrieval_config?.reranking_mode === 'reranking_model' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {editingKB.retrieval_config?.reranking_mode === 'weighted_score' && (
+                      <div className="mb-6 px-2">
+                        <Slider
+                          min={0}
+                          max={1}
+                          step={0.1}
+                          value={editingKB.retrieval_config?.weights?.vector_setting?.vector_weight || 0.5}
+                          tooltip={{ formatter: null }}
+                          trackStyle={{ backgroundColor: '#0ea5e9' }}
+                          railStyle={{ backgroundColor: '#10b981' }}
+                          handleStyle={{ borderColor: '#e5e7eb', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                          onChange={(v) => updateKBSettings({ 
+                            retrieval_config: { 
+                              weights: {
+                                vector_setting: { 
+                                  vector_weight: v,
+                                  embedding_provider_name: editingKB.retrieval_config?.weights?.vector_setting?.embedding_provider_name || '',
+                                  embedding_model_name: editingKB.retrieval_config?.weights?.vector_setting?.embedding_model_name || ''
+                                },
+                                keyword_setting: { keyword_weight: parseFloat((1 - v).toFixed(1)) }
+                              }
+                            } 
+                          })}
+                        />
+                        <div className="flex items-center justify-between mt-2 text-sm font-medium">
+                          <span className="text-sky-500">语义 {editingKB.retrieval_config?.weights?.vector_setting?.vector_weight || 0.5}</span>
+                          <span className="text-emerald-500">{editingKB.retrieval_config?.weights?.keyword_setting?.keyword_weight || 0.5} 关键词</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {editingKB.retrieval_config?.reranking_mode === 'reranking_model' && (
+                      <ModelSelect
+                        className="w-full mb-6"
+                        modelType={ModelTypeEnum.rerank}
+                        value={editingKB.retrieval_config?.reranking_model?.reranking_model_name || 'gte-rerank'}
+                        onChange={(model, provider) => updateKBSettings({ 
                           retrieval_config: { 
-                            weights: {
-                              vector_setting: { 
-                                vector_weight: v,
-                                embedding_provider_name: editingKB.retrieval_config?.weights?.vector_setting?.embedding_provider_name || '',
-                                embedding_model_name: editingKB.retrieval_config?.weights?.vector_setting?.embedding_model_name || ''
-                              },
-                              keyword_setting: { keyword_weight: parseFloat((1 - v).toFixed(1)) }
-                            }
+                            reranking_model: { 
+                              reranking_provider_name: provider, 
+                              reranking_model_name: model 
+                            } 
                           } 
                         })}
                       />
-                    </div>
-                  )}
-
-                  {editingKB.retrieval_config?.reranking_mode === 'reranking_model' && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-medium text-gray-500">Rerank 模型</label>
-                        <Switch
-                          size="small"
-                          checked={editingKB.retrieval_config?.reranking_enable}
-                          onChange={(v) => updateKBSettings({ retrieval_config: { reranking_enable: v } })}
-                        />
+                    )}
+                    
+                    <div className="flex items-center gap-8">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">
+                          Top K <Tooltip title="返回的文档数量"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <InputNumber 
+                            min={1} 
+                            max={20} 
+                            value={editingKB.retrieval_config?.top_k || 3}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
+                            className="w-16"
+                          />
+                          <Slider 
+                            className="flex-1"
+                            min={1} 
+                            max={20} 
+                            value={editingKB.retrieval_config?.top_k || 3}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
+                          />
+                        </div>
                       </div>
-                      {editingKB.retrieval_config?.reranking_enable && (
-                        <Select
-                          className="w-full"
-                          placeholder="选择 Rerank 模型"
-                          value={editingKB.retrieval_config?.reranking_model?.reranking_model_name}
-                          onChange={(v) => updateKBSettings({ 
-                            retrieval_config: { 
-                              reranking_model: { 
-                                reranking_provider_name: 'tongyi', 
-                                reranking_model_name: v 
-                              } 
-                            } 
-                          })}
-                          options={[
-                            { value: 'gte-rerank', label: 'GTE Rerank' },
-                            { value: 'bge-reranker-v2', label: 'BGE Reranker V2' },
-                          ]}
-                        />
-                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <Switch 
+                            size="small" 
+                            checked={editingKB.retrieval_config?.score_threshold_enabled}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold_enabled: v } })}
+                          />
+                          Score 阈值 <Tooltip title="相似度阈值"><HelpCircle className="w-3.5 h-3.5 text-gray-400" /></Tooltip>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <InputNumber 
+                            min={0} 
+                            max={1} 
+                            step={0.01}
+                            value={editingKB.retrieval_config?.score_threshold || 0.5}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
+                            className="w-16"
+                            disabled={!editingKB.retrieval_config?.score_threshold_enabled}
+                          />
+                          <Slider 
+                            className="flex-1"
+                            min={0} 
+                            max={1} 
+                            step={0.01}
+                            value={editingKB.retrieval_config?.score_threshold || 0.5}
+                            onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
+                            disabled={!editingKB.retrieval_config?.score_threshold_enabled}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">Top K</label>
-                  <span className="text-xs text-gray-500">{editingKB.retrieval_config?.top_k}</span>
-                </div>
-                <Slider
-                  min={1}
-                  max={20}
-                  value={editingKB.retrieval_config?.top_k}
-                  onChange={(v) => updateKBSettings({ retrieval_config: { top_k: v } })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">Score 阈值</label>
-                  <span className="text-xs text-gray-500">{editingKB.retrieval_config?.score_threshold}</span>
-                </div>
-                <Slider
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={editingKB.retrieval_config?.score_threshold}
-                  onChange={(v) => updateKBSettings({ retrieval_config: { score_threshold: v } })}
-                />
+                  </div>
+                )}
               </div>
             </div>
           </div>

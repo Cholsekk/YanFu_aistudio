@@ -10,6 +10,7 @@ interface ModelSelectProps {
   modelType: ModelTypeEnum;
   className?: string;
   disableFetchRules?: boolean;
+  disabled?: boolean;
 }
 
 const getI18nText = (text: TypeWithI18N | string | undefined, lang: string = 'zh_Hans') => {
@@ -18,7 +19,7 @@ const getI18nText = (text: TypeWithI18N | string | undefined, lang: string = 'zh
   return text[lang] || text['en_US'] || '';
 };
 
-const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, className = '', disableFetchRules = false }) => {
+const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, className = '', disableFetchRules = false, disabled = false }) => {
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,6 +120,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
       value={value}
       open={isOpen}
       onOpenChange={setIsOpen}
+      disabled={disabled}
       popupMatchSelectWidth={false}
       popupStyle={{ width: '320px', padding: 0 }}
       labelRender={() => {
