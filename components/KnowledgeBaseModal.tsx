@@ -38,19 +38,12 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const type = activeTab === 'all' ? undefined : activeTab;
-      // Map tab keys to API types if necessary
-      // doc -> document, database -> database, graph -> knowledge_graph
-      let apiType = type;
-      if (type === 'document') apiType = 'doc';
-      if (type === 'graph') apiType = 'knowledge_graph';
+      const apiType = activeTab === 'all' ? undefined : activeTab;
 
       const response = await apiService.fetchDatasets({
         page: pageNum,
         limit: 20,
         type: apiType,
-        // search: searchQuery // Assuming API supports search, but fetchDatasets params didn't show it. 
-        // If it doesn't, we might need to filter client-side or check if I should add it.
       });
 
       if (isLoadMore) {
@@ -71,6 +64,9 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
     if (isOpen) {
       setSelectedIds([]);
       fetchDatasets(1, false);
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
     }
   }, [isOpen, activeTab]);
 
@@ -111,9 +107,9 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
 
   const tabItems = [
     { key: 'all', label: '全部', icon: <LayoutGrid className="w-4 h-4" /> },
-    { key: 'document', label: '文档', icon: <FileText className="w-4 h-4" /> },
+    { key: 'doc', label: '文档', icon: <FileText className="w-4 h-4" /> },
     { key: 'database', label: '数据库', icon: <Database className="w-4 h-4" /> },
-    { key: 'graph', label: '知识图谱', icon: <Network className="w-4 h-4" /> },
+    { key: 'knowledge_graph', label: '知识图谱', icon: <Network className="w-4 h-4" /> },
   ];
 
   return (
