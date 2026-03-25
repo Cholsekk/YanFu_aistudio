@@ -212,11 +212,36 @@ const AppConfig: React.FC = () => {
           const config = detail.model_config;
           if (config.pre_prompt) setPrompt(config.pre_prompt);
           if (config.user_input_form) setVariables(config.user_input_form);
-          if (config.dataset_configs && config.dataset_configs.datasets) setKnowledgeBases(config.dataset_configs.datasets.datasets.map((d: any) => ({
-            id: d.dataset.id,
-            name: 'Knowledge Base', // Placeholder as name isn't in this part of response
-            count: 0,
-          })));
+          
+          if (config.dataset_configs && config.dataset_configs.datasets && config.dataset_configs.datasets.datasets) {
+            const kbIds = config.dataset_configs.datasets.datasets.map((d: any) => d.dataset.id);
+            if (kbIds.length > 0) {
+              try {
+                const kbListResponse = await apiService.fetchDatasets({ page: 1, ids: kbIds, limit: kbIds.length });
+                if (kbListResponse && kbListResponse.data) {
+                  const kbList = kbListResponse.data.map((d: any) => ({
+                    id: d.id,
+                    name: d.name || 'Knowledge Base',
+                    description: d.description,
+                    count: d.document_count || 0,
+                    permission: d.permission,
+                    indexing_technique: d.indexing_technique,
+                    embedding_model: d.embedding_model,
+                    retrieval_config: config.dataset_configs.retrieval_model_dict
+                  }));
+                  setKnowledgeBases(kbList);
+                }
+              } catch (e) {
+                console.error('Failed to fetch dataset details:', e);
+              }
+            }
+          }
+          if (config.dataset_configs?.metadata_filtering_mode) {
+            setMetadataFilter(config.dataset_configs.metadata_filtering_mode);
+          }
+          if (config.dataset_configs?.metadata_model_config) {
+            setMetadataModelConfig(config.dataset_configs.metadata_model_config);
+          }
           if (config.model) {
             const model = {
               id: config.model.name,
