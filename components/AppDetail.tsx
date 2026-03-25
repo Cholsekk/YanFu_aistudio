@@ -29,24 +29,28 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
     const type = app.type;
     if (type === '对话应用') {
       return [
+        { id: 'overview', label: '概览', icon: <Layout className="w-4 h-4" /> },
         { id: 'config', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志与标注', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
     } else if (type === '文本生成应用') {
       return [
+        { id: 'overview', label: '概览', icon: <Layout className="w-4 h-4" /> },
         { id: 'config', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
     } else if (type === '智能体应用') {
       return [
+        { id: 'overview', label: '概览', icon: <Layout className="w-4 h-4" /> },
         { id: 'config', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志与标注', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
     } else if (type === '工作流应用') {
       return [
+        { id: 'overview', label: '概览', icon: <Layout className="w-4 h-4" /> },
         { id: 'orchestrate', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
@@ -136,6 +140,39 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
 
     if (activeTab === 'config') {
       return <AppConfig />;
+    }
+
+    if (activeTab === 'overview') {
+      return (
+        <div className="max-w-5xl mx-auto p-6 space-y-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">已启用功能</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {Object.entries(app.config?.model_config || {}).filter(([key, value]) => {
+                // Simplified feature detection based on common config structure
+                const features = ['speech_to_text', 'text_to_speech', 'citation', 'suggestion', 'opening'];
+                return features.includes(key) && (value as any)?.enabled;
+              }).map(([key, value]) => (
+                <div key={key} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="text-sm font-medium text-gray-900">{key}</div>
+                  <div className="text-xs text-gray-500">已启用</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">模型参数</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Object.entries(app.config?.model_config?.model || {}).filter(([key]) => ['temperature', 'top_p', 'max_tokens'].includes(key)).map(([key, value]) => (
+                <div key={key} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="text-xs text-gray-500 uppercase">{key}</div>
+                  <div className="text-sm font-medium text-gray-900">{value as any}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
     }
 
     return (

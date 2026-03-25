@@ -288,7 +288,17 @@ const AppConfig: React.FC = () => {
         });
         setMessages(initialMessages);
       }
-      if (config.enabledFeatures) setEnabledFeatures(config.enabledFeatures);
+      if (config.enabledFeatures) {
+        if (Array.isArray(config.enabledFeatures)) {
+          const enabledFeaturesMap: Record<string, boolean> = {};
+          config.enabledFeatures.forEach((f: string) => {
+            enabledFeaturesMap[f] = true;
+          });
+          setEnabledFeatures(enabledFeaturesMap);
+        } else {
+          setEnabledFeatures(config.enabledFeatures);
+        }
+      }
       if (config.metadataFilter) setMetadataFilter(config.metadataFilter);
       if (config.metadataModelConfig) setMetadataModelConfig(config.metadataModelConfig);
       if (config.manualFilters) setManualFilters(config.manualFilters);
@@ -1676,7 +1686,7 @@ const AppConfig: React.FC = () => {
             <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/50 rounded-xl border border-blue-100/50">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-1.5">
-                  {Object.entries(enabledFeatures).filter(([_, enabled]) => enabled).map(([id, _]) => {
+                  {Object.entries(enabledFeatures || {}).filter(([_, enabled]) => enabled).map(([id, _]) => {
                     const feature = features.find(f => f.id === id);
                     if (!feature) return null;
                     return (
@@ -2003,7 +2013,7 @@ const AppConfig: React.FC = () => {
                           className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-gray-100 ${editingKB.partial_team_data?.members?.includes(user.id) ? 'bg-blue-50' : ''}`}
                           onClick={() => {
                             const newMembers = editingKB.partial_team_data?.members?.includes(user.id)
-                              ? editingKB.partial_team_data.members.filter(m => m !== user.id)
+                              ? editingKB.partial_team_data?.members?.filter(m => m !== user.id) || []
                               : [...(editingKB.partial_team_data?.members || []), user.id];
                             updateKBSettings({ 
                               partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), members: newMembers } 
