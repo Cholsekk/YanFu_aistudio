@@ -208,24 +208,31 @@ const AppConfig: React.FC = () => {
     const fetchAppDetail = async () => {
       try {
         const detail = await apiService.getAppDetail(appId);
-        if (detail && detail.config) {
-          const config = detail.config;
-          if (config.prompt) setPrompt(config.prompt);
-          if (config.variables) setVariables(config.variables);
-          if (config.knowledgeBases) setKnowledgeBases(config.knowledgeBases);
-          if (config.models) {
-            const validModels = config.models.filter((m: any) => m && m.id);
-            setModels(validModels);
-            const initialMessages: Record<string, any> = {};
-            validModels.forEach((m: any) => {
-              initialMessages[m.id] = [];
-            });
-            setMessages(initialMessages);
+        if (detail && detail.model_config) {
+          const config = detail.model_config;
+          if (config.pre_prompt) setPrompt(config.pre_prompt);
+          if (config.user_input_form) setVariables(config.user_input_form);
+          if (config.dataset_configs && config.dataset_configs.datasets) setKnowledgeBases(config.dataset_configs.datasets.datasets.map((d: any) => ({
+            id: d.dataset.id,
+            name: 'Knowledge Base', // Placeholder as name isn't in this part of response
+            count: 0,
+          })));
+          if (config.model) {
+            const model = {
+              id: config.model.name,
+              name: config.model.name,
+              provider: config.model.provider,
+              temperature: config.model.completion_params?.temperature || 0.7,
+              topP: config.model.completion_params?.top_p || 1,
+              presencePenalty: config.model.completion_params?.presence_penalty || 0,
+              frequencyPenalty: config.model.completion_params?.frequency_penalty || 0,
+              maxTokens: config.model.completion_params?.max_tokens || 512,
+              responseFormat: 'text',
+            };
+            setModels([model]);
+            setMessages({ [model.id]: [] });
           }
-          if (config.enabledFeatures) setEnabledFeatures(config.enabledFeatures);
-          if (config.metadataFilter) setMetadataFilter(config.metadataFilter);
-          if (config.metadataModelConfig) setMetadataModelConfig(config.metadataModelConfig);
-          if (config.manualFilters) setManualFilters(config.manualFilters);
+          // Mapping other features...
         }
       } catch (e) {
         console.error('Failed to fetch app detail:', e);
@@ -240,7 +247,7 @@ const AppConfig: React.FC = () => {
       if (config.prompt) setPrompt(config.prompt);
       if (config.variables) setVariables(config.variables);
       if (config.knowledgeBases) setKnowledgeBases(config.knowledgeBases);
-      if (config.models) {
+      if (config.models && Array.isArray(config.models)) {
         const validModels = config.models.filter((m: any) => m && m.id);
         setModels(validModels);
         const initialMessages: Record<string, any> = {};
