@@ -64,7 +64,7 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import VariableEditModal, { Variable } from './VariableEditModal';
-import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum } from '../types';
+import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
 
@@ -132,6 +132,7 @@ interface KnowledgeBase {
   };
   indexing_technique?: string;
   embedding_model?: string;
+  embedding_model_provider?: string;
   retrieval_config?: {
     search_method: string;
     reranking_model?: {
@@ -179,6 +180,63 @@ const AppConfig: React.FC = () => {
   const [isKBSettingsOpen, setIsKBSettingsOpen] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [editingKB, setEditingKB] = useState<KnowledgeBase | null>(null);
+  const [memberList, setMemberList] = useState<Member[]>([]);
+  const [roleList, setRoleList] = useState<Role[]>([]);
+  const [isSavingKB, setIsSavingKB] = useState(false);
+
+  const handleSaveKBSettings = async () => {
+    if (!editingKB) return;
+    setIsSavingKB(true);
+    try {
+      const body: any = {
+        name: editingKB.name,
+        description: editingKB.description,
+        permission: editingKB.permission,
+        indexing_technique: editingKB.indexing_technique,
+        embedding_model: editingKB.embedding_model,
+        embedding_model_provider: editingKB.embedding_model_provider,
+        retrieval_model: editingKB.retrieval_config,
+      };
+
+      if (editingKB.permission === 'partial_members') {
+        const partialData = editingKB.partial_team_data || { roles: [], departments: [], members: [] };
+        
+        // Get all member IDs including those auto-selected by roles
+        const selectedRoleNames = roleList
+          .filter(r => partialData.roles?.includes(r.role_id))
+          .map(r => r.role_name);
+        
+        const autoSelectedMemberIDs = memberList
+          .filter(m => selectedRoleNames.includes(m.role))
+          .map(m => m.id);
+        
+        const allSelectedMemberIDs = Array.from(new Set([
+          ...(partialData.members || []),
+          ...autoSelectedMemberIDs
+        ]));
+
+        body.partial_member_list = allSelectedMemberIDs.map(id => {
+          const member = memberList.find(m => m.id === id);
+          return {
+            user_id: id,
+            role: member?.role
+          };
+        });
+      }
+
+      await apiService.updateDatasetSetting(editingKB.id, body);
+      message.success('知识库设置已更新');
+      setIsKBSettingsOpen(false);
+      // Update local knowledge bases list
+      setKnowledgeBases(prev => prev.map(kb => kb.id === editingKB.id ? editingKB : kb));
+    } catch (error) {
+      console.error('Failed to update knowledge base settings:', error);
+      message.error('更新知识库设置失败');
+    } finally {
+      setIsSavingKB(false);
+    }
+  };
+
   const [citationPreview, setCitationPreview] = useState<any | null>(null);
   const [isMultiModel, setIsMultiModel] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
@@ -301,6 +359,11 @@ const AppConfig: React.FC = () => {
                     permission: d.permission,
                     indexing_technique: d.indexing_technique,
                     embedding_model: d.embedding_model,
+                    partial_team_data: {
+                      roles: [],
+                      departments: [],
+                      members: d.partial_member_list?.map((m: any) => m.user_id) || []
+                    },
                     retrieval_config: {
                       ...d.retrieval_model_dict,
                       ...(config.dataset_configs.datasets.datasets.find((ds: any) => (ds.dataset ? ds.dataset.id : ds.id) === d.id)?.dataset?.retrieval_model || {})
@@ -585,7 +648,6 @@ const AppConfig: React.FC = () => {
       }
     };
     setEditingKB(updatedKB);
-    setKnowledgeBases(knowledgeBases.map(kb => kb.id === updatedKB.id ? updatedKB : kb));
   };
 
   const loadPreset = (preset: string) => {
@@ -2039,7 +2101,13 @@ const AppConfig: React.FC = () => {
         footer={
           <div className="flex justify-end gap-2">
             <Button onClick={() => setIsKBSettingsOpen(false)}>取消</Button>
-            <Button type="primary" onClick={() => setIsKBSettingsOpen(false)}>确定</Button>
+            <Button 
+              type="primary" 
+              loading={isSavingKB} 
+              onClick={handleSaveKBSettings}
+            >
+              确定
+            </Button>
           </div>
         }
       >
@@ -2088,6 +2156,10 @@ const AppConfig: React.FC = () => {
                   <PartialTeamMembersSelector 
                     partialTeamData={editingKB.partial_team_data || { roles: [], departments: [], members: [] }}
                     updateKBSettings={updateKBSettings}
+                    onMembersLoaded={(members, roles) => {
+                      setMemberList(members);
+                      setRoleList(roles);
+                    }}
                   />
                 </div>
               )}

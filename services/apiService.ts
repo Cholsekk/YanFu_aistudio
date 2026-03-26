@@ -1,4 +1,4 @@
-import { Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
+import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 export const getBaseUrl = () => {
@@ -788,6 +788,15 @@ class ApiService {
   async getMembers(params: any = {}): Promise<{ accounts: Member[] }> {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/workspaces/current/members${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async updateDatasetSetting(datasetId: string, body: Partial<Pick<DataSet,
+    'name' | 'description' | 'permission' | 'partial_member_list' | 'indexing_technique' | 'retrieval_model' | 'embedding_model' | 'embedding_model_provider'
+  >>): Promise<DataSet> {
+    return this.request(`/datasets/${datasetId}`, {
+      method: 'PATCH',
+      body: body as any
+    });
   }
 
   async getApps(params: Record<string, any> = { page: 1, limit: 30, built_in: false }): Promise<any> {

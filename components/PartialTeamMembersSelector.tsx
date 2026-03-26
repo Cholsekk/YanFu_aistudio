@@ -13,9 +13,10 @@ interface PartialTeamData {
 interface PartialTeamMembersSelectorProps {
   partialTeamData: PartialTeamData;
   updateKBSettings: (settings: any) => void;
+  onMembersLoaded?: (members: Member[], roles: Role[]) => void;
 }
 
-export const PartialTeamMembersSelector: React.FC<PartialTeamMembersSelectorProps> = ({ partialTeamData, updateKBSettings }) => {
+export const PartialTeamMembersSelector: React.FC<PartialTeamMembersSelectorProps> = ({ partialTeamData, updateKBSettings, onMembersLoaded }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roles, setRoles] = useState<Role[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -31,9 +32,14 @@ export const PartialTeamMembersSelector: React.FC<PartialTeamMembersSelectorProp
           apiService.getDepartments(),
           apiService.getMembers()
         ]);
-        setRoles(rolesRes.data || []);
+        const fetchedRoles = rolesRes.data || [];
+        const fetchedMembers = membersRes.accounts || [];
+        setRoles(fetchedRoles);
         setDepartments(deptsRes.data || []);
-        setMembers(membersRes.accounts || []);
+        setMembers(fetchedMembers);
+        if (onMembersLoaded) {
+          onMembersLoaded(fetchedMembers, fetchedRoles);
+        }
       } catch (error) {
         console.error('Failed to fetch user management data:', error);
       } finally {

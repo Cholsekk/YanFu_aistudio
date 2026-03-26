@@ -1110,7 +1110,7 @@ export type DataSet = {
   retrieval_model_dict: RetrievalConfig
   retrieval_model: RetrievalConfig
   tags: Tag[]
-  partial_member_list?: string[]
+  partial_member_list?: { user_id: string; role: string }[]
   external_knowledge_info: {
     external_knowledge_id: string
     external_knowledge_api_id: string
