@@ -64,7 +64,7 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import VariableEditModal, { Variable } from './VariableEditModal';
-import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role } from '../types';
+import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, LogicalOperator, ComparisonOperator } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
 
@@ -72,7 +72,7 @@ import { PartialTeamMembersSelector } from './PartialTeamMembersSelector';
 
 const { TextArea } = Input;
 
-interface ModelConfig {
+interface LocalModelConfig {
   id: string;
   name: string;
   provider: string;
@@ -91,7 +91,7 @@ interface ModelConfig {
   rules?: ModelParameterRule[];
 }
 
-const DEFAULT_MODEL: ModelConfig = {
+const DEFAULT_MODEL: LocalModelConfig = {
   id: 'gpt-3.5-turbo-0125',
   name: 'gpt-3.5-turbo-0125',
   provider: 'OpenAI',
@@ -184,6 +184,226 @@ const AppConfig: React.FC = () => {
   const [roleList, setRoleList] = useState<Role[]>([]);
   const [isSavingKB, setIsSavingKB] = useState(false);
 
+  const [isMarketModalOpen, setIsMarketModalOpen] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [isPublishingToMarket, setIsPublishingToMarket] = useState(false);
+  const [draftUpdatedAt, setDraftUpdatedAt] = useState<number | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const lastSavedConfigRef = useRef<string>('');
+
+  const [relativeTimeString, setRelativeTimeString] = useState<string>('');
+
+  const fetchCategories = async () => {
+    setLoadingCategories(true);
+    try {
+      const res = await apiService.getAppCategories();
+      if (res && res.data) {
+        setCategories(res.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      message.error('获取分类失败');
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const handleOpenMarketModal = () => {
+    setIsMarketModalOpen(true);
+    fetchCategories();
+  };
+
+  const getCurrentConfig = () => {
+    return {
+      prompt,
+      variables,
+      knowledgeBases,
+      models,
+      enabledFeatures,
+      variableValues,
+      metadataFilter,
+      metadataModelConfig,
+      manualFilters,
+      dataset_configs: {
+        retrieval_model: RETRIEVE_TYPE.multiWay,
+        top_k: 4,
+        reranking_mode: RerankingModeEnum.RerankingModel,
+        reranking_model: {
+          reranking_provider_name: 'tongyi',
+          reranking_model_name: 'gte-rerank'
+        },
+        reranking_enable: false,
+        datasets: {
+          datasets: knowledgeBases.map(kb => ({
+            enabled: true,
+            id: kb.id
+          }))
+        },
+        metadata_filtering_mode: metadataFilter,
+        ...(metadataFilter === MetadataFilteringModeEnum.automatic && metadataModelConfig ? {
+          metadata_model_config: {
+            provider: metadataModelConfig.provider,
+            name: metadataModelConfig.name,
+            mode: ModelModeType.chat,
+            completion_params: {
+              temperature: metadataModelConfig.temperature,
+              top_p: metadataModelConfig.topP,
+              presence_penalty: metadataModelConfig.presencePenalty,
+              frequency_penalty: metadataModelConfig.frequencyPenalty,
+              max_tokens: metadataModelConfig.maxTokens,
+            }
+          }
+        } : {}),
+        ...(metadataFilter === MetadataFilteringModeEnum.manual ? {
+          metadata_filtering_conditions: {
+            logical_operator: LogicalOperator.and,
+            conditions: manualFilters.map(f => ({
+              id: f.key,
+              name: f.key,
+              comparison_operator: ComparisonOperator.is,
+              value: f.value
+            }))
+          }
+        } : {}),
+        score_threshold_enabled: false,
+        score_threshold: null
+      }
+    };
+  };
+
+  const getCurrentModelConfig = (): ModelConfig => {
+    const model = models[0] || DEFAULT_MODEL;
+    return {
+      opening_statement: openingStatement,
+      suggested_questions: suggestedQuestions,
+      pre_prompt: prompt,
+      prompt_type: PromptMode.simple,
+      chat_prompt_config: {},
+      completion_prompt_config: {},
+      user_input_form: variables as any,
+      dataset_query_variable: '',
+      more_like_this: {
+        enabled: false
+      },
+      suggested_questions_after_answer: {
+        enabled: !!enabledFeatures.suggestion
+      },
+      speech_to_text: {
+        enabled: !!enabledFeatures.stt
+      },
+      text_to_speech: {
+        enabled: !!enabledFeatures.tts,
+        voice: '',
+        language: ''
+      },
+      retriever_resource: {
+        enabled: !!enabledFeatures.citation
+      },
+      sensitive_word_avoidance: {
+        enabled: !!enabledFeatures.content_check
+      },
+      agent_mode: {
+        enabled: false,
+        tools: []
+      },
+      model: {
+        provider: model.provider,
+        name: model.name,
+        mode: ModelModeType.chat,
+        completion_params: {
+          temperature: model.temperature,
+          top_p: model.topP,
+          presence_penalty: model.presencePenalty,
+          frequency_penalty: model.frequencyPenalty,
+          max_tokens: model.maxTokens,
+        }
+      },
+      dataset_configs: {
+        retrieval_model: RETRIEVE_TYPE.multiWay,
+        top_k: 4,
+        reranking_mode: RerankingModeEnum.RerankingModel,
+        reranking_model: {
+          reranking_provider_name: 'tongyi',
+          reranking_model_name: 'gte-rerank'
+        },
+        reranking_enable: false,
+        datasets: {
+          datasets: knowledgeBases.map(kb => ({
+            enabled: true,
+            id: kb.id
+          }))
+        },
+        metadata_filtering_mode: metadataFilter,
+        ...(metadataFilter === MetadataFilteringModeEnum.automatic && metadataModelConfig ? {
+          metadata_model_config: {
+            provider: metadataModelConfig.provider,
+            name: metadataModelConfig.name,
+            mode: ModelModeType.chat,
+            completion_params: {
+              temperature: metadataModelConfig.temperature,
+              top_p: metadataModelConfig.topP,
+              presence_penalty: metadataModelConfig.presencePenalty,
+              frequency_penalty: metadataModelConfig.frequencyPenalty,
+              max_tokens: metadataModelConfig.maxTokens,
+            }
+          }
+        } : {}),
+        ...(metadataFilter === MetadataFilteringModeEnum.manual ? {
+          metadata_filtering_conditions: {
+            logical_operator: LogicalOperator.and,
+            conditions: manualFilters.map(f => ({
+              id: f.key,
+              name: f.key,
+              comparison_operator: ComparisonOperator.is,
+              value: f.value
+            }))
+          }
+        } : {}),
+        score_threshold_enabled: false,
+        score_threshold: null
+      }
+    };
+  };
+
+  const handlePublishToMarket = async () => {
+    if (!selectedCategory || !appId) {
+      message.warning('请选择发布分类');
+      return;
+    }
+    setIsPublishingToMarket(true);
+    const hide = message.loading('正在发布到应用市场...', 0);
+    try {
+      const modelConfig = getCurrentModelConfig();
+      // First update the model config
+      await apiService.updateAppModelConfig(appId, modelConfig);
+      
+      // Then update the app metadata and category
+      await apiService.updateApp(appId, {
+        name: app.name,
+        icon_type: app.iconType as any,
+        icon: app.icon,
+        icon_background: app.iconBgColor,
+        description: app.description,
+        config: getCurrentConfig(),
+        category: selectedCategory
+      } as any);
+
+      message.success('已成功发布到应用市场');
+      setDraftUpdatedAt(Date.now());
+      lastSavedConfigRef.current = getConfigString();
+      setIsMarketModalOpen(false);
+    } catch (error) {
+      console.error('Failed to publish to market:', error);
+      message.error('发布到应用市场失败');
+    } finally {
+      setIsPublishingToMarket(false);
+      hide();
+    }
+  };
+
   const handleSaveKBSettings = async () => {
     if (!editingKB) return;
     setIsSavingKB(true);
@@ -244,7 +464,7 @@ const AppConfig: React.FC = () => {
   const handleVariableChange = (id: string, value: any) => {
     setVariableValues(prev => ({ ...prev, [id]: value }));
   };
-  const [models, setModels] = useState<ModelConfig[]>([DEFAULT_MODEL]);
+  const [models, setModels] = useState<LocalModelConfig[]>([DEFAULT_MODEL]);
   const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[] }[]>>({
     [DEFAULT_MODEL.id]: []
   });
@@ -324,9 +544,100 @@ const AppConfig: React.FC = () => {
     annotation: false,
     attachment: false,
   });
+  const [openingStatement, setOpeningStatement] = useState('');
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [metadataFilter, setMetadataFilter] = useState<MetadataFilteringModeEnum>(MetadataFilteringModeEnum.disabled);
   const [metadataModelConfig, setMetadataModelConfig] = useState<any>(null);
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
+
+  const getConfigString = () => {
+    return JSON.stringify({
+      prompt,
+      variables,
+      knowledgeBases,
+      models,
+      enabledFeatures,
+      variableValues,
+      metadataFilter,
+      metadataModelConfig,
+      manualFilters,
+      openingStatement,
+      suggestedQuestions
+    });
+  };
+
+  const getRelativeTime = (timestamp: number) => {
+    const now = Date.now();
+    const diff = Math.floor((now - timestamp) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+    return `${Math.floor(diff / 86400)}天前`;
+  };
+
+  useEffect(() => {
+    if (!draftUpdatedAt) return;
+    const updateRelativeTime = () => {
+      setRelativeTimeString(getRelativeTime(draftUpdatedAt));
+    };
+    updateRelativeTime();
+    const interval = setInterval(updateRelativeTime, 60000);
+    return () => clearInterval(interval);
+  }, [draftUpdatedAt]);
+
+  const handleAutoSave = async (configStr: string) => {
+    if (!appId) return;
+    setIsAutoSaving(true);
+    try {
+      const modelConfig = getCurrentModelConfig();
+      await apiService.updateAppModelConfig(appId, modelConfig);
+      await apiService.updateApp(appId, {
+        name: app.name,
+        icon_type: app.iconType as any,
+        icon: app.icon,
+        icon_background: app.iconBgColor,
+        description: app.description,
+        config: getCurrentConfig()
+      } as any);
+      setDraftUpdatedAt(Date.now());
+      lastSavedConfigRef.current = configStr;
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      message.error('自动保存失败，请检查网络');
+    } finally {
+      setIsAutoSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    const currentConfig = getConfigString();
+
+    if (!lastSavedConfigRef.current) {
+      lastSavedConfigRef.current = currentConfig;
+      return;
+    }
+
+    if (currentConfig === lastSavedConfigRef.current) return;
+
+    const timer = setTimeout(() => {
+      handleAutoSave(currentConfig);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [
+    prompt,
+    variables,
+    knowledgeBases,
+    models,
+    enabledFeatures,
+    variableValues,
+    metadataFilter,
+    metadataModelConfig,
+    manualFilters,
+    openingStatement,
+    suggestedQuestions
+  ]);
 
   useEffect(() => {
     if (!appId) return;
@@ -398,6 +709,9 @@ const AppConfig: React.FC = () => {
             setMessages({ [model.id]: [] });
           }
           
+          if (config.opening_statement) setOpeningStatement(config.opening_statement);
+          if (config.suggested_questions) setSuggestedQuestions(config.suggested_questions);
+
           // Map features from model_config to enabledFeatures state
           setEnabledFeatures({
             opening: !!config.opening_statement,
@@ -409,6 +723,7 @@ const AppConfig: React.FC = () => {
             annotation: !!config.annotation_reply?.enabled,
             attachment: !!config.file_upload?.enabled || !!config.file_upload?.image?.enabled,
           });
+          setIsLoaded(true);
         }
       } catch (e) {
         console.error('Failed to fetch app detail:', e);
@@ -446,6 +761,7 @@ const AppConfig: React.FC = () => {
       if (config.metadataFilter) setMetadataFilter(config.metadataFilter);
       if (config.metadataModelConfig) setMetadataModelConfig(config.metadataModelConfig);
       if (config.manualFilters) setManualFilters(config.manualFilters);
+      setIsLoaded(true);
       return;
     }
 
@@ -461,15 +777,15 @@ const AppConfig: React.FC = () => {
             console.error('Failed to fetch model parameter rules:', e);
           }
           
-          const newModel: ModelConfig = {
+          const newModel: LocalModelConfig = {
             ...DEFAULT_MODEL,
             id: res.model,
             name: res.model,
             provider: res.provider.provider,
             rules,
-            ...(rules ? rules.reduce((acc, rule) => {
+            ...(rules ? (rules as any[]).reduce((acc: any, rule: any) => {
               if (rule.default !== undefined) {
-                const keyMap: Record<string, keyof ModelConfig> = {
+                const keyMap: Record<string, keyof LocalModelConfig> = {
                   'temperature': 'temperature',
                   'top_p': 'topP',
                   'presence_penalty': 'presencePenalty',
@@ -487,6 +803,7 @@ const AppConfig: React.FC = () => {
           
           setModels([newModel]);
           setMessages({ [newModel.id]: [] });
+          setIsLoaded(true);
         }
       } catch (e) {
         console.error('Failed to fetch default model:', e);
@@ -495,7 +812,7 @@ const AppConfig: React.FC = () => {
     fetchDefaultModel();
   }, [app]);
 
-  const updateMetadataModelParam = (param: keyof ModelConfig | 'model_info', value: any, extra?: { provider?: string; rules?: ModelParameterRule[] }) => {
+  const updateMetadataModelParam = (param: keyof LocalModelConfig | 'model_info', value: any, extra?: { provider?: string; rules?: ModelParameterRule[] }) => {
     setMetadataModelConfig((prev: any) => {
       const m = prev || { ...DEFAULT_MODEL, id: 'metadata-model', name: '', provider: '' };
       if (param === 'model_info') {
@@ -508,7 +825,7 @@ const AppConfig: React.FC = () => {
           // Reset params to defaults if rules are provided
           ...(rules ? rules.reduce((acc: any, rule: any) => {
             if (rule.default !== undefined) {
-              const keyMap: Record<string, keyof ModelConfig> = {
+              const keyMap: Record<string, keyof LocalModelConfig> = {
                 'temperature': 'temperature',
                 'top_p': 'topP',
                 'presence_penalty': 'presencePenalty',
@@ -532,71 +849,22 @@ const AppConfig: React.FC = () => {
     if (!appId) return;
     const hide = message.loading('正在发布配置...', 0);
     try {
-      const config = {
-        prompt,
-        variables,
-        knowledgeBases,
-        models,
-        enabledFeatures,
-        variableValues,
-        metadataFilter,
-        metadataModelConfig,
-        manualFilters,
-        // Backfill to the requested structure
-        dataset_configs: {
-          retrieval_model: 'multiple',
-          top_k: 4,
-          reranking_mode: 'reranking_model',
-          reranking_model: {
-            reranking_provider_name: 'tongyi',
-            reranking_model_name: 'gte-rerank'
-          },
-          reranking_enable: false,
-          datasets: {
-            datasets: knowledgeBases.map(kb => ({
-              dataset: {
-                enabled: true,
-                id: kb.id,
-                name: kb.name,
-                retrieval_model: kb.retrieval_config ? {
-                  search_method: kb.retrieval_config.search_method,
-                  top_k: kb.retrieval_config.top_k,
-                  score_threshold: kb.retrieval_config.score_threshold,
-                  reranking_enable: kb.retrieval_config.reranking_enable,
-                  reranking_model: kb.retrieval_config.reranking_model,
-                  weights: kb.retrieval_config.weights,
-                  reranking_mode: kb.retrieval_config.reranking_mode
-                } : undefined
-              }
-            }))
-          },
-          metadata_filtering_mode: metadataFilter,
-          ...(metadataFilter === MetadataFilteringModeEnum.automatic && metadataModelConfig ? {
-            metadata_model_config: {
-              provider: metadataModelConfig.provider,
-              name: metadataModelConfig.name,
-              mode: 'chat',
-              completion_params: {
-                temperature: metadataModelConfig.temperature,
-                top_p: metadataModelConfig.topP,
-                presence_penalty: metadataModelConfig.presencePenalty,
-                frequency_penalty: metadataModelConfig.frequencyPenalty,
-                max_tokens: metadataModelConfig.maxTokens,
-              }
-            }
-          } : {}),
-          manual_filters: metadataFilter === MetadataFilteringModeEnum.manual ? manualFilters : []
-        }
-      };
+      const modelConfig = getCurrentModelConfig();
+      await apiService.updateAppModelConfig(appId, modelConfig);
+      
+      // Also update app basic info if needed
       await apiService.updateApp(appId, {
         name: app.name,
-        icon_type: app.iconType,
+        icon_type: app.iconType as any,
         icon: app.icon,
         icon_background: app.iconBgColor,
         description: app.description,
-        config: config
-      });
+        config: getCurrentConfig()
+      } as any);
+      
       message.success('配置发布成功！');
+      setDraftUpdatedAt(Date.now());
+      lastSavedConfigRef.current = getConfigString();
     } catch (error) {
       console.error('Failed to publish:', error);
       message.error('发布失败');
@@ -651,7 +919,7 @@ const AppConfig: React.FC = () => {
   };
 
   const loadPreset = (preset: string) => {
-    const presets: Record<string, Partial<ModelConfig>> = {
+    const presets: Record<string, Partial<LocalModelConfig>> = {
       'creative': { temperature: 1.2, topP: 0.95, presencePenalty: 0.1 },
       'precise': { temperature: 0.1, topP: 0.1, presencePenalty: 0 },
       'balanced': { temperature: 0.7, topP: 1, presencePenalty: 0 },
@@ -808,7 +1076,7 @@ const AppConfig: React.FC = () => {
               metadata_model_config: {
                 provider: metadataModelConfig.provider,
                 name: metadataModelConfig.name,
-                mode: 'chat',
+                mode: ModelModeType.chat,
                 completion_params: {
                   temperature: metadataModelConfig.temperature,
                   top_p: metadataModelConfig.topP,
@@ -818,7 +1086,17 @@ const AppConfig: React.FC = () => {
                 }
               }
             } : {}),
-            manual_filters: metadataFilter === MetadataFilteringModeEnum.manual ? manualFilters : []
+            ...(metadataFilter === MetadataFilteringModeEnum.manual ? {
+              metadata_filtering_conditions: {
+                logical_operator: LogicalOperator.and,
+                conditions: manualFilters.map(f => ({
+                  id: f.key,
+                  name: f.key,
+                  comparison_operator: ComparisonOperator.is,
+                  value: f.value
+                }))
+              }
+            } : {}),
           },
           file_upload: {
             image: {
@@ -988,7 +1266,7 @@ const AppConfig: React.FC = () => {
     }
   };
 
-  const updateModelParam = (id: string, param: keyof ModelConfig | 'model_info' | 'required_param', value: any, extra?: { provider?: string; rules?: ModelParameterRule[]; paramName?: string }) => {
+  const updateModelParam = (id: string, param: keyof LocalModelConfig | 'model_info' | 'required_param', value: any, extra?: { provider?: string; rules?: ModelParameterRule[]; paramName?: string }) => {
     setModels(models.map(m => {
       if (m.id === id) {
         if (param === 'model_info') {
@@ -1020,7 +1298,7 @@ const AppConfig: React.FC = () => {
             // Reset params to defaults if rules are provided
             ...(rules ? rules.reduce((acc, rule) => {
               if (rule.default !== undefined) {
-                const keyMap: Record<string, keyof ModelConfig> = {
+                const keyMap: Record<string, keyof LocalModelConfig> = {
                   'temperature': 'temperature',
                   'top_p': 'topP',
                   'presence_penalty': 'presencePenalty',
@@ -1406,7 +1684,7 @@ const AppConfig: React.FC = () => {
                         {(metadataModelConfig.rules || [
                           { label: { zh_Hans: '温度 (Temperature)', en_US: 'Temperature' }, name: 'temperature', min: 0, max: 2, type: 'slider', precision: 1 },
                         ]).filter((rule: any) => ['temperature', 'top_p', 'max_tokens'].includes(rule.name)).map((rule: any) => {
-                          const keyMap: Record<string, keyof ModelConfig> = {
+                          const keyMap: Record<string, keyof LocalModelConfig> = {
                             'temperature': 'temperature',
                             'top_p': 'topP',
                             'max_tokens': 'maxTokens',
@@ -1503,7 +1781,9 @@ const AppConfig: React.FC = () => {
               <div className="w-64">
                 <div className="mb-3">
                   <div className="text-gray-600 text-sm mb-1">当前草稿未发布</div>
-                  <div className="text-gray-400 text-xs">自动保存 ·</div>
+                  <div className="text-gray-400 text-xs">
+                    {isAutoSaving ? '正在自动保存...' : draftUpdatedAt ? `自动保存于 ${relativeTimeString}` : '自动保存 ·'}
+                  </div>
                 </div>
                 <Button 
                   type="primary" 
@@ -1521,7 +1801,10 @@ const AppConfig: React.FC = () => {
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-gray-400" />
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg cursor-pointer text-blue-600 transition-colors">
+                  <div 
+                    className="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg cursor-pointer text-blue-600 transition-colors"
+                    onClick={handleOpenMarketModal}
+                  >
                     <div className="flex items-center gap-2">
                       <Store className="w-4 h-4" />
                       <span className="text-sm font-medium">发布到应用市场</span>
@@ -1556,6 +1839,52 @@ const AppConfig: React.FC = () => {
           </Popover>
         </div>
       </div>
+
+      {/* Market Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500">
+              <Info className="w-6 h-6" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">确认</span>
+          </div>
+        }
+        open={isMarketModalOpen}
+        onCancel={() => setIsMarketModalOpen(false)}
+        onOk={handlePublishToMarket}
+        okText="确认"
+        cancelText="取消"
+        confirmLoading={isPublishingToMarket}
+        centered
+        width={480}
+        styles={{
+          mask: { backdropFilter: 'blur(4px)' },
+          header: { borderBottom: 'none', padding: '24px 24px 0' },
+          body: { padding: '16px 24px 24px' },
+          footer: { borderTop: 'none', padding: '0 24px 24px' }
+        }}
+        okButtonProps={{
+          className: 'h-10 px-8 rounded-lg bg-blue-600 font-medium',
+        }}
+        cancelButtonProps={{
+          className: 'h-10 px-8 rounded-lg font-medium',
+        }}
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700 text-base font-medium">请选择发布分类</p>
+          <Select
+            className="w-full h-12"
+            placeholder="请选择发布到应用市场的分类"
+            loading={loadingCategories}
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            options={categories.map(c => ({ label: c.category, value: c.id }))}
+            dropdownStyle={{ borderRadius: '12px', padding: '8px' }}
+            variant="outlined"
+          />
+        </div>
+      </Modal>
 
       {/* Right Debug Area */}
       <div className="flex-grow flex flex-col bg-gray-50/50">
@@ -1933,7 +2262,7 @@ const AppConfig: React.FC = () => {
                         { label: { zh_Hans: '联网搜索', en_US: 'Google Search' }, name: 'google_search', type: 'boolean' },
                         { label: { zh_Hans: '推理模式', en_US: 'Reasoning Mode' }, name: 'reasoning_mode', type: 'boolean' },
                       ]).map((rule: any) => {
-                        const keyMap: Record<string, keyof ModelConfig> = {
+                        const keyMap: Record<string, keyof LocalModelConfig> = {
                           'temperature': 'temperature',
                           'top_p': 'topP',
                           'presence_penalty': 'presencePenalty',
@@ -2038,6 +2367,10 @@ const AppConfig: React.FC = () => {
         onClose={() => setShowFeaturesDrawer(false)} 
         enabledFeatures={enabledFeatures}
         setEnabledFeatures={setEnabledFeatures}
+        openingStatement={openingStatement}
+        setOpeningStatement={setOpeningStatement}
+        suggestedQuestions={suggestedQuestions}
+        setSuggestedQuestions={setSuggestedQuestions}
       />
 
       <style>{`
@@ -2608,31 +2941,89 @@ const FeaturesDrawer = ({
   isOpen, 
   onClose, 
   enabledFeatures, 
-  setEnabledFeatures 
+  setEnabledFeatures,
+  openingStatement,
+  setOpeningStatement,
+  suggestedQuestions,
+  setSuggestedQuestions
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   enabledFeatures: Record<string, boolean>;
   setEnabledFeatures: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  openingStatement: string;
+  setOpeningStatement: (val: string) => void;
+  suggestedQuestions: string[];
+  setSuggestedQuestions: (val: string[]) => void;
 }) => {
   return (
     <Drawer title="功能" open={isOpen} onClose={onClose} size="default">
       <div className="text-sm text-gray-500 mb-4">增强 web app 用户体验</div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {features.map(f => (
-          <div key={f.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-            <div className={`w-10 h-10 rounded-lg ${f.color} flex items-center justify-center text-white shrink-0`}>
-              <f.icon className="w-5 h-5" />
+          <div key={f.id} className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+              <div className={`w-10 h-10 rounded-lg ${f.color} flex items-center justify-center text-white shrink-0`}>
+                <f.icon className="w-5 h-5" />
+              </div>
+              <div className="flex-grow">
+                <div className="font-bold text-gray-900">{f.name}</div>
+                <div className="text-xs text-gray-500">{f.desc}</div>
+              </div>
+              <Switch 
+                size="small" 
+                checked={enabledFeatures[f.id]}
+                onChange={(checked) => setEnabledFeatures(prev => ({ ...prev, [f.id]: checked }))}
+              />
             </div>
-            <div className="flex-grow">
-              <div className="font-bold text-gray-900">{f.name}</div>
-              <div className="text-xs text-gray-500">{f.desc}</div>
-            </div>
-            <Switch 
-              size="small" 
-              checked={enabledFeatures[f.id]}
-              onChange={(checked) => setEnabledFeatures(prev => ({ ...prev, [f.id]: checked }))}
-            />
+            
+            {f.id === 'opening' && enabledFeatures.opening && (
+              <div className="ml-13 space-y-3">
+                <div className="space-y-1.5">
+                  <div className="text-xs font-medium text-gray-700">开场白内容</div>
+                  <TextArea 
+                    rows={3} 
+                    placeholder="输入开场白内容..." 
+                    value={openingStatement}
+                    onChange={(e) => setOpeningStatement(e.target.value)}
+                    className="text-xs rounded-lg"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="text-xs font-medium text-gray-700">推荐问题</div>
+                  <div className="space-y-2">
+                    {suggestedQuestions.map((q, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Input 
+                          size="small" 
+                          value={q}
+                          onChange={(e) => {
+                            const newQs = [...suggestedQuestions];
+                            newQs[idx] = e.target.value;
+                            setSuggestedQuestions(newQs);
+                          }}
+                          className="text-xs rounded-md"
+                        />
+                        <Trash2 
+                          className="w-3.5 h-3.5 text-gray-300 hover:text-red-500 cursor-pointer" 
+                          onClick={() => setSuggestedQuestions(suggestedQuestions.filter((_, i) => i !== idx))}
+                        />
+                      </div>
+                    ))}
+                    <Button 
+                      type="dashed" 
+                      size="small" 
+                      block 
+                      icon={<Plus className="w-3 h-3" />}
+                      className="text-[10px]"
+                      onClick={() => setSuggestedQuestions([...suggestedQuestions, ''])}
+                    >
+                      添加推荐问题
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

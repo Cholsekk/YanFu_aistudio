@@ -487,6 +487,10 @@ export type UploadFileSetting = {
   max_length: number
   number_limits?: number
 }
+/**
+ * 补全参数常量
+ */
+export const CompletionParams = ['temperature', 'top_p', 'presence_penalty', 'max_token', 'stop', 'frequency_penalty'] as const
 
 export type ModelConfig = {
   opening_statement: string
@@ -524,7 +528,12 @@ export type ModelConfig = {
     strategy?: AgentStrategy
     tools: ToolItem[]
   }
-  model: Model
+  model: {
+    provider: string
+    name: string
+    mode: ModelModeType
+    completion_params: Record<string, any>
+  }
   dataset_configs: DatasetConfigs
   file_upload?: {
     image: VisionSettings
@@ -645,6 +654,7 @@ export type AppTokenCostsResponse = {
 }
 
 export type UpdateModelConfigResponse = { result: string }
+export type UpdateAppModelConfigResponse = { result: string }
 
 export type ApiKeyItemResponse = {
   id: string
@@ -1792,10 +1802,6 @@ export type ConversationListResponse = {
 export const fetchLogs = (url: string) =>
   fetch(url).then<ConversationListResponse>(r => r.json())
 
-/**
- * 补全参数常量
- */
-export const CompletionParams = ['temperature', 'top_p', 'presence_penalty', 'max_token', 'stop', 'frequency_penalty'] as const
 
 /**
  * 补全参数类型
@@ -2364,7 +2370,6 @@ export type CompletionPromptConfig = {
   conversation_histories_role: ConversationHistoriesRole
 }
 export enum ModelModeType {
-  'chat' = 'chat',
-  'completion' = 'completion',
-  'unset' = '',
+  chat = 'chat',
+  completion = 'completion',
 }

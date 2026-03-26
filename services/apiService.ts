@@ -1,4 +1,4 @@
-import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
+import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType, ModelConfig, UpdateAppModelConfigResponse } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 export const getBaseUrl = () => {
@@ -907,10 +907,18 @@ class ApiService {
     use_icon_as_answer_icon?: boolean; 
     built_in?: boolean;
     config?: any;
+    category?: string;
   }): Promise<any> {
     return this.request(`/apps/${appID}`, {
       method: 'PUT',
       body: data as any
+    });
+  }
+
+  async updateAppModelConfig(appId: string, body: ModelConfig): Promise<UpdateAppModelConfigResponse> {
+    return this.request(`/apps/${appId}/model-config`, {
+      method: 'POST',
+      body: body as any
     });
   }
 
@@ -1414,4 +1422,12 @@ export const fetchDatasets: Fetcher<DataSetListResponse, {
       }) => {
   // type分别为“doc” “database” “knowledge_graph”，对应选择知识库面板发三种分类，全部的时候不传type
   return apiService.fetchDatasets(params);
+}
+
+export const updateAppModelConfig: Fetcher<UpdateAppModelConfigResponse, { url: string; body: ModelConfig }> = ({
+  url,
+  body
+}) => {
+  const appId = url.split('/')[2];
+  return apiService.updateAppModelConfig(appId, body);
 }
