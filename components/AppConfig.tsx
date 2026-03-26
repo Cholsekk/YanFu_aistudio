@@ -179,6 +179,7 @@ const AppConfig: React.FC = () => {
   const [isKBSettingsOpen, setIsKBSettingsOpen] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [editingKB, setEditingKB] = useState<KnowledgeBase | null>(null);
+  const [citationPreview, setCitationPreview] = useState<any | null>(null);
   const [isMultiModel, setIsMultiModel] = useState(false);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
 
@@ -186,16 +187,78 @@ const AppConfig: React.FC = () => {
     setVariableValues(prev => ({ ...prev, [id]: value }));
   };
   const [models, setModels] = useState<ModelConfig[]>([DEFAULT_MODEL]);
-  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string }[]>>({
+  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[] }[]>>({
     [DEFAULT_MODEL.id]: []
   });
   const [isStreaming, setIsStreaming] = useState<Record<string, boolean>>({});
   const [inputValue, setInputValue] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachments, setAttachments] = useState<any[]>([]);
   const [showParams, setShowParams] = useState<string | null>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await apiService.uploadFile(file);
+      setAttachments(prev => [...prev, { id: res.id, name: file.name, type: file.type }]);
+    } catch (e) {
+      console.error(e);
+      message.error('上传失败');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSpeechToText = async () => {
+    if (recording) {
+      mediaRecorderRef.current?.stop();
+      setRecording(false);
+      return;
+    }
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks: Blob[] = [];
+      
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
+        setUploading(true);
+        try {
+          const res = await apiService.uploadFile(file);
+          // Assuming there's an STT endpoint
+          const sttRes = await (apiService as any).request('/speech-to-text', {
+            method: 'POST',
+            body: JSON.stringify({ file_id: res.id })
+          });
+          setInputValue(prev => prev + (sttRes.text || ''));
+        } catch (e) {
+          console.error(e);
+          message.error('语音转文字失败');
+        } finally {
+          setUploading(false);
+        }
+      };
+      
+      mediaRecorder.start();
+      setRecording(true);
+    } catch (e) {
+      console.error(e);
+      message.error('无法访问麦克风');
+    }
+  };
   const [showFeaturesDrawer, setShowFeaturesDrawer] = useState(false);
   const [enabledFeatures, setEnabledFeatures] = useState<Record<string, boolean>>({
-    opening: true,
-    suggestion: true,
+    opening: false,
+    suggestion: false,
     tts: false,
     stt: false,
     citation: false,
@@ -274,7 +337,7 @@ const AppConfig: React.FC = () => {
           
           // Map features from model_config to enabledFeatures state
           setEnabledFeatures({
-            opening: true, // Always true or map from opening_statement if needed
+            opening: !!config.opening_statement,
             suggestion: !!config.suggested_questions_after_answer?.enabled,
             tts: !!config.text_to_speech?.enabled,
             stt: !!config.speech_to_text?.enabled,
@@ -569,6 +632,7 @@ const AppConfig: React.FC = () => {
 
     const query = inputValue.trim();
     setInputValue('');
+    setAttachments([]);
 
     // Add user message to configured models
     setMessages(prev => {
@@ -602,6 +666,7 @@ const AppConfig: React.FC = () => {
         inputs: inputs,
         query: query,
         conversation_id: '',
+        files: attachments.map(a => ({ id: a.id, type: 'document' })),
         model_config: {
           pre_prompt: prompt,
           prompt_type: 'simple',
@@ -759,7 +824,7 @@ const AppConfig: React.FC = () => {
       try {
         if (app?.mode === 'completion') {
           await apiService.sendCompletionMessage(appId!, body, {
-            onData: (data) => {
+            onData: (data: any) => {
               const text = data.answer || '';
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
@@ -795,7 +860,7 @@ const AppConfig: React.FC = () => {
           });
         } else {
           await apiService.sendChatMessage(appId!, body, {
-            onData: (data) => {
+            onData: (data: any) => {
               const text = data.answer || '';
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
@@ -1649,6 +1714,27 @@ const AppConfig: React.FC = () => {
                             {msg.role === 'assistant' && isStreaming[model.id] && i === messages[model.id].length - 1 && (
                               <span className="inline-block w-1.5 h-4 ml-1 bg-primary-500 animate-pulse align-middle" />
                             )}
+                            {msg.citations && msg.citations.length > 0 && (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <div className="text-xs font-bold text-gray-500 mb-2">引用来源</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {msg.citations.map((citation, cIdx) => (
+                                    <Button
+                                      key={cIdx}
+                                      type="default"
+                                      size="small"
+                                      className="text-xs h-7 rounded-lg border-gray-200 hover:border-primary-500 hover:text-primary-600"
+                                      onClick={() => {
+                                        setCitationPreview(citation);
+                                      }}
+                                    >
+                                      <FileText className="w-3 h-3 mr-1" />
+                                      {citation.title || `来源 ${cIdx + 1}`}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       ))}
@@ -1661,18 +1747,53 @@ const AppConfig: React.FC = () => {
           </div>
         </div>
 
+        {/* Citation Preview Modal */}
+        <Modal
+          title="引用预览"
+          open={!!citationPreview}
+          onCancel={() => setCitationPreview(null)}
+          footer={null}
+          width={800}
+        >
+          {citationPreview && (
+            <div className="prose prose-sm max-w-none">
+              <h3>{citationPreview.title}</h3>
+              <p>{citationPreview.content || '暂无内容'}</p>
+              {citationPreview.url && (
+                <a href={citationPreview.url} target="_blank" rel="noreferrer" className="text-blue-600">查看原文</a>
+              )}
+            </div>
+          )}
+        </Modal>
+
         {/* Input Area */}
         <div className="p-6 border-t border-gray-100 bg-white">
           <div className="max-w-4xl mx-auto space-y-3">
+            <div className="flex flex-wrap gap-2 mb-2">
+              {attachments.map((att, i) => (
+                <Badge key={i} className="bg-gray-100 text-gray-600 rounded-full px-3 py-1">
+                  {att.name}
+                  <Trash2 className="w-3 h-3 ml-2 cursor-pointer" onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))} />
+                </Badge>
+              ))}
+            </div>
             <motion.div 
               whileFocus={{ scale: 1.01 }}
               className="relative flex items-center bg-white rounded-2xl border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all px-4 py-2 shadow-sm"
             >
               {enabledFeatures.attachment && (
-                <Button type="text" icon={<Paperclip className="w-4 h-4 text-gray-400" />} className="p-0 w-8 h-8 flex items-center justify-center" />
+                <>
+                  <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
+                  <Button type="text" icon={<Paperclip className="w-4 h-4 text-gray-400" />} className="p-0 w-8 h-8 flex items-center justify-center" onClick={() => fileInputRef.current?.click()} loading={uploading} />
+                </>
               )}
               {enabledFeatures.stt && (
-                <Button type="text" icon={<Mic className="w-4 h-4 text-gray-400" />} className="p-0 w-8 h-8 flex items-center justify-center" />
+                <Button 
+                  type="text" 
+                  icon={<Mic className={`w-4 h-4 ${recording ? 'text-red-500 animate-pulse' : 'text-gray-400'}`} />} 
+                  className="p-0 w-8 h-8 flex items-center justify-center" 
+                  onClick={handleSpeechToText} 
+                />
               )}
               <Input 
                 placeholder="和言复对话，获取您需要的信息" 
