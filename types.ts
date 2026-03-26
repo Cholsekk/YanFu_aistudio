@@ -31,6 +31,29 @@ export type Tag = {
   binding_count: number
 }
 
+export interface Role {
+  role_id: string;
+  role_name: string;
+}
+
+export interface Department {
+  dept_id: string;
+  dept_name: string;
+}
+
+export interface Member {
+  id: string;
+  name: string;
+  avatar: string | null;
+  email: string;
+  real_name: string;
+  last_login_at: string | null;
+  last_active_at: string;
+  created_at: string;
+  role: string;
+  status: string;
+}
+
 export type AppType = '全部' | '对话应用' | '智能体应用' | '工作流应用' | '定制应用' | '内置应用';
 
 export interface MenuItem {

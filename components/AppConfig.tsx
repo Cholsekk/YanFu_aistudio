@@ -2085,85 +2085,10 @@ const AppConfig: React.FC = () => {
 
               {editingKB.permission === 'partial_members' && (
                 <div className="p-4 bg-blue-50 rounded-lg space-y-4 border border-blue-100">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-blue-600 uppercase">角色</label>
-                      <Select
-                        mode="multiple"
-                        className="w-full"
-                        placeholder="选择角色"
-                        value={editingKB.partial_team_data?.roles}
-                        onChange={(v) => {
-                          // TODO: 补充从接口获取角色列表的逻辑
-                          // TODO: 补充根据角色/部门自动勾选成员的逻辑
-                          updateKBSettings({ 
-                            partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), roles: v } 
-                          });
-                        }}
-                        options={[
-                          { value: 'role-1', label: '管理员' },
-                          { value: 'role-2', label: '成员' },
-                        ]}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-blue-600 uppercase">部门</label>
-                      <Select
-                        mode="multiple"
-                        className="w-full"
-                        placeholder="选择部门"
-                        value={editingKB.partial_team_data?.departments}
-                        onChange={(v) => {
-                          // TODO: 补充从接口获取部门列表的逻辑
-                          // TODO: 补充根据角色/部门自动勾选成员的逻辑
-                          updateKBSettings({ 
-                            partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), departments: v } 
-                          });
-                        }}
-                        options={[
-                          { value: 'dept-1', label: '研发部' },
-                          { value: 'dept-2', label: '产品部' },
-                        ]}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-blue-600 uppercase">成员</label>
-                    <Input.Search placeholder="搜索用户" className="mb-2" />
-                    <div className="max-h-60 overflow-y-auto custom-scrollbar border rounded-md bg-white p-2 space-y-1">
-                      {/* TODO: 补充从接口获取成员列表的逻辑 */}
-                      {[
-                        { id: 'user-1', name: 'szyl (你)', email: 'szyl@sl.hn.cn' },
-                        { id: 'user-2', name: 'dddd', email: '' },
-                        { id: 'user-3', name: 'rrr', email: 'jiaoxu043@gmail.com' },
-                      ].map(user => (
-                        <div 
-                          key={user.id}
-                          className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-gray-100 ${editingKB.partial_team_data?.members?.includes(user.id) ? 'bg-blue-50' : ''}`}
-                          onClick={() => {
-                            const newMembers = editingKB.partial_team_data?.members?.includes(user.id)
-                              ? editingKB.partial_team_data?.members?.filter(m => m !== user.id) || []
-                              : [...(editingKB.partial_team_data?.members || []), user.id];
-                            updateKBSettings({ 
-                              partial_team_data: { ...(editingKB.partial_team_data || { roles: [], departments: [], members: [] }), members: newMembers } 
-                            });
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs">
-                              {user.name.charAt(0)}
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium">{user.name}</div>
-                              <div className="text-xs text-gray-400">{user.email}</div>
-                            </div>
-                          </div>
-                          {editingKB.partial_team_data?.members?.includes(user.id) && <Check className="w-4 h-4 text-blue-500" />}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <PartialTeamMembersSelector 
+                    partialTeamData={editingKB.partial_team_data || { roles: [], departments: [], members: [] }}
+                    updateKBSettings={updateKBSettings}
+                  />
                 </div>
               )}
             </div>

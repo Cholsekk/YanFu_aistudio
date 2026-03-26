@@ -1,4 +1,4 @@
-import { DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
+import { Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 
 export const getBaseUrl = () => {
@@ -775,6 +775,19 @@ class ApiService {
       method: 'POST',
       body: data as any
     });
+  }
+
+  async getRoles(): Promise<{ result: string; data: Role[] }> {
+    return this.request('/workspaces/current/roles');
+  }
+
+  async getDepartments(): Promise<{ result: string; data: Department[] }> {
+    return this.request('/workspaces/current/depts');
+  }
+
+  async getMembers(params: any = {}): Promise<{ accounts: Member[] }> {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/workspaces/current/members${queryString ? `?${queryString}` : ''}`);
   }
 
   async getApps(params: Record<string, any> = { page: 1, limit: 30, built_in: false }): Promise<any> {
