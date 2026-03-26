@@ -813,7 +813,7 @@ class ApiService {
 
     // For other apps, do not include tenant_id
     const queryString = new URLSearchParams(queryParams as any).toString();
-    return this.post(`/apps?${queryString}`);
+    return this.get(`/apps?${queryString}`);
   }
 
   async fetchAppDetail(id: string): Promise<any> {
