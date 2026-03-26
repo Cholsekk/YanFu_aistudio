@@ -69,6 +69,7 @@ import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
 
 import { PartialTeamMembersSelector } from './PartialTeamMembersSelector';
+import EmbedModal from './EmbedModal';
 
 const { TextArea } = Input;
 
@@ -192,7 +193,13 @@ const AppConfig: React.FC = () => {
   const [draftUpdatedAt, setDraftUpdatedAt] = useState<number | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [appDetail, setAppDetail] = useState<any>(null);
+  const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
+  const [isPublishPopoverOpen, setIsPublishPopoverOpen] = useState(false);
   const lastSavedConfigRef = useRef<string>('');
+
+  const appMode = appDetail ? ((appDetail.mode !== 'completion' && appDetail.mode !== 'workflow') ? 'chat' : appDetail.mode) : 'chat';
+  const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.code}` : "";
 
   const [relativeTimeString, setRelativeTimeString] = useState<string>('');
 
@@ -644,6 +651,7 @@ const AppConfig: React.FC = () => {
     const fetchAppDetail = async () => {
       try {
         const detail = await apiService.fetchAppDetail(appId);
+        setAppDetail(detail);
         if (detail && detail.model_config) {
           const config = detail.model_config;
           if (config.pre_prompt) setPrompt(config.pre_prompt);
@@ -1776,6 +1784,8 @@ const AppConfig: React.FC = () => {
           <Popover 
             placement="topRight" 
             trigger="click"
+            open={isPublishPopoverOpen}
+            onOpenChange={setIsPublishPopoverOpen}
             styles={{ container: { padding: '12px', borderRadius: '12px' } }}
             content={
               <div className="w-64">
@@ -1789,40 +1799,37 @@ const AppConfig: React.FC = () => {
                   type="primary" 
                   block 
                   className="mb-2 bg-blue-600 h-10 rounded-lg font-medium" 
-                  onClick={onPublish}
+                  onClick={() => {
+                    setIsPublishPopoverOpen(false);
+                    onPublish();
+                  }}
                 >
                   发布
                 </Button>
                 <div className="space-y-1 mt-2">
-                  <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-600 group transition-colors">
-                    <div className="flex items-center gap-2">
-                      <PlayCircle className="w-4 h-4" />
-                      <span className="text-sm">运行</span>
-                    </div>
-                    <ArrowUpRight className="w-4 h-4 text-gray-400" />
-                  </div>
                   <div 
-                    className="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg cursor-pointer text-blue-600 transition-colors"
-                    onClick={handleOpenMarketModal}
+                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-700 group transition-colors"
+                    onClick={() => {
+                      setIsPublishPopoverOpen(false);
+                      handleOpenMarketModal();
+                    }}
                   >
                     <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4" />
-                      <span className="text-sm font-medium">发布到应用市场</span>
+                      <Store className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                      <span className="text-sm">发布到应用市场</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-600 group transition-colors">
+                  <div 
+                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-700 group transition-colors"
+                    onClick={() => {
+                      setIsPublishPopoverOpen(false);
+                      setIsEmbedModalOpen(true);
+                    }}
+                  >
                     <div className="flex items-center gap-2">
-                      <Code className="w-4 h-4" />
+                      <Code className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
                       <span className="text-sm">嵌入网站</span>
                     </div>
-                    <ArrowUpRight className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-600 group transition-colors">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      <span className="text-sm">访问 API</span>
-                    </div>
-                    <ArrowUpRight className="w-4 h-4 text-gray-400" />
                   </div>
                 </div>
               </div>
@@ -2932,6 +2939,12 @@ const AppConfig: React.FC = () => {
           }
           setIsVariableModalOpen(false);
         }}
+      />
+
+      <EmbedModal 
+        isOpen={isEmbedModalOpen} 
+        onClose={() => setIsEmbedModalOpen(false)} 
+        publicUrl={publicUrl} 
       />
     </div>
   );

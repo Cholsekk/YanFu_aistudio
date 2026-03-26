@@ -218,7 +218,6 @@ const MCPServices: React.FC = () => {
 
   const handleAddService = async (data: any) => {
     try {
-      const filteredHeaders = (data.headers || []).filter((h: any) => h.key && h.value);
 
       const requestData: McpProviderRequest = {
         name: data.name,
@@ -230,7 +229,7 @@ const MCPServices: React.FC = () => {
         is_dynamic_registration: data.is_dynamic_registration,
         authentication: data.authentication,
         configuration: data.configuration,
-        headers: filteredHeaders,
+        headers: data.headers,
       };
       await apiService.createMcpProvider(requestData);
       message.success('添加成功');
@@ -244,7 +243,6 @@ const MCPServices: React.FC = () => {
   const handleUpdateService = async (data: any) => {
     if (!editingService) return;
     try {
-      const filteredHeaders = (data.headers || []).filter((h: any) => h.key && h.value);
 
       const requestData: McpProviderUpdateRequest = {
         provider_id: editingService.id,
@@ -257,7 +255,7 @@ const MCPServices: React.FC = () => {
         is_dynamic_registration: data.is_dynamic_registration,
         authentication: data.authentication,
         configuration: data.configuration,
-        headers: filteredHeaders,
+        headers: data.headers,
       };
       await apiService.updateMcpProvider(requestData);
       message.success('更新成功');
@@ -505,11 +503,11 @@ const MCPServices: React.FC = () => {
         {filteredServices.map(service => (
           <div 
             key={service.id}
-            className={`group relative bg-white rounded-2xl border border-gray-100 p-5 flex flex-col cursor-pointer shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out overflow-hidden ${menuOpenId === service.id ? 'z-50 ring-2 ring-indigo-500/20' : ''}`}
+            className={`group relative bg-white rounded-2xl border border-gray-100 p-5 flex flex-col cursor-pointer shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out ${menuOpenId === service.id ? 'z-50 ring-2 ring-indigo-500/20' : ''}`}
             onClick={() => handleSelectService(service)}
           >
             {/* Top accent line */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl"></div>
 
             {/* Status Indicator */}
             <div className="absolute top-5 right-5">

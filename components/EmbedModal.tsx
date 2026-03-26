@@ -53,7 +53,7 @@ const EmbedModal: React.FC<EmbedModalProps> = ({ isOpen, onClose, publicUrl }) =
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="嵌入到网站" maxWidth="max-w-3xl">
+    <Modal isOpen={isOpen} onClose={onClose} title="嵌入到网站" maxWidth="max-w-3xl" zIndex="z-[1050]">
       <div className="p-8 space-y-8">
         {/* Header with Icon */}
         <div className="flex items-center gap-4 p-4 bg-indigo-50 text-indigo-700 rounded-2xl border border-indigo-100">

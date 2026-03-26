@@ -34,62 +34,7 @@ import {
   NodeTracingListResponse
 } from '../types';
 
-import { getBaseUrl } from './apiService';
-
-const API_PREFIX = '/console/api';
-
-async function request<T>(path: string, params?: Record<string, string>, method: 'GET' | 'POST' | 'DELETE' = 'GET', body?: any): Promise<T> {
-  const token = localStorage.getItem('console_token');
-  if (!token) {
-    window.alert('请配置 console_token');
-    throw new Error('Missing console_token');
-  }
-
-  const url = new URL(`/api-proxy${API_PREFIX}${path}`, window.location.origin);
-  if (params && method === 'GET') {
-    Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
-  }
-
-  const isFormData = body instanceof FormData;
-  const headers: Record<string, string> = {
-    'x-target-base-url': getBaseUrl(),
-    'Authorization': `Bearer ${token}`,
-  };
-
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
-
-  try {
-    const response = await fetch(url.toString(), {
-      method,
-      headers,
-      body: isFormData ? body : (body ? JSON.stringify(body) : undefined)
-    });
-
-    if (response.status === 401) {
-      window.alert('Token 已过期或无效，请重新配置 console_token');
-      throw new Error('Unauthorized');
-    }
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('API Error Body:', errorBody);
-      throw new Error(`API Error: ${response.statusText} - ${errorBody}`);
-    }
-
-    if (response.status === 204) {
-      return {} as T;
-    }
-
-    return response.json();
-  } catch (error: any) {
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error(`网络连接失败：无法通过代理连接到后端。请确保后端服务已启动并可访问。`);
-    }
-    throw error;
-  }
-}
+import { apiService } from './apiService';
 
 const MOCK_LOGS: LogListResponse = {
   page: 1,
@@ -349,50 +294,50 @@ const MOCK_MESSAGES: MessageListResponse = {
 
 export const monitoringService = {
   getDailyMessages: (appId: string, start?: string, end?: string) => 
-    request<AppDailyMessagesResponse>(`/apps/${appId}/statistics/daily-messages`, { start: start || '', end: end || '' }),
+    apiService.get<AppDailyMessagesResponse>(`/apps/${appId}/statistics/daily-messages`, { start: start || '', end: end || '' }),
   
   getDailyConversations: (appId: string, start?: string, end?: string) => 
-    request<AppDailyConversationsResponse>(`/apps/${appId}/statistics/daily-conversations`, { start: start || '', end: end || '' }),
+    apiService.get<AppDailyConversationsResponse>(`/apps/${appId}/statistics/daily-conversations`, { start: start || '', end: end || '' }),
   
   getWorkflowDailyConversations: (appId: string, start?: string, end?: string) => 
-    request<WorkflowDailyConversationsResponse>(`/apps/${appId}/workflow/statistics/daily-conversations`, { start: start || '', end: end || '' }),
+    apiService.get<WorkflowDailyConversationsResponse>(`/apps/${appId}/workflow/statistics/daily-conversations`, { start: start || '', end: end || '' }),
   
   getDailyEndUsers: (appId: string, start?: string, end?: string) => 
-    request<AppDailyEndUsersResponse>(`/apps/${appId}/statistics/daily-end-users`, { start: start || '', end: end || '' }),
+    apiService.get<AppDailyEndUsersResponse>(`/apps/${appId}/statistics/daily-end-users`, { start: start || '', end: end || '' }),
   
   getTokenCosts: (appId: string, start?: string, end?: string) => 
-    request<AppTokenCostsResponse>(`/apps/${appId}/statistics/token-costs`, { start: start || '', end: end || '' }),
+    apiService.get<AppTokenCostsResponse>(`/apps/${appId}/statistics/token-costs`, { start: start || '', end: end || '' }),
   
   getAverageSessionInteractions: (appId: string, start?: string, end?: string) => 
-    request<AppStatisticsResponse>(`/apps/${appId}/statistics/average-session-interactions`, { start: start || '', end: end || '' }),
+    apiService.get<AppStatisticsResponse>(`/apps/${appId}/statistics/average-session-interactions`, { start: start || '', end: end || '' }),
 
   getTokensPerSecond: (appId: string, start?: string, end?: string) => 
-    request<AppStatisticsResponse>(`/apps/${appId}/statistics/tokens-per-second`, { start: start || '', end: end || '' }),
+    apiService.get<AppStatisticsResponse>(`/apps/${appId}/statistics/tokens-per-second`, { start: start || '', end: end || '' }),
 
   getUserSatisfactionRate: (appId: string, start?: string, end?: string) => 
-    request<AppStatisticsResponse>(`/apps/${appId}/statistics/user-satisfaction-rate`, { start: start || '', end: end || '' }),
+    apiService.get<AppStatisticsResponse>(`/apps/${appId}/statistics/user-satisfaction-rate`, { start: start || '', end: end || '' }),
 
   getAppDetail: (appId: string) => 
-    request<AppDetailResponse>(`/apps/${appId}`),
+    apiService.get<AppDetailResponse>(`/apps/${appId}`),
 
   updateAppSiteConfig: (appId: string, params: any) => 
-    request<App>(`/apps/${appId}/site`, undefined, 'POST', params),
+    apiService.post<App>(`/apps/${appId}/site`, params),
 
   updateAppSiteAccessToken: (appId: string) =>
-    request<UpdateAppSiteCodeResponse>(`/apps/${appId}/site/access-token-reset`, undefined, 'POST'),
+    apiService.post<UpdateAppSiteCodeResponse>(`/apps/${appId}/site/access-token-reset`),
 
   createApiKey: (appId: string) =>
-    request<CreateApiKeyResponse>(`/apps/${appId}/api-keys`, undefined, 'POST'),
+    apiService.post<CreateApiKeyResponse>(`/apps/${appId}/api-keys`),
 
   getApiKeys: (appId: string) =>
-    request<ApiKeysListResponse>(`/apps/${appId}/api-keys`),
+    apiService.get<ApiKeysListResponse>(`/apps/${appId}/api-keys`),
 
   deleteApiKey: (appId: string, keyId: string) =>
-    request<any>(`/apps/${appId}/api-keys/${keyId}`, undefined, 'DELETE'),
+    apiService.del<any>(`/apps/${appId}/api-keys/${keyId}`),
 
   getChatConversations: async (appId: string, params: any) => {
     try {
-      return await request<ChatConversationsResponse>(`/apps/${appId}/chat-conversations`, params);
+      return await apiService.get<ChatConversationsResponse>(`/apps/${appId}/chat-conversations`, params);
     } catch (error) {
       console.warn('Failed to fetch chat conversations, using mock data instead.', error);
       return MOCK_LOGS as unknown as ChatConversationsResponse;
@@ -401,7 +346,7 @@ export const monitoringService = {
 
   getCompletionConversations: async (appId: string, params: any) => {
     try {
-      return await request<CompletionConversationsResponse>(`/apps/${appId}/completion-conversations`, params);
+      return await apiService.get<CompletionConversationsResponse>(`/apps/${appId}/completion-conversations`, params);
     } catch (error) {
       console.warn('Failed to fetch completion conversations, using mock data instead.', error);
       return MOCK_LOGS as unknown as CompletionConversationsResponse;
@@ -417,7 +362,7 @@ export const monitoringService = {
     if (params.status && params.status !== 'all') queryParams.status = params.status;
 
     try {
-      return await request<WorkflowLogsResponse>(`/apps/${appId}/workflow-app-logs`, queryParams);
+      return await apiService.get<WorkflowLogsResponse>(`/apps/${appId}/workflow-app-logs`, queryParams);
     } catch (error) {
       console.warn('Failed to fetch workflow logs, using mock data instead.', error);
       return { data: [], total: 0, has_more: false, limit: params.limit, page: params.page } as WorkflowLogsResponse;
@@ -425,16 +370,16 @@ export const monitoringService = {
   },
 
   fetchRunDetail: async (appId: string, runId: string) => {
-    return request<WorkflowRunDetailResponse>(`/apps/${appId}/workflow-runs/${runId}`);
+    return apiService.get<WorkflowRunDetailResponse>(`/apps/${appId}/workflow-runs/${runId}`);
   },
 
   fetchTracingList: async (appId: string, runId: string) => {
-    return request<NodeTracingListResponse>(`/apps/${appId}/workflow-runs/${runId}/node-executions`);
+    return apiService.get<NodeTracingListResponse>(`/apps/${appId}/workflow-runs/${runId}/node-executions`);
   },
 
   getWorkflowRunDetail: async (appId: string, runId: string) => {
     try {
-      return await request<any>(`/apps/${appId}/workflow-runs/${runId}`);
+      return await apiService.get<any>(`/apps/${appId}/workflow-runs/${runId}`);
     } catch (error) {
       console.warn('Failed to fetch workflow run detail, using mock data instead.', error);
       return null;
@@ -443,7 +388,7 @@ export const monitoringService = {
 
   getChatConversationDetail: async (appId: string, conversationId: string) => {
     try {
-      return await request<ChatConversationFullDetailResponse>(`/apps/${appId}/chat-conversations/${conversationId}`);
+      return await apiService.get<ChatConversationFullDetailResponse>(`/apps/${appId}/chat-conversations/${conversationId}`);
     } catch (error) {
       console.warn('Failed to fetch chat conversation detail, using mock data instead.', error);
       const mockLog = MOCK_LOGS.data.find(log => log.id === conversationId) || MOCK_LOGS.data[0];
@@ -453,7 +398,7 @@ export const monitoringService = {
 
   getCompletionConversationDetail: async (appId: string, conversationId: string) => {
     try {
-      return await request<CompletionConversationFullDetailResponse>(`/apps/${appId}/completion-conversations/${conversationId}`);
+      return await apiService.get<CompletionConversationFullDetailResponse>(`/apps/${appId}/completion-conversations/${conversationId}`);
     } catch (error) {
       console.warn('Failed to fetch completion conversation detail, using mock data instead.', error);
       const mockLog = MOCK_LOGS.data.find(log => log.id === conversationId) || MOCK_LOGS.data[0];
@@ -463,7 +408,7 @@ export const monitoringService = {
 
   getChatMessages: async (appId: string, params: ChatMessagesRequest) => {
     try {
-      return await request<ChatMessagesResponse>(`/apps/${appId}/chat-messages`, params as any);
+      return await apiService.get<ChatMessagesResponse>(`/apps/${appId}/chat-messages`, params as any);
     } catch (error) {
       console.warn('Failed to fetch chat messages, using mock data instead.', error);
       const filtered = MOCK_MESSAGES.data.filter(m => m.conversation_id === params.conversation_id);
@@ -472,17 +417,17 @@ export const monitoringService = {
   },
 
   updateLogMessageFeedbacks: (appId: string, body: LogMessageFeedbacksRequest) =>
-    request<LogMessageFeedbacksResponse>(`/apps/${appId}/feedbacks`, undefined, 'POST', body),
+    apiService.post<LogMessageFeedbacksResponse>(`/apps/${appId}/feedbacks`, body),
 
   updateLogMessageAnnotations: (appId: string, body: AnnotationItemBasic) =>
-    request<LogMessageAnnotationsResponse>(`/apps/${appId}/annotations`, undefined, 'POST', body),
+    apiService.post<LogMessageAnnotationsResponse>(`/apps/${appId}/annotations`, body),
 
   deleteLogMessageAnnotation: (appId: string, annotationId: string) =>
-    request<any>(`/apps/${appId}/annotations/${annotationId}`, undefined, 'DELETE'),
+    apiService.del<any>(`/apps/${appId}/annotations/${annotationId}`),
 
   getAnnotations: async (appId: string, params?: Record<string, any>) => {
     try {
-      return await request<any>(`/apps/${appId}/annotations`, params);
+      return await apiService.get<any>(`/apps/${appId}/annotations`, params);
     } catch (error) {
       console.warn('Failed to fetch annotations, using mock data instead.', error);
       const annotatedLogs = MOCK_LOGS.data.filter(log => log.annotated);
@@ -491,11 +436,11 @@ export const monitoringService = {
   },
 
   updateAnnotation: (appId: string, annotationId: string, body: AnnotationItemBasic) =>
-    request<any>(`/apps/${appId}/annotations/${annotationId}`, undefined, 'POST', body),
+    apiService.post<any>(`/apps/${appId}/annotations/${annotationId}`, body),
 
   getAnnotationConfig: async (appId: string) => {
     try {
-      return await request<AnnotationSetting>(`/apps/${appId}/annotation-setting`);
+      return await apiService.get<AnnotationSetting>(`/apps/${appId}/annotation-setting`);
     } catch (error) {
       console.warn('Failed to fetch annotation config, using mock data instead.', error);
       return {
@@ -510,26 +455,26 @@ export const monitoringService = {
   },
 
   updateAnnotationStatus: (appId: string, action: AnnotationEnableStatus, body: { embedding_model_name?: string, embedding_provider_name?: string, score_threshold?: number }) =>
-    request<any>(`/apps/${appId}/annotation-reply/${action}`, undefined, 'POST', body),
+    apiService.post<any>(`/apps/${appId}/annotation-reply/${action}`, body),
 
   updateAnnotationScore: (appId: string, settingId: string, scoreThreshold: number) =>
-    request<any>(`/apps/${appId}/annotation-settings/${settingId}`, undefined, 'POST', { score_threshold: scoreThreshold }),
+    apiService.post<any>(`/apps/${appId}/annotation-settings/${settingId}`, { score_threshold: scoreThreshold }),
 
   exportAnnotations: (appId: string) =>
-    request<any>(`/apps/${appId}/annotations/export`),
+    apiService.get<any>(`/apps/${appId}/annotations/export`),
 
   importAnnotations: (appId: string, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return request<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-import`, undefined, 'POST', formData);
+    return apiService.post<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-import`, formData);
   },
 
   getBatchImportStatus: (appId: string, jobId: string) =>
-    request<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-import-status/${jobId}`),
+    apiService.get<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-import-status/${jobId}`),
 
   getHitHistory: async (appId: string, annotationId: string, params?: Record<string, any>) => {
     try {
-      return await request<any>(`/apps/${appId}/annotations/${annotationId}/hit-histories`, params);
+      return await apiService.get<any>(`/apps/${appId}/annotations/${annotationId}/hit-histories`, params);
     } catch (error) {
       console.warn('Failed to fetch hit history, using mock data instead.', error);
       return { data: [], total: 0 };
@@ -538,7 +483,7 @@ export const monitoringService = {
 
   getConversationMessages: async (appId: string, conversationId: string) => {
     try {
-      return await request<MessageListResponse>(`/apps/${appId}/messages`, { conversation_id: conversationId });
+      return await apiService.get<MessageListResponse>(`/apps/${appId}/messages`, { conversation_id: conversationId });
     } catch (error) {
       console.warn('Failed to fetch messages, using mock data instead.', error);
       // Filter mock messages for this conversation
@@ -561,7 +506,7 @@ export const monitoringService = {
     if (query.direction) params.direction = query.direction;
     
     try {
-      return await request<LogListResponse>(`/apps/${appId}/messages`, params);
+      return await apiService.get<LogListResponse>(`/apps/${appId}/messages`, params);
     } catch (error) {
       console.warn('Failed to fetch logs, using mock data instead.', error);
       return MOCK_LOGS;

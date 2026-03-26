@@ -213,7 +213,7 @@ const AppCard: React.FC<AppCardProps> = ({
   if (viewMode === 'list') {
     return (
       <div 
-        className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all duration-200 group flex items-center gap-4 cursor-pointer relative"
+        className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all duration-200 group flex items-center gap-4 cursor-pointer relative ${isMenuOpen ? 'z-50' : 'z-10'}`}
         onClick={onClick}
       >
         <div className="flex-shrink-0">
@@ -259,7 +259,7 @@ const AppCard: React.FC<AppCardProps> = ({
 
   return (
     <div 
-      className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative flex flex-col h-full cursor-pointer"
+      className={`bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative flex flex-col h-full cursor-pointer ${isMenuOpen || isAddingTag ? 'z-50' : 'z-10'}`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-4 relative">

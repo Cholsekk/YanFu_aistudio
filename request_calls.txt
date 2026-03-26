@@ -1,0 +1,246 @@
+122:    return this.request(fullUrl, { ...options, method: 'GET' });
+123-  }
+124-
+125-  public async post<T = any>(endpoint: string, body?: any, options: any = {}): Promise<T> {
+126:    return this.request(endpoint, { ...options, method: 'POST', body });
+127-  }
+128-
+129-  public async put<T = any>(endpoint: string, body?: any, options: any = {}): Promise<T> {
+130:    return this.request(endpoint, { ...options, method: 'PUT', body });
+131-  }
+132-
+133-  public async del<T = any>(endpoint: string, body?: any, options: any = {}): Promise<T> {
+134:    return this.request(endpoint, { ...options, method: 'DELETE', body });
+135-  }
+136-
+137-  public async ssePost(endpoint: string, options: any, callbacks: any) {
+138-    const { onData, onCompleted, onThought, onFile, onError, getAbortController, onMessageEnd, onMessageReplace } = callbacks;
+--
+789:    return this.request('/workspaces/current/depts');
+790-  }
+791-
+792-  async getMembers(params: any = {}): Promise<{ accounts: Member[] }> {
+793-    const queryString = new URLSearchParams(params).toString();
+794:    return this.request(`/workspaces/current/members${queryString ? `?${queryString}` : ''}`);
+795-  }
+796-
+797-  async updateDatasetSetting(datasetId: string, body: Partial<Pick<DataSet,
+798-    'name' | 'description' | 'permission' | 'partial_member_list' | 'indexing_technique' | 'retrieval_model' | 'embedding_model' | 'embedding_model_provider'
+--
+800:    return this.request(`/datasets/${datasetId}`, {
+801-      method: 'PATCH',
+802-      body: body as any
+803-    });
+804-  }
+--
+834:    return this.request(`/explore/apps/${id}`);
+835-  }
+836-
+837-  async createApp(data: { 
+838-    name: string; 
+--
+847:    return this.request('/apps', data as any
+848-    );
+849-  }
+850-
+851-  async createCustomApp(data: any): Promise<any> {
+--
+856:    return this.request('/explore/apps', {
+857-      method: 'POST',
+858-      body: { ...data, tenant_id: tenantId } as any
+859-    });
+860-  }
+--
+875:    return this.request('/explore/apps/categories', {
+876-      method: 'POST',
+877-      body: { tenant_id: tenantId, category } as any
+878-    });
+879-  }
+--
+886:    return this.request('/explore/apps/categories', {
+887-      method: 'PUT',
+888-      body: { tenant_id: tenantId, category_id: categoryId, category } as any
+889-    });
+890-  }
+--
+897:    return this.request('/explore/apps/categories', {
+898-      method: 'DELETE',
+899-      body: { tenant_id: tenantId, category_id: categoryId } as any
+900-    });
+901-  }
+--
+958:    return this.request('/explore/apps', {
+959-      method: 'DELETE',
+960-      body: { id: appID } as any
+961-    });
+962-  }
+--
+973:    return this.request('/scheduled-tasks', task as any,
+974-    );
+975-  }
+976-
+977-  async updateTask(id: string, task: Partial<ScheduledTask>): Promise<ScheduledTask> {
+--
+983:    return this.request(`/scheduled-tasks/${id}`, {
+984-      method: 'DELETE',
+985-    });
+986-  }
+987-
+--
+989:    return this.request(`/scheduled-tasks/${id}/toggle`, {
+990-      method: 'POST',
+991-    });
+992-  }
+993-
+--
+1003:    return this.request(url);
+1004-  }
+1005-
+1006-  async fetchBuiltInToolList(collectionName: string): Promise<ToolExtension[]> {
+1007:    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/tools`);
+1008-  }
+1009-
+1010-  async fetchCustomToolList(collectionName: string): Promise<ToolExtension[]> {
+1011:    return this.request(`/workspaces/current/tool-provider/api/tools?provider=${collectionName}`);
+1012-  }
+1013-
+1014-  async fetchModelToolList(collectionName: string): Promise<ToolExtension[]> {
+1015:    return this.request(`/workspaces/current/tool-provider/model/tools?provider=${collectionName}`);
+1016-  }
+1017-
+1018-  // 2. 内置工具认证管理
+1019-  async fetchBuiltInToolCredentialSchema(collectionName: string): Promise<ToolCredential[]> {
+1020:    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/credentials_schema`);
+1021-  }
+1022-
+1023-  async fetchBuiltInToolCredential(collectionName: string): Promise<ToolCredential[]> {
+1024:    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/credentials`);
+1025-  }
+1026-
+1027-  async updateBuiltInToolCredential(collectionName: string, credentials: Record<string, any>): Promise<void> {
+1028:    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/update`, {
+1029-      method: 'POST',
+1030-      body: { credentials } as any,
+1031-    });
+1032-  }
+--
+1035:    return this.request(`/workspaces/current/tool-provider/builtin/${collectionName}/delete`, {
+1036-      method: 'POST',
+1037-      body: {} as any,
+1038-    });
+1039-  }
+--
+1043:    return this.request('/workspaces/current/tool-provider/api/schema', {
+1044-      method: 'POST',
+1045-      body: { schema } as any,
+1046-    });
+1047-  }
+--
+1054:    return this.request('/workspaces/current/tool-provider/api/add', collection as any,
+1055-    );
+1056-  }
+1057-
+1058-  async updateCustomCollection(collection: CustomCollectionBackend): Promise<void> {
+--
+1064:    return this.request('/workspaces/current/tool-provider/api/delete', {
+1065-      method: 'POST',
+1066-      body: { provider: collectionName } as any,
+1067-    });
+1068-  }
+--
+1075:    return this.request('/workspaces/current/tool-provider/api/test/pre', payload as any,
+1076-    );
+1077-  }
+1078-
+1079-  // 4. 工具列表获取
+--
+1089:    return this.request('/workspaces/current/tools/workflow');
+1090-  }
+1091-
+1092-  // 5. 标签管理
+1093-  async fetchLabelList(): Promise<Label[]> {
+1094:    return this.request('/workspaces/current/tool-labels');
+1095-  }
+1096-
+1097-  // 6. 工作流工具提供商管理
+1098-  async createWorkflowToolProvider(data: WorkflowToolProviderRequest & { workflow_app_id: string }): Promise<void> {
+1099:    return this.request('/workspaces/current/tool-provider/workflow/create', data as any,
+1100-    );
+1101-  }
+1102-
+1103-  async saveWorkflowToolProvider(data: WorkflowToolProviderRequest & Partial<{ workflow_app_id: string, workflow_tool_id: string }>): Promise<void> {
+--
+1113:    return this.request(`/workspaces/current/tool-provider/workflow/get?workflow_tool_id=${toolID}`);
+1114-  }
+1115-
+1116-  async deleteWorkflowTool(toolID: string): Promise<void> {
+1117:    return this.request('/workspaces/current/tool-provider/workflow/delete', {
+1118-      method: 'POST',
+1119-      body: { workflow_tool_id: toolID } as any,
+1120-    });
+1121-  }
+--
+1130:    return this.request('/workspaces/current/tool-provider/mcp', data as any,
+1131-    );
+1132-  }
+1133-
+1134-  async updateMcpProvider(data: McpProviderUpdateRequest): Promise<void> {
+--
+1140:    return this.request('/workspaces/current/tool-provider/mcp', {
+1141-      method: 'DELETE',
+1142-      body: { provider_id: providerId } as any,
+1143-    });
+1144-  }
+--
+1151:    return this.request('/workspaces/current/tool-provider/mcp/auth', {
+1152-      method: 'POST',
+1153-      body: { 
+1154-        provider_id: providerId, 
+1155-        authorization_code: authorizationCode,
+--
+1167:    return this.request('/tags', {
+1168-      method: 'POST',
+1169-      body: { name, type } as any,
+1170-    });
+1171-  }
+--
+1174:    return this.request(`/tags/${tagID}`, {
+1175-      method: 'PATCH',
+1176-      body: { name } as any,
+1177-    });
+1178-  }
+--
+1181:    return this.request(`/tags/${tagID}`, {
+1182-      method: 'DELETE',
+1183-    });
+1184-  }
+1185-
+--
+1187:    return this.request('/tag-bindings/create', {
+1188-      method: 'POST',
+1189-      body: {
+1190-        tag_ids: tagIDList,
+1191-        target_id: targetID,
+--
+1198:    return this.request('/tag-bindings/remove', {
+1199-      method: 'POST',
+1200-      body: {
+1201-        tag_id: tagID,
+1202-        target_id: targetID,
+--
+1224:    const response = await this.request(`/workspaces/current/models/model-types/${type}`);
+1225-    return response.data;
+1226-  }
+1227-
+1228-  async fetchDefaultModal(type: ModelTypeEnum): Promise<DefaultModelResponse> {
+1229:    const response = await this.request(`/workspaces/current/default-model?model_type=${type}`);
+1230-    return response.data;
+1231-  }
+1232-
+1233-  async fetchModelProviderCredentials(provider: string, model?: string, modelType?: ModelTypeEnum): Promise<{ credentials?: Record<string, string | boolean | undefined>, load_balancing: ModelLoadBalancingConfig }> {
+--
+1247:    const response = await this.request(`/workspaces/current/model-providers/${provider}/checkout-url`);
+1248-    return response;
+1249-  }
+1250-
+1251-  /**
