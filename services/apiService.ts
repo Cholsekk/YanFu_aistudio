@@ -914,6 +914,10 @@ class ApiService {
     );
   }
 
+  async putApp(data: any): Promise<any> {
+    return this.put('/explore/apps', { body: data });
+  }
+
   async copyApp(appID: string, data: { 
     name: string; 
     icon_type: 'icon' | 'image' | 'sys-icon'; 

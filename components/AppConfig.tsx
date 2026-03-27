@@ -64,7 +64,7 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import VariableEditModal, { Variable } from './VariableEditModal';
-import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, LogicalOperator, ComparisonOperator } from '../types';
+import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, LogicalOperator, ComparisonOperator, IOnDataMoreInfo } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
 
@@ -207,7 +207,9 @@ const AppConfig: React.FC = () => {
     setLoadingCategories(true);
     try {
       const res = await apiService.getAppCategories();
-      if (res && res.data) {
+      if (res && Array.isArray(res)) {
+        setCategories(res);
+      } else if (res && res.data && Array.isArray(res.data)) {
         setCategories(res.data);
       }
     } catch (error) {
@@ -383,24 +385,31 @@ const AppConfig: React.FC = () => {
     setIsPublishingToMarket(true);
     const hide = message.loading('正在发布到应用市场...', 0);
     try {
-      const modelConfig = getCurrentModelConfig();
-      // First update the model config
-      await apiService.updateAppModelConfig(appId, modelConfig);
-      
-      // Then update the app metadata and category
-      await apiService.updateApp(appId, {
-        name: app.name,
-        icon_type: app.iconType as any,
-        icon: app.icon,
-        icon_background: app.iconBgColor,
-        description: app.description,
-        config: getCurrentConfig(),
-        category: selectedCategory
-      } as any);
+      // 1. 获取市场应用列表
+      const marketApps = await apiService.getApps({ is_custom_app_list: true, limit: 100 });
+      const existingApp = marketApps.data.find((item: any) => item.app_id === appId);
 
-      message.success('已成功发布到应用市场');
+      const publishData = {
+        app_id: appId,
+        category: selectedCategory,
+        description: appDetail?.description || '',
+        is_listed: true
+      };
+
+      if (existingApp) {
+        // 2. 更新逻辑
+        await apiService.putApp({
+          ...publishData,
+          id: existingApp.id
+        });
+        message.success('已更新到应用市场');
+      } else {
+        // 3. 创建逻辑
+        await apiService.post('/explore/apps', publishData);
+        message.success('已成功发布到应用市场');
+      }
+
       setDraftUpdatedAt(Date.now());
-      lastSavedConfigRef.current = getConfigString();
       setIsMarketModalOpen(false);
     } catch (error) {
       console.error('Failed to publish to market:', error);
@@ -1172,8 +1181,8 @@ const AppConfig: React.FC = () => {
       try {
         if (app?.mode === 'completion') {
           await apiService.sendCompletionMessage(appId!, body, {
-            onData: (data: any) => {
-              const text = data.answer || '';
+            onData: (message: string, isFirstMessage: boolean, moreInfo: IOnDataMoreInfo) => {
+              const text = message || '';
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
                 if (modelMsgs.length > 0) {
@@ -1208,8 +1217,8 @@ const AppConfig: React.FC = () => {
           });
         } else {
           await apiService.sendChatMessage(appId!, body, {
-            onData: (data: any) => {
-              const text = data.answer || '';
+            onData: (message: string, isFirstMessage: boolean, moreInfo: IOnDataMoreInfo) => {
+              const text = message || '';
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
                 if (modelMsgs.length > 0) {
