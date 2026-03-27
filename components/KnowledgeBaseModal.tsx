@@ -38,17 +38,16 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const apiType = activeTab === 'all' ? undefined : activeTab;
-
       const params: { page: number; limit: number; type?: string } = {
         page: pageNum,
         limit: 20,
       };
-      if (apiType) {
-        params.type = apiType;
+      if (activeTab !== 'all') {
+        params.type = activeTab;
       }
 
       const response = await apiService.fetchDatasets(params);
+      console.log('API Response:', response);
 
       if (isLoadMore) {
         setDatasets(prev => [...prev, ...response.data]);
