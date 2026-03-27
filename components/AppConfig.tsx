@@ -420,7 +420,7 @@ const AppConfig: React.FC = () => {
         category: selectedCategory,
         position: null,
         is_listed: true,
-        tenant_id: appDetail.tenant_id // 假设 appDetail 中有 tenant_id
+        tenant_id: appDetail.tenant_id || localStorage.getItem('console_tenant_id') || '6cd1c55c-441a-4b28-8da5-071c896ab5d2' // 优先使用 appDetail.tenant_id，其次从 localStorage 获取，最后使用固定值
       };
 
       if (existingApp) {
