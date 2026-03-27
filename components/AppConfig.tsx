@@ -378,7 +378,7 @@ const AppConfig: React.FC = () => {
   };
 
   const handlePublishToMarket = async () => {
-    if (!selectedCategory || !appId) {
+    if (!selectedCategory || !appId || !appDetail) {
       message.warning('请选择发布分类');
       return;
     }
@@ -389,22 +389,49 @@ const AppConfig: React.FC = () => {
       const marketApps = await apiService.getApps({ is_custom_app_list: true, limit: 100 });
       const existingApp = marketApps.data.find((item: any) => item.app_id === appId);
 
+      // 2. 构建 URL
+      const site = appDetail.site;
+      let url = '';
+      if (['advanced-chat', 'agent-chat', 'chat'].includes(appDetail.mode)) {
+        url = `${site.app_base_url}/chat/${site.access_token}`;
+      } else if (appDetail.mode === 'workflow') {
+        url = `${site.app_base_url}/workflow/${site.access_token}`;
+      } else if (appDetail.mode === 'completion') {
+        url = `${site.app_base_url}/completion/${site.access_token}`;
+      }
+
+      // 3. 构建发布数据
       const publishData = {
+        app: {
+          id: appDetail.id,
+          name: appDetail.name,
+          mode: appDetail.mode,
+          icon: appDetail.icon,
+          icon_url: null,
+          icon_type: appDetail.icon_type,
+          icon_background: appDetail.icon_background,
+          url: url
+        },
         app_id: appId,
+        description: appDetail.description || '',
+        copyright: appDetail.site?.copyright || 'Yanfu.AI',
+        privacy_policy: appDetail.site?.privacy_policy,
+        custom_disclaimer: appDetail.site?.custom_disclaimer,
         category: selectedCategory,
-        description: appDetail?.description || '',
-        is_listed: true
+        position: null,
+        is_listed: true,
+        tenant_id: appDetail.tenant_id // 假设 appDetail 中有 tenant_id
       };
 
       if (existingApp) {
-        // 2. 更新逻辑
+        // 4. 更新逻辑
         await apiService.putApp({
           ...publishData,
           id: existingApp.id
         });
         message.success('已更新到应用市场');
       } else {
-        // 3. 创建逻辑
+        // 5. 创建逻辑
         await apiService.post('/explore/apps', publishData);
         message.success('已成功发布到应用市场');
       }

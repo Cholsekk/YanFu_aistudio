@@ -720,7 +720,7 @@ class ApiService {
   }
 
   async exportApp(appId: string, includeSecret: boolean = false): Promise<{ data: string }> {
-    return this.post(`/apps/${appId}/export?include_secret=${includeSecret}`);
+    return this.get(`/apps/${appId}/export?include_secret=${includeSecret}`);
   }
 
   async importApp(data: { 
