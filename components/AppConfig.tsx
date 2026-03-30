@@ -2992,57 +2992,114 @@ const AppConfig: React.FC = () => {
       </Drawer>
 
       <Modal
-        title="召回设置"
+        title={
+          <div>
+            <div className="text-lg font-bold text-gray-900">召回设置</div>
+            <div className="text-xs text-gray-500 font-normal">默认情况下使用多路召回。从多个知识库中检索知识，然后重新排序。</div>
+          </div>
+        }
         open={isRecallSettingsModalOpen}
         onCancel={() => setIsRecallSettingsModalOpen(false)}
-        footer={null}
+        footer={
+          <div className="flex justify-end gap-2 pt-4">
+            <Button onClick={() => setIsRecallSettingsModalOpen(false)}>取消</Button>
+            <Button type="primary" onClick={() => setIsRecallSettingsModalOpen(false)}>保存</Button>
+          </div>
+        }
         width={600}
         centered
       >
         <div className="space-y-6">
           <div className="space-y-2">
-            <div className="text-sm font-medium text-gray-700">Rerank 模型</div>
-            <ModelSelect
-              className="w-full"
-              modelType={ModelTypeEnum.rerank}
-              value={rerankingModel.model}
-              onChange={(model, provider) => setRerankingModel({ provider, model })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-gray-700">向量权重</div>
-            <Slider 
-              min={0} 
-              max={1} 
-              step={0.1} 
-              value={vectorWeight} 
-              onChange={setVectorWeight} 
-            />
+            <div className="text-sm font-bold text-gray-900">RERANK 设置</div>
+            <div className="flex p-1 bg-gray-100 rounded-lg">
+              <Button 
+                type={rerankingMode === RerankingModeEnum.Weight ? 'primary' : 'text'}
+                className={`flex-1 ${rerankingMode === RerankingModeEnum.Weight ? 'bg-white shadow-sm text-primary-600' : 'text-gray-600'}`}
+                onClick={() => setRerankingMode(RerankingModeEnum.Weight)}
+              >
+                权重设置
+              </Button>
+              <Button 
+                type={rerankingMode === RerankingModeEnum.RerankingModel ? 'primary' : 'text'}
+                className={`flex-1 ${rerankingMode === RerankingModeEnum.RerankingModel ? 'bg-white shadow-sm text-primary-600' : 'text-gray-600'}`}
+                onClick={() => setRerankingMode(RerankingModeEnum.RerankingModel)}
+              >
+                Rerank 模型
+              </Button>
+            </div>
           </div>
 
+          {rerankingMode === RerankingModeEnum.Weight ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">语义 {vectorWeight.toFixed(1)}</span>
+                <Slider 
+                  className="flex-1"
+                  min={0} 
+                  max={1} 
+                  step={0.1} 
+                  value={vectorWeight} 
+                  onChange={setVectorWeight} 
+                />
+                <span className="text-sm font-medium text-gray-700">{(1 - vectorWeight).toFixed(1)} 关键词</span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700">Rerank 模型</div>
+              <ModelSelect
+                className="w-full"
+                modelType={ModelTypeEnum.rerank}
+                value={rerankingModel.model}
+                onChange={(model, provider) => setRerankingModel({ provider, model })}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
-            <div className="text-sm font-medium text-gray-700">Top K</div>
-            <InputNumber 
-              min={1} 
-              max={20} 
-              value={topK} 
-              onChange={(v) => setTopK(v || 4)} 
-              className="w-full"
-            />
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-medium text-gray-700">Top K</div>
+            </div>
+            <div className="flex items-center gap-4">
+              <InputNumber 
+                min={1} 
+                max={20} 
+                value={topK} 
+                onChange={(v) => setTopK(v || 4)} 
+                className="w-20"
+              />
+              <Slider 
+                className="flex-1"
+                min={1} 
+                max={20} 
+                value={topK} 
+                onChange={(v) => setTopK(v)} 
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">启用 Score 阈值</div>
-            <Switch 
-              checked={scoreThresholdEnabled} 
-              onChange={setScoreThresholdEnabled} 
-            />
+            <div className="flex items-center gap-2">
+              <Switch 
+                checked={scoreThresholdEnabled} 
+                onChange={setScoreThresholdEnabled} 
+                size="small"
+              />
+              <div className="text-sm font-medium text-gray-700">Score 阈值</div>
+            </div>
           </div>
 
           {scoreThresholdEnabled && (
             <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700">Score 阈值</div>
+              <InputNumber 
+                min={0} 
+                max={1} 
+                step={0.01} 
+                value={scoreThreshold} 
+                onChange={(v) => setScoreThreshold(v || 0.5)} 
+                className="w-20"
+              />
               <Slider 
                 min={0} 
                 max={1} 
@@ -3052,11 +3109,6 @@ const AppConfig: React.FC = () => {
               />
             </div>
           )}
-
-          <div className="flex justify-end gap-2">
-            <Button onClick={() => setIsRecallSettingsModalOpen(false)}>取消</Button>
-            <Button type="primary" onClick={() => setIsRecallSettingsModalOpen(false)}>确定</Button>
-          </div>
         </div>
       </Modal>
 
