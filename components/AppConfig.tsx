@@ -643,6 +643,7 @@ const AppConfig: React.FC = () => {
     return () => clearInterval(interval);
   }, [draftUpdatedAt]);
 
+  /*
   const handleAutoSave = async (configStr: string) => {
     if (!appId) return;
     setIsAutoSaving(true);
@@ -666,7 +667,9 @@ const AppConfig: React.FC = () => {
       setIsAutoSaving(false);
     }
   };
+  */
 
+  /*
   useEffect(() => {
     if (!isLoaded) return;
     const currentConfig = getConfigString();
@@ -696,6 +699,7 @@ const AppConfig: React.FC = () => {
     openingStatement,
     suggestedQuestions
   ]);
+  */
 
   useEffect(() => {
     if (!appId) return;
@@ -1645,7 +1649,7 @@ const AppConfig: React.FC = () => {
                 <span className="text-sm font-bold text-gray-900">知识库</span>
               </div>
               <div className="flex items-center gap-2">
-                {knowledgeBases.length > 0 && (
+                {knowledgeBases.length > 0 && appDetail?.mode !== 'agent-chat' && (
                   <Button 
                     type="text" 
                     size="small" 
@@ -1849,6 +1853,37 @@ const AppConfig: React.FC = () => {
               </AnimatePresence>
             </div>
           </motion.div>
+
+          {(app?.mode === 'agent-chat' || app?.mode === 'advanced-chat') && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-900">工具</span>
+                  <Tooltip title="工具可以帮助 AI 完成更复杂的任务。">
+                    <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                  </Tooltip>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">0/0 启用</span>
+                  <Divider type="vertical" />
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    icon={<Plus className="w-3.5 h-3.5" />}
+                    className="text-gray-500 hover:text-primary-600 hover:bg-gray-50 flex items-center gap-1 text-xs font-medium"
+                    onClick={() => { /* TODO: Add tool handler */ }}
+                  >
+                    添加
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
         
         <div className="p-4 border-t border-gray-200 bg-white">

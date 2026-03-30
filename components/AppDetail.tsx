@@ -26,27 +26,31 @@ interface AppDetailProps {
 const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
   const getTabs = () => {
     const type = app.type;
+    const isWorkflowOrAdvancedChat = app.mode === 'workflow' || app.mode === 'advanced-chat';
+    const configLabel = isWorkflowOrAdvancedChat ? '工作流编排' : '开发配置';
+    const configId = isWorkflowOrAdvancedChat ? 'orchestrate' : 'config';
+
     if (type === '对话应用') {
       return [
-        { id: 'config', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
+        { id: configId, label: configLabel, icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志与标注', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
     } else if (type === '文本生成应用') {
       return [
-        { id: 'config', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
+        { id: configId, label: configLabel, icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
     } else if (type === '智能体应用') {
       return [
-        { id: 'config', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
+        { id: configId, label: configLabel, icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志与标注', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
     } else if (type === '工作流应用') {
       return [
-        { id: 'orchestrate', label: '开发配置', icon: <Settings className="w-4 h-4" /> },
+        { id: 'orchestrate', label: configLabel, icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
@@ -123,7 +127,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
   };
 
   const renderContent = () => {
-    if (activeTab === 'orchestrate' && app.type === '工作流应用') {
+    if (activeTab === 'orchestrate') {
       return (
         <div className="h-full w-full">
           <WorkflowEditor />
@@ -183,10 +187,20 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
                   </h1>
                 </Tooltip>
               </div>
-              <div className="mt-0.5">
+              <div className="flex items-center gap-1 mt-0.5">
                 <span className={`px-1 py-0.5 rounded text-[9px] font-bold border ${getTypeColor()}`}>
                   {app.typeLabel}
                 </span>
+                {app.mode === 'advanced-chat' && (
+                  <span className="px-1 py-0.5 rounded text-[9px] font-bold border bg-orange-50 text-orange-700 border-orange-100">
+                    workflow模式
+                  </span>
+                )}
+                {app.mode === 'chat' && (
+                  <span className="px-1 py-0.5 rounded text-[9px] font-bold border bg-green-50 text-green-700 border-green-100">
+                    基础模式
+                  </span>
+                )}
               </div>
             </div>
           </div>

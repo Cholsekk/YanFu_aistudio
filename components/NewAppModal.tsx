@@ -77,6 +77,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       description: formData.description,
       typeLabel: formData.type,
       type: formData.type.includes('助手') ? '对话应用' : formData.type,
+      mode: formData.type === '对话助手' ? (formData.subType === '对话助手工作流' ? 'advanced-chat' : 'chat') : undefined,
       icon: formData.icon,
       iconType: formData.iconType,
       iconBgColor: formData.iconBgColor,
@@ -198,25 +199,27 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">对话助手开发与调试</label>
-                <div className="grid grid-cols-2 gap-4">
-                  {subTypes.map(st => (
-                    <div 
-                      key={st}
-                      onClick={() => setFormData({...formData, subType: st})}
-                      className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
-                        formData.subType === st ? 'border-primary-500 bg-primary-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
-                      }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.subType === st ? 'border-primary-500' : 'border-gray-300'}`}>
-                        {formData.subType === st && <div className="w-2 h-2 rounded-full bg-primary-500" />}
+              {formData.type === '对话助手' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">对话助手开发与调试</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {subTypes.map(st => (
+                      <div 
+                        key={st}
+                        onClick={() => setFormData({...formData, subType: st})}
+                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
+                          formData.subType === st ? 'border-primary-500 bg-primary-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.subType === st ? 'border-primary-500' : 'border-gray-300'}`}>
+                          {formData.subType === st && <div className="w-2 h-2 rounded-full bg-primary-500" />}
+                        </div>
+                        <span className="font-medium text-gray-900 text-sm">{st}</span>
                       </div>
-                      <span className="font-medium text-gray-900 text-sm">{st}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
