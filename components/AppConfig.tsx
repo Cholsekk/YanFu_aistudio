@@ -2993,36 +2993,45 @@ const AppConfig: React.FC = () => {
 
       <Modal
         title={
-          <div>
-            <div className="text-lg font-bold text-gray-900">召回设置</div>
-            <div className="text-xs text-gray-500 font-normal">默认情况下使用多路召回。从多个知识库中检索知识，然后重新排序。</div>
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl border-b border-blue-100">
+            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <Settings2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-gray-900">召回设置</div>
+              <div className="text-xs text-gray-500 font-normal">默认使用多路召回，通过检索与重排序优化结果。</div>
+            </div>
           </div>
         }
         open={isRecallSettingsModalOpen}
         onCancel={() => setIsRecallSettingsModalOpen(false)}
         footer={
-          <div className="flex justify-end gap-2 pt-4">
-            <Button onClick={() => setIsRecallSettingsModalOpen(false)}>取消</Button>
-            <Button type="primary" onClick={() => setIsRecallSettingsModalOpen(false)}>保存</Button>
+          <div className="flex justify-end gap-3 p-4 bg-gray-50 rounded-b-xl border-t border-gray-100">
+            <Button onClick={() => setIsRecallSettingsModalOpen(false)} className="rounded-lg">取消</Button>
+            <Button type="primary" onClick={() => setIsRecallSettingsModalOpen(false)} className="rounded-lg bg-blue-600 hover:bg-blue-700">保存设置</Button>
           </div>
         }
         width={600}
         centered
+        styles={{ header: { padding: 0 }, body: { padding: '24px' } }}
       >
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="text-sm font-bold text-gray-900">RERANK 设置</div>
-            <div className="flex p-1 bg-gray-100 rounded-lg">
+        <div className="space-y-8">
+          <div className="space-y-3">
+            <div className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+              RERANK 模式
+            </div>
+            <div className="flex p-1 bg-gray-100 rounded-xl border border-gray-200">
               <Button 
                 type={rerankingMode === RerankingModeEnum.Weight ? 'primary' : 'text'}
-                className={`flex-1 ${rerankingMode === RerankingModeEnum.Weight ? 'bg-white shadow-sm text-primary-600' : 'text-gray-600'}`}
+                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.Weight ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-600'}`}
                 onClick={() => setRerankingMode(RerankingModeEnum.Weight)}
               >
                 权重设置
               </Button>
               <Button 
                 type={rerankingMode === RerankingModeEnum.RerankingModel ? 'primary' : 'text'}
-                className={`flex-1 ${rerankingMode === RerankingModeEnum.RerankingModel ? 'bg-white shadow-sm text-primary-600' : 'text-gray-600'}`}
+                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.RerankingModel ? 'bg-white shadow-sm text-indigo-600 font-bold' : 'text-gray-600'}`}
                 onClick={() => setRerankingMode(RerankingModeEnum.RerankingModel)}
               >
                 Rerank 模型
@@ -3031,25 +3040,30 @@ const AppConfig: React.FC = () => {
           </div>
 
           {rerankingMode === RerankingModeEnum.Weight ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">语义 {vectorWeight.toFixed(1)}</span>
-                <Slider 
-                  className="flex-1"
-                  min={0} 
-                  max={1} 
-                  step={0.1} 
-                  value={vectorWeight} 
-                  onChange={setVectorWeight} 
-                />
-                <span className="text-sm font-medium text-gray-700">{(1 - vectorWeight).toFixed(1)} 关键词</span>
+            <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 space-y-4">
+              <div className="flex items-center justify-between text-sm font-bold text-gray-800">
+                <span>语义匹配</span>
+                <span>关键词匹配</span>
+              </div>
+              <Slider 
+                min={0} 
+                max={1} 
+                step={0.1} 
+                value={vectorWeight} 
+                onChange={setVectorWeight}
+                trackStyle={{ background: 'linear-gradient(90deg, #2563eb, #4f46e5)' }}
+                handleStyle={{ borderColor: '#2563eb', backgroundColor: '#fff' }}
+              />
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-blue-700">
+                <span>{vectorWeight.toFixed(1)}</span>
+                <span>{(1 - vectorWeight).toFixed(1)}</span>
               </div>
             </div>
           ) : (
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700">Rerank 模型</div>
+            <div className="space-y-3">
+              <div className="text-sm font-bold text-gray-900">选择 Rerank 模型</div>
               <ModelSelect
-                className="w-full"
+                className="w-full h-12 rounded-xl border-gray-200"
                 modelType={ModelTypeEnum.rerank}
                 value={rerankingModel.model}
                 onChange={(model, provider) => setRerankingModel({ provider, model })}
@@ -3057,58 +3071,60 @@ const AppConfig: React.FC = () => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="text-sm font-medium text-gray-700">Top K</div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="text-sm font-bold text-gray-900">Top K</div>
+              <div className="flex items-center gap-3">
+                <InputNumber 
+                  min={1} 
+                  max={20} 
+                  value={topK} 
+                  onChange={(v) => setTopK(v || 4)} 
+                  className="w-20 h-10 rounded-lg"
+                />
+                <Slider 
+                  className="flex-1"
+                  min={1} 
+                  max={20} 
+                  value={topK} 
+                  onChange={(v) => setTopK(v)} 
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <InputNumber 
-                min={1} 
-                max={20} 
-                value={topK} 
-                onChange={(v) => setTopK(v || 4)} 
-                className="w-20"
-              />
-              <Slider 
-                className="flex-1"
-                min={1} 
-                max={20} 
-                value={topK} 
-                onChange={(v) => setTopK(v)} 
-              />
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-bold text-gray-900">Score 阈值</div>
+                <Switch 
+                  checked={scoreThresholdEnabled} 
+                  onChange={setScoreThresholdEnabled} 
+                  size="small"
+                  className={scoreThresholdEnabled ? 'bg-green-500' : ''}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <InputNumber 
+                  min={0} 
+                  max={1} 
+                  step={0.01} 
+                  value={scoreThreshold} 
+                  onChange={(v) => setScoreThreshold(v || 0.5)} 
+                  className="w-20 h-10 rounded-lg"
+                  disabled={!scoreThresholdEnabled}
+                />
+                <Slider 
+                  className="flex-1"
+                  min={0} 
+                  max={1} 
+                  step={0.01} 
+                  value={scoreThreshold} 
+                  onChange={setScoreThreshold} 
+                  disabled={!scoreThresholdEnabled}
+                  trackStyle={{ backgroundColor: scoreThresholdEnabled ? '#22c55e' : '#d1d5db' }}
+                />
+              </div>
             </div>
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Switch 
-                checked={scoreThresholdEnabled} 
-                onChange={setScoreThresholdEnabled} 
-                size="small"
-              />
-              <div className="text-sm font-medium text-gray-700">Score 阈值</div>
-            </div>
-          </div>
-
-          {scoreThresholdEnabled && (
-            <div className="space-y-2">
-              <InputNumber 
-                min={0} 
-                max={1} 
-                step={0.01} 
-                value={scoreThreshold} 
-                onChange={(v) => setScoreThreshold(v || 0.5)} 
-                className="w-20"
-              />
-              <Slider 
-                min={0} 
-                max={1} 
-                step={0.01} 
-                value={scoreThreshold} 
-                onChange={setScoreThreshold} 
-              />
-            </div>
-          )}
         </div>
       </Modal>
 
