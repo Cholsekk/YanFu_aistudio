@@ -41,7 +41,9 @@ const App: React.FC = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [activeNavTab, setActiveNavTab] = useState('app-dev');
+  const [activeNavTab, setActiveNavTab] = useState(() => {
+    return sessionStorage.getItem('activeNavTab') || 'app-dev';
+  });
 
   // Handle tab from query param
   useEffect(() => {
@@ -57,12 +59,12 @@ const App: React.FC = () => {
     }
   }, [searchParams, pathname, router]);
 
-  const [activeFilterTab, setActiveFilterTab] = useState('全部');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilterTab, setActiveFilterTab] = useState(() => sessionStorage.getItem('activeFilterTab') || '全部');
+  const [searchQuery, setSearchQuery] = useState(() => sessionStorage.getItem('searchQuery') || '');
   const [apps, setApps] = useState<AppItem[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'default' | 'name' | 'time-desc' | 'time-asc'>('default');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (sessionStorage.getItem('viewMode') as 'grid' | 'list') || 'grid');
+  const [sortBy, setSortBy] = useState<'default' | 'name' | 'time-desc' | 'time-asc'>(() => (sessionStorage.getItem('sortBy') as any) || 'default');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +80,46 @@ const App: React.FC = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [isConvertToWorkflowModalOpen, setIsConvertToWorkflowModalOpen] = useState(false);
   const [appToConvert, setAppToConvert] = useState<AppItem | null>(null);
-  const [selectedApp, setSelectedApp] = useState<AppItem | null>(null);
+  const [selectedApp, setSelectedApp] = useState<AppItem | null>(() => {
+    const saved = sessionStorage.getItem('selectedApp');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // Persist state to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('activeNavTab', activeNavTab);
+  }, [activeNavTab]);
+
+  useEffect(() => {
+    sessionStorage.setItem('activeFilterTab', activeFilterTab);
+  }, [activeFilterTab]);
+
+  useEffect(() => {
+    sessionStorage.setItem('searchQuery', searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    sessionStorage.setItem('viewMode', viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    sessionStorage.setItem('sortBy', sortBy);
+  }, [sortBy]);
+
+  useEffect(() => {
+    if (selectedApp) {
+      sessionStorage.setItem('selectedApp', JSON.stringify(selectedApp));
+    } else {
+      sessionStorage.removeItem('selectedApp');
+    }
+  }, [selectedApp]);
   
   const [editingApp, setEditingApp] = useState<AppItem | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{

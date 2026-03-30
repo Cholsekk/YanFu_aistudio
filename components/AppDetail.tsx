@@ -55,7 +55,13 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
   };
 
   const tabs = getTabs();
-  const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'config');
+  const [activeTab, setActiveTab] = useState(() => {
+    return sessionStorage.getItem(`appDetailTab_${app.id}`) || tabs[0]?.id || 'config';
+  });
+
+  React.useEffect(() => {
+    sessionStorage.setItem(`appDetailTab_${app.id}`, activeTab);
+  }, [activeTab, app.id]);
 
   const getTypeIcon = () => {
     switch (app.mode) {

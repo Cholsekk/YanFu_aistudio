@@ -593,6 +593,15 @@ const AppConfig: React.FC = () => {
   const [metadataModelConfig, setMetadataModelConfig] = useState<any>(null);
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
 
+  // Recall Settings State
+  const [rerankingMode, setRerankingMode] = useState<RerankingModeEnum>(RerankingModeEnum.RerankingModel);
+  const [rerankingModel, setRerankingModel] = useState<{provider: string, model: string}>({provider: 'tongyi', model: 'gte-rerank'});
+  const [vectorWeight, setVectorWeight] = useState<number>(0.7);
+  const [topK, setTopK] = useState<number>(4);
+  const [scoreThresholdEnabled, setScoreThresholdEnabled] = useState<boolean>(false);
+  const [scoreThreshold, setScoreThreshold] = useState<number>(0.5);
+  const [isRecallSettingsModalOpen, setIsRecallSettingsModalOpen] = useState(false);
+
   const getConfigString = () => {
     return JSON.stringify({
       prompt,
@@ -605,7 +614,13 @@ const AppConfig: React.FC = () => {
       metadataModelConfig,
       manualFilters,
       openingStatement,
-      suggestedQuestions
+      suggestedQuestions,
+      rerankingMode,
+      rerankingModel,
+      vectorWeight,
+      topK,
+      scoreThresholdEnabled,
+      scoreThreshold
     });
   };
 
@@ -1102,13 +1117,30 @@ const AppConfig: React.FC = () => {
           },
           dataset_configs: {
             retrieval_model: 'multiple',
-            top_k: 4,
-            reranking_mode: 'reranking_model',
-            reranking_model: {
-              reranking_provider_name: 'tongyi',
-              reranking_model_name: 'gte-rerank'
-            },
-            reranking_enable: false,
+            top_k: topK,
+            score_threshold_enabled: scoreThresholdEnabled,
+            score_threshold: scoreThresholdEnabled ? scoreThreshold : undefined,
+            reranking_mode: rerankingMode,
+            ...(rerankingMode === RerankingModeEnum.RerankingModel ? {
+              reranking_model: {
+                reranking_provider_name: rerankingModel.provider,
+                reranking_model_name: rerankingModel.model
+              },
+              reranking_enable: true
+            } : {
+              weights: {
+                weight_type: WeightedScoreEnum.Customized,
+                vector_setting: {
+                  vector_weight: vectorWeight,
+                  embedding_provider_name: '',
+                  embedding_model_name: ''
+                },
+                keyword_setting: {
+                  keyword_weight: 1 - vectorWeight
+                }
+              },
+              reranking_enable: false
+            }),
             datasets: {
               datasets: knowledgeBases.map(kb => ({
                 enabled: true,
@@ -1613,14 +1645,17 @@ const AppConfig: React.FC = () => {
                 <span className="text-sm font-bold text-gray-900">知识库</span>
               </div>
               <div className="flex items-center gap-2">
-                <Button 
-                  type="text" 
-                  size="small" 
-                  icon={<Settings2 className="w-3.5 h-3.5" />}
-                  className="text-gray-500 hover:text-primary-600 hover:bg-gray-50 flex items-center gap-1 text-xs font-medium"
-                >
-                  召回设置
-                </Button>
+                {knowledgeBases.length > 0 && (
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    icon={<Settings2 className="w-3.5 h-3.5" />}
+                    className="text-gray-500 hover:text-primary-600 hover:bg-gray-50 flex items-center gap-1 text-xs font-medium"
+                    onClick={() => setIsRecallSettingsModalOpen(true)}
+                  >
+                    召回设置
+                  </Button>
+                )}
                 <Button 
                   type="text" 
                   size="small" 

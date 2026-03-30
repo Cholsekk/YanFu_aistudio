@@ -623,7 +623,13 @@ const ToolExtensions: React.FC = () => {
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'builtin' | 'custom' | 'workflow' | 'mcp'>('builtin');
+  const [activeTab, setActiveTab] = useState<'builtin' | 'custom' | 'workflow' | 'mcp'>(() => {
+    return (sessionStorage.getItem('toolExtensionsTab') as any) || 'builtin';
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('toolExtensionsTab', activeTab);
+  }, [activeTab]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string>('全部');
   const [isFilterOpen, setIsFilterOpen] = useState(false);

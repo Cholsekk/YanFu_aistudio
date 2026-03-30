@@ -19,11 +19,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, app, onU
   const [name, setName] = useState(app.name);
   const [description, setDescription] = useState(app.description);
   const [useCustomIcon, setUseCustomIcon] = useState(app.use_icon_as_answer_icon ?? true);
-  const [language, setLanguage] = useState(app.site.default_language || 'zh-Hans');
+  const [language, setLanguage] = useState(app.site?.default_language || 'zh-Hans');
   const [showWorkflow, setShowWorkflow] = useState(true);
-  const [copyright, setCopyright] = useState(app.site.copyright || '');
-  const [privacyPolicy, setPrivacyPolicy] = useState(app.site.privacy_policy || '');
-  const [customDisclaimer, setCustomDisclaimer] = useState(app.site.custom_disclaimer || '');
+  const [copyright, setCopyright] = useState(app.site?.copyright || '');
+  const [privacyPolicy, setPrivacyPolicy] = useState(app.site?.privacy_policy || '');
+  const [customDisclaimer, setCustomDisclaimer] = useState(app.site?.custom_disclaimer || '');
   
   // Icon state
   const [icon, setIcon] = useState(app.icon || 'Bot');

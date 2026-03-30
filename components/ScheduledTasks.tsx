@@ -13,9 +13,21 @@ import { message } from 'antd';
 const ScheduledTasks: React.FC = () => {
   // View State
   const [displayedTasks, setDisplayedTasks] = useState<ScheduledTask[]>([]);
-  const [searchName, setSearchName] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [searchName, setSearchName] = useState(() => sessionStorage.getItem('scheduledTasksSearch') || '');
+  const [currentPage, setCurrentPage] = useState(() => Number(sessionStorage.getItem('scheduledTasksPage')) || 1);
+  const [pageSize, setPageSize] = useState(() => Number(sessionStorage.getItem('scheduledTasksPageSize')) || 10);
+
+  useEffect(() => {
+    sessionStorage.setItem('scheduledTasksSearch', searchName);
+  }, [searchName]);
+
+  useEffect(() => {
+    sessionStorage.setItem('scheduledTasksPage', currentPage.toString());
+  }, [currentPage]);
+
+  useEffect(() => {
+    sessionStorage.setItem('scheduledTasksPageSize', pageSize.toString());
+  }, [pageSize]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   

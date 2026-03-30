@@ -944,7 +944,7 @@ class ApiService {
     if (taskName) {
       url += `&task_name=${encodeURIComponent(taskName)}`; // Doc says 'name' for filtering? Actually doc doesn't specify filter param name in list, but usually it's name. Let's assume 'name' or check if I should stick to 'task_name'. The doc summary says "Get Task List", but doesn't detail query params. I'll stick to 'name' as it's more standard, or keep 'task_name' if I'm unsure. Wait, the doc doesn't show list params. I'll keep it as is or change to 'name' if I want to be safe. Let's assume 'name' based on the field name.
     }
-    return this.post(url);
+    return this.get(url);
   }
 
   async createTask(task: Partial<ScheduledTask>): Promise<ScheduledTask> {
@@ -1078,7 +1078,7 @@ class ApiService {
   // --- MCP Tool Provider APIs ---
 
   async fetchMcpProviderDetail(providerId: string): Promise<McpProvider> {
-    return this.post(`/workspaces/current/tool-provider/mcp/tools/${providerId}`);
+    return this.get(`/workspaces/current/tool-provider/mcp/tools/${providerId}`);
   }
 
   async createMcpProvider(data: McpProviderRequest): Promise<McpProvider> {
