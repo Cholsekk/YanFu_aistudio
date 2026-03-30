@@ -70,6 +70,7 @@ import { useAppDevHub } from '../context/AppContext';
 
 import { PartialTeamMembersSelector } from './PartialTeamMembersSelector';
 import EmbedModal from './EmbedModal';
+import { ToolSelectorPopover } from './ToolSelectorPopover';
 
 const { TextArea } = Input;
 
@@ -315,8 +316,8 @@ const AppConfig: React.FC = () => {
         enabled: !!enabledFeatures.content_check
       },
       agent_mode: {
-        enabled: false,
-        tools: []
+        enabled: tools.length > 0,
+        tools: tools
       },
       model: {
         provider: model.provider,
@@ -774,6 +775,7 @@ const AppConfig: React.FC = () => {
           
           if (config.opening_statement) setOpeningStatement(config.opening_statement);
           if (config.suggested_questions) setSuggestedQuestions(config.suggested_questions);
+          if (config.agent_mode?.tools) setTools(config.agent_mode.tools);
 
           // Map features from model_config to enabledFeatures state
           setEnabledFeatures({
@@ -1114,10 +1116,10 @@ const AppConfig: React.FC = () => {
             configs: []
           },
           agent_mode: {
-            enabled: false,
+            enabled: tools.length > 0,
             max_iteration: 5,
             strategy: 'function_call',
-            tools: []
+            tools: tools
           },
           dataset_configs: {
             retrieval_model: 'multiple',
@@ -1440,6 +1442,7 @@ const AppConfig: React.FC = () => {
   };
 
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
+  const [tools, setTools] = useState<any[]>([]);
 
   const handleAutoGenerate = async () => {
     if (!prompt.trim() || isAutoGenerating) return;
@@ -1869,19 +1872,68 @@ const AppConfig: React.FC = () => {
                   </Tooltip>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">0/0 启用</span>
-                  <Divider type="vertical" />
-                  <Button 
-                    type="text" 
-                    size="small" 
-                    icon={<Plus className="w-3.5 h-3.5" />}
-                    className="text-gray-500 hover:text-primary-600 hover:bg-gray-50 flex items-center gap-1 text-xs font-medium"
-                    onClick={() => { /* TODO: Add tool handler */ }}
+                  <span className="text-xs text-gray-500">{tools.length}/{tools.length} 启用</span>
+                  <Divider orientation="vertical" />
+                  <ToolSelectorPopover
+                    onSelectTool={(provider, tool) => {
+                      // Add tool to the list if it's not already there
+                      const exists = tools.some(t => t.provider_id === provider.id && t.provider_type === provider.type && t.tool_name === tool.name);
+                      if (!exists) {
+                        setTools([...tools, {
+                          provider_id: provider.id,
+                          provider_type: provider.type,
+                          provider_name: provider.name,
+                          tool_name: tool.name,
+                          tool_label: tool.label?.zh_Hans || tool.name,
+                          tool_parameters: tool.parameters || {},
+                          enabled: true
+                        }]);
+                      }
+                    }}
                   >
-                    添加
-                  </Button>
+                    <Button 
+                      type="text" 
+                      size="small" 
+                      icon={<Plus className="w-3.5 h-3.5" />}
+                      className="text-gray-500 hover:text-primary-600 hover:bg-gray-50 flex items-center gap-1 text-xs font-medium"
+                    >
+                      添加
+                    </Button>
+                  </ToolSelectorPopover>
                 </div>
               </div>
+              
+              {tools.length > 0 && (
+                <div className="space-y-2 mt-3">
+                  {tools.map((tool, index) => (
+                    <div key={`${tool.provider_id}-${tool.tool_name}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shadow-sm">
+                          <Wand2 className="w-4 h-4 text-primary-600" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{tool.tool_label || tool.tool_name}</div>
+                          <div className="text-xs text-gray-500">{tool.provider_name}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          className="text-gray-400 hover:text-red-500"
+                          onClick={() => {
+                            const newTools = [...tools];
+                            newTools.splice(index, 1);
+                            setTools(newTools);
+                          }}
+                        >
+                          移除
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
         </div>
