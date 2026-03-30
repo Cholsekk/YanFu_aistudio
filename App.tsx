@@ -156,8 +156,11 @@ const App: React.FC = () => {
     }
   };
 
-  const mapTypeToAppMode = (type: string): AppMode => {
-    if (type.includes('对话')) return 'chat';
+  const mapTypeToAppMode = (type: string, mode?: string): AppMode => {
+    if (type.includes('对话')) {
+      if (mode === 'advanced-chat') return 'advanced-chat';
+      return 'chat';
+    }
     if (type.includes('智能体')) return 'agent-chat';
     if (type.includes('工作流')) return 'workflow';
     if (type.includes('文本')) return 'completion';
@@ -569,7 +572,7 @@ const App: React.FC = () => {
           icon_type: appData.iconType || 'icon',
           icon: appData.icon,
           icon_background: appData.iconBgColor,
-          mode: mapTypeToAppMode(appData.typeLabel || appData.type),
+          mode: mapTypeToAppMode(appData.typeLabel || appData.type, appData.mode),
           description: appData.description,
           built_in: appData.builtIn || false,
           config: config
@@ -631,7 +634,7 @@ const App: React.FC = () => {
         icon_type: app.iconType,
         icon: app.icon,
         icon_background: app.iconBgColor,
-        mode: mapTypeToAppMode(app.type),
+        mode: mapTypeToAppMode(app.type, app.mode),
         description: app.description,
         config: config
       });
