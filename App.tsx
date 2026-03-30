@@ -9,7 +9,6 @@ import ImportAppModal from './components/ImportAppModal';
 import ManageTagsModal from './components/ManageTagsModal';
 import ScheduledTasks from './components/ScheduledTasks';
 import ToolExtensions from './components/ToolExtensions';
-import MCPServices from './components/MCPServices';
 import AppDetail from './components/AppDetail';
 import TokenConfigModal from './components/TokenConfigModal';
 import ConvertToWorkflowModal from './components/ConvertToWorkflowModal';
@@ -772,10 +771,6 @@ const App: React.FC = () => {
 
     if (activeNavTab === 'tools') {
       return <ToolExtensions />;
-    }
-
-    if (activeNavTab === 'mcp') {
-      return <MCPServices />;
     }
 
     if (activeNavTab !== 'app-dev') {

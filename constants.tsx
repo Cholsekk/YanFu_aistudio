@@ -43,7 +43,6 @@ import {
 export const NAV_TABS: NavTab[] = [
   { id: 'app-dev', label: '应用开发' },
   { id: 'tools', label: '工具拓展' },
-  { id: 'mcp', label: 'MCP服务' },
   { id: 'model', label: '模型服务' },
   { id: 'tasks', label: '定时任务' },
 ];

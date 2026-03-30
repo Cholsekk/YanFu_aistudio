@@ -49,12 +49,13 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
       const response = await apiService.fetchDatasets(params);
       console.log('API Response:', response);
 
+      const responseData = Array.isArray(response) ? response : (response.data || []);
       if (isLoadMore) {
-        setDatasets(prev => [...prev, ...response.data]);
+        setDatasets(prev => [...prev, ...responseData]);
       } else {
-        setDatasets(response.data);
+        setDatasets(responseData);
       }
-      setHasMore(response.has_more);
+      setHasMore(Array.isArray(response) ? false : !!response.has_more);
       setPage(pageNum);
     } catch (error) {
       console.error('Failed to fetch datasets:', error);
@@ -104,9 +105,15 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
   };
 
   const filteredDatasets = datasets.filter(ds => 
-    ds.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (ds.name || '').toLowerCase().includes(searchQuery.toLowerCase()) &&
     !(excludeIds || []).includes(ds.id)
   );
+
+  console.log('KnowledgeBaseModal - Current Datasets:', datasets);
+  console.log('KnowledgeBaseModal - Filtered Datasets:', filteredDatasets);
+  console.log('KnowledgeBaseModal - Search Query:', searchQuery);
+  console.log('KnowledgeBaseModal - Exclude IDs:', excludeIds);
+  console.log('KnowledgeBaseModal - Active Tab:', activeTab);
 
   const tabItems = [
     { key: 'all', label: '全部', icon: <LayoutGrid className="w-4 h-4" /> },

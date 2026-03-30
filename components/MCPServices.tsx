@@ -107,7 +107,11 @@ const MOCK_TOOLS = [
     }
 ];
 
-const MCPServices: React.FC = () => {
+interface MCPServicesProps {
+  isEmbedded?: boolean;
+}
+
+const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
   const [services, setServices] = useState<any[]>(MOCK_MCP_SERVICES);
   const [selectedService, setSelectedService] = useState<any | null>(null);
   const [tools, setTools] = useState<any[]>([]);
@@ -446,19 +450,23 @@ const MCPServices: React.FC = () => {
   }, [selectedService?.name]);
 
   return (
-    <div className="flex flex-col gap-8 p-8 min-h-screen font-sans text-gray-900 bg-[#F9FAFB]">
+    <div className={isEmbedded ? "flex flex-col gap-6" : "flex flex-col gap-8 p-8 min-h-screen font-sans text-gray-900 bg-[#F9FAFB]"}>
       {/* Subtle Background Pattern */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none opacity-[0.4]" style={{ backgroundImage: 'radial-gradient(#E5E7EB 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+      {!isEmbedded && (
+        <div className="fixed inset-0 z-[-1] pointer-events-none opacity-[0.4]" style={{ backgroundImage: 'radial-gradient(#E5E7EB 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+      )}
       
-      <div className="relative flex flex-col md:flex-row md:items-end justify-between border-b border-gray-200/80 pb-6 gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900">MCP 服务</h2>
-          <p className="text-sm text-gray-500 mt-2 max-w-2xl leading-relaxed">
-            管理和配置您的 MCP 服务连接，扩展应用能力。已连接的服务将自动同步工具。
-          </p>
-        </div>
+      <div className={`relative flex flex-col md:flex-row md:items-end justify-between ${isEmbedded ? '' : 'border-b border-gray-200/80 pb-6'} gap-4`}>
+        {!isEmbedded && (
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">MCP 服务</h2>
+            <p className="text-sm text-gray-500 mt-2 max-w-2xl leading-relaxed">
+              管理和配置您的 MCP 服务连接，扩展应用能力。已连接的服务将自动同步工具。
+            </p>
+          </div>
+        )}
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className={`flex items-center gap-3 w-full md:w-auto ${isEmbedded ? 'ml-auto' : ''}`}>
           <div className="relative flex-grow md:w-72">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
@@ -488,11 +496,11 @@ const MCPServices: React.FC = () => {
         {/* Add Service Card (Always First) */}
         {!searchQuery && (
           <div 
-            className="group relative bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[220px]"
+            className="group relative bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[180px]"
             onClick={() => setIsModalOpen(true)}
           >
-            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-indigo-100 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-300">
-              <Plus className="w-6 h-6 text-indigo-500 group-hover:text-white transition-colors" />
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-indigo-100 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-300">
+              <Plus className="w-5 h-5 text-indigo-500 group-hover:text-white transition-colors" />
             </div>
             <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">添加新服务</span>
             <p className="text-xs text-indigo-400 mt-2 text-center px-4 leading-relaxed">连接新的 MCP 服务器以扩展工具集</p>
@@ -522,9 +530,9 @@ const MCPServices: React.FC = () => {
             </div>
 
             <div className="flex items-start gap-4 mb-5">
-              {renderServiceIcon(service, "w-14 h-14 rounded-2xl shrink-0 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300", "w-7 h-7")}
+              {renderServiceIcon(service, "w-12 h-12 rounded-xl shrink-0 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300", "w-6 h-6")}
               <div className="flex-1 min-w-0 pr-4 pt-1">
-                <h3 className="font-bold text-gray-900 text-lg truncate leading-tight group-hover:text-indigo-600 transition-colors">{service.name}</h3>
+                <h3 className="font-bold text-gray-900 text-base truncate leading-tight group-hover:text-indigo-600 transition-colors">{service.name}</h3>
                 <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
                     <span className="text-[10px] text-gray-500 font-mono truncate max-w-[120px]">{service.server_identifier || service.identifier}</span>
                 </div>
