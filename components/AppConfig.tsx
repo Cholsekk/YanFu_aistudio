@@ -2991,6 +2991,75 @@ const AppConfig: React.FC = () => {
         )}
       </Drawer>
 
+      <Modal
+        title="召回设置"
+        open={isRecallSettingsModalOpen}
+        onCancel={() => setIsRecallSettingsModalOpen(false)}
+        footer={null}
+        width={600}
+        centered
+      >
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-gray-700">Rerank 模型</div>
+            <ModelSelect
+              className="w-full"
+              modelType={ModelTypeEnum.rerank}
+              value={rerankingModel.model}
+              onChange={(model, provider) => setRerankingModel({ provider, model })}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-gray-700">向量权重</div>
+            <Slider 
+              min={0} 
+              max={1} 
+              step={0.1} 
+              value={vectorWeight} 
+              onChange={setVectorWeight} 
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-gray-700">Top K</div>
+            <InputNumber 
+              min={1} 
+              max={20} 
+              value={topK} 
+              onChange={(v) => setTopK(v || 4)} 
+              className="w-full"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">启用 Score 阈值</div>
+            <Switch 
+              checked={scoreThresholdEnabled} 
+              onChange={setScoreThresholdEnabled} 
+            />
+          </div>
+
+          {scoreThresholdEnabled && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700">Score 阈值</div>
+              <Slider 
+                min={0} 
+                max={1} 
+                step={0.01} 
+                value={scoreThreshold} 
+                onChange={setScoreThreshold} 
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setIsRecallSettingsModalOpen(false)}>取消</Button>
+            <Button type="primary" onClick={() => setIsRecallSettingsModalOpen(false)}>确定</Button>
+          </div>
+        </div>
+      </Modal>
+
       <VariableEditModal 
         isOpen={isVariableModalOpen} 
         onClose={() => setIsVariableModalOpen(false)} 
