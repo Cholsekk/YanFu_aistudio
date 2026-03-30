@@ -195,6 +195,7 @@ export interface ToolItem {
   tools: any[];
   labels: string[];
   workflow_app_id?: string;
+  is_authed?: boolean;
 }
 
 export interface ToolDetail {

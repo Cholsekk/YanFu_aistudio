@@ -36,6 +36,7 @@ import {
 
 import { message } from 'antd';
 import { ConfirmDialog } from './components/ConfirmDialog';
+// import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';
 
 const App: React.FC = () => {
   const pathname = usePathname();
@@ -816,6 +817,10 @@ const App: React.FC = () => {
     if (activeNavTab === 'tools') {
       return <ToolExtensions />;
     }
+
+    // if (activeNavTab === 'model') {
+    //   return <ModelProviderPage />;
+    // }
 
     if (activeNavTab !== 'app-dev') {
       return (

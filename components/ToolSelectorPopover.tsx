@@ -140,16 +140,27 @@ export const ToolSelectorPopover: React.FC<ToolSelectorPopoverProps> = ({ childr
 
   const renderIcon = (iconData: any) => {
     if (!iconData) return <div className="w-5 h-5 bg-gray-200 rounded-md" />;
+    
+    let parsedIcon = iconData;
     if (typeof iconData === 'string') {
-      return <img src={iconData} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+      if (iconData.startsWith('{')) {
+        try {
+          parsedIcon = JSON.parse(iconData);
+        } catch (e) {
+          // It's a URL string
+        }
+      } else {
+        return <img src={iconData} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+      }
     }
-    if (iconData.content) {
+    
+    if (parsedIcon && parsedIcon.content) {
       return (
         <div 
           className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs"
-          style={{ background: iconData.background }}
+          style={{ background: parsedIcon.background }}
         >
-          {iconData.content.substring(0, 1)}
+          {parsedIcon.content.substring(0, 1)}
         </div>
       );
     }
@@ -273,7 +284,7 @@ export const ToolSelectorPopover: React.FC<ToolSelectorPopoverProps> = ({ childr
       placement="bottomLeft"
       open={isOpen}
       onOpenChange={setIsOpen}
-      overlayInnerStyle={{ padding: 0 }}
+      styles={{ container: { padding: 0 } }}
       arrow={false}
     >
       {children}

@@ -71,6 +71,7 @@ import { useAppDevHub } from '../context/AppContext';
 import { PartialTeamMembersSelector } from './PartialTeamMembersSelector';
 import EmbedModal from './EmbedModal';
 import { ToolSelectorPopover } from './ToolSelectorPopover';
+import ToolAuthDrawer from './ToolAuthDrawer';
 
 const { TextArea } = Input;
 
@@ -203,6 +204,9 @@ const AppConfig: React.FC = () => {
   const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.code}` : "";
 
   const [relativeTimeString, setRelativeTimeString] = useState<string>('');
+  const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
+  const [selectedToolForAuth, setSelectedToolForAuth] = useState<any>(null);
+  const [toolDetailForAuth, setToolDetailForAuth] = useState<any>(null);
 
   const fetchCategories = async () => {
     setLoadingCategories(true);
@@ -219,6 +223,18 @@ const AppConfig: React.FC = () => {
     } finally {
       setLoadingCategories(false);
     }
+  };
+
+  const handleAuthorize = () => {
+    if (!selectedToolForAuth) return;
+    // Implement authorize logic, maybe reuse ToolExtensions logic
+    console.log('Authorize tool:', selectedToolForAuth);
+  };
+
+  const handleEditTool = () => {
+    if (!selectedToolForAuth) return;
+    // Implement edit logic
+    console.log('Edit tool:', selectedToolForAuth);
   };
 
   const handleOpenMarketModal = () => {
@@ -317,7 +333,10 @@ const AppConfig: React.FC = () => {
       },
       agent_mode: {
         enabled: tools.length > 0,
-        tools: tools
+        tools: tools.map(t => {
+          const { raw_tool, raw_provider, ...rest } = t;
+          return rest;
+        })
       },
       model: {
         provider: model.provider,
@@ -775,7 +794,13 @@ const AppConfig: React.FC = () => {
           
           if (config.opening_statement) setOpeningStatement(config.opening_statement);
           if (config.suggested_questions) setSuggestedQuestions(config.suggested_questions);
-          if (config.agent_mode?.tools) setTools(config.agent_mode.tools);
+          if (config.agent_mode?.tools) {
+            const loadedTools = config.agent_mode.tools.map((t: any) => ({
+              ...t,
+              enabled: t.enabled !== false
+            }));
+            setTools(loadedTools);
+          }
 
           // Map features from model_config to enabledFeatures state
           setEnabledFeatures({
@@ -1119,7 +1144,10 @@ const AppConfig: React.FC = () => {
             enabled: tools.length > 0,
             max_iteration: 5,
             strategy: 'function_call',
-            tools: tools
+            tools: tools.map(t => {
+              const { raw_tool, raw_provider, ...rest } = t;
+              return rest;
+            })
           },
           dataset_configs: {
             retrieval_model: 'multiple',
@@ -1443,6 +1471,112 @@ const AppConfig: React.FC = () => {
 
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
   const [tools, setTools] = useState<any[]>([]);
+  const [selectedToolForParams, setSelectedToolForParams] = useState<any>(null);
+
+  const renderToolIcon = (iconData: any) => {
+    if (!iconData) return <Wand2 className="w-4 h-4 text-primary-600" />;
+    
+    let parsedIcon = iconData;
+    if (typeof iconData === 'string') {
+      if (iconData.startsWith('{')) {
+        try {
+          parsedIcon = JSON.parse(iconData);
+        } catch (e) {
+          // It's a URL string
+        }
+      } else {
+        return <img src={iconData} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+      }
+    }
+    
+    if (parsedIcon && parsedIcon.content) {
+      return (
+        <div 
+          className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs"
+          style={{ background: parsedIcon.background }}
+        >
+          {parsedIcon.content.substring(0, 1)}
+        </div>
+      );
+    }
+    return <Wand2 className="w-4 h-4 text-primary-600" />;
+  };
+
+  const ToolSettingDrawer = () => {
+    if (!selectedToolForParams) return null;
+    const tool = selectedToolForParams;
+    const parameters = tool.raw_tool?.parameters || tool.tool_parameters || [];
+    const isArray = Array.isArray(parameters);
+    const paramList = isArray ? parameters : Object.values(parameters);
+
+    return (
+      <Drawer
+        title="工具设置"
+        open={!!selectedToolForParams}
+        onClose={() => setSelectedToolForParams(null)}
+        size="default"
+      >
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shadow-sm">
+              {renderToolIcon(tool.provider_icon)}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{tool.tool_label || tool.tool_name}</h3>
+              <div className="text-sm text-gray-500 mt-0.5">{tool.provider_name}</div>
+            </div>
+          </div>
+
+          {/* Description */}
+          {tool.tool_description && (
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {tool.tool_description}
+              </p>
+            </div>
+          )}
+
+          {/* Parameters */}
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-gray-400" />
+              参数配置
+            </h4>
+            
+            {paramList.length > 0 ? (
+              <div className="space-y-4">
+                {paramList.map((param: any, idx: number) => (
+                  <div key={param.name || idx} className="bg-white border border-gray-200 rounded-xl p-4 hover:border-primary-300 transition-colors">
+                    <div className="flex items-baseline gap-3 mb-2 flex-wrap">
+                      <span className="text-sm font-bold text-gray-900">
+                        {param.label?.zh_Hans || param.name}
+                      </span>
+                      <span className="text-xs font-mono text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded">
+                        {param.type || 'string'}
+                      </span>
+                      {param.required && (
+                        <span className="text-[10px] font-medium text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
+                          必填
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      {param.human_description?.zh_Hans || param.llm_description || param.description?.zh_Hans || param.description || '无描述'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-xl border border-gray-100 border-dashed">
+                <p className="text-sm text-gray-400">该工具无需参数配置</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Drawer>
+    );
+  };
 
   const handleAutoGenerate = async () => {
     if (!prompt.trim() || isAutoGenerating) return;
@@ -1883,10 +2017,14 @@ const AppConfig: React.FC = () => {
                           provider_id: provider.id,
                           provider_type: provider.type,
                           provider_name: provider.name,
+                          provider_icon: provider.icon,
                           tool_name: tool.name,
                           tool_label: tool.label?.zh_Hans || tool.name,
                           tool_parameters: tool.parameters || {},
-                          enabled: true
+                          tool_description: tool.description?.zh_Hans || tool.description?.en_US || '',
+                          enabled: true,
+                          raw_tool: tool,
+                          raw_provider: provider
                         }]);
                       }
                     }}
@@ -1909,26 +2047,72 @@ const AppConfig: React.FC = () => {
                     <div key={`${tool.provider_id}-${tool.tool_name}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shadow-sm">
-                          <Wand2 className="w-4 h-4 text-primary-600" />
+                          {renderToolIcon(tool.provider_icon)}
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">{tool.tool_label || tool.tool_name}</div>
                           <div className="text-xs text-gray-500">{tool.provider_name}</div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button 
-                          type="text" 
-                          size="small" 
-                          className="text-gray-400 hover:text-red-500"
-                          onClick={() => {
-                            const newTools = [...tools];
-                            newTools.splice(index, 1);
-                            setTools(newTools);
-                          }}
-                        >
-                          移除
-                        </Button>
+                      <div className="flex items-center gap-3">
+                        {tool.is_authed === false ? (
+                          <Button 
+                            size="small" 
+                            className="bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100"
+                            onClick={async () => {
+                              setSelectedToolForAuth(tool);
+                              try {
+                                let detail: any = null;
+                                if (tool.type === 'builtin') {
+                                  detail = await apiService.fetchBuiltInToolList(tool.tool_name);
+                                } else if (tool.type === 'api') {
+                                  detail = await apiService.fetchCustomToolList(tool.tool_name);
+                                } else if (tool.type === 'workflow') {
+                                  detail = await apiService.fetchWorkflowToolDetail(tool.id);
+                                } else if (tool.type === 'mcp') {
+                                  detail = await apiService.fetchMcpProviderDetail(tool.id);
+                                }
+                                setToolDetailForAuth(detail);
+                                setIsAuthDrawerOpen(true);
+                              } catch (error) {
+                                message.error('获取工具详情失败');
+                              }
+                            }}
+                          >
+                            工具未授权
+                          </Button>
+                        ) : (
+                          <Switch 
+                            size="small" 
+                            checked={tool.enabled} 
+                            onChange={(checked) => {
+                              const newTools = [...tools];
+                              newTools[index].enabled = checked;
+                              setTools(newTools);
+                            }} 
+                          />
+                        )}
+                        <div className={`flex items-center gap-1 ${tool.is_authed === false ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                          <Button 
+                            type="text" 
+                            size="small" 
+                            icon={<Settings className="w-4 h-4" />}
+                            className="text-gray-400 hover:text-primary-600"
+                            onClick={() => setSelectedToolForParams(tool)}
+                            disabled={tool.is_authed === false}
+                          />
+                          <Button 
+                            type="text" 
+                            size="small" 
+                            icon={<Trash2 className="w-4 h-4" />}
+                            className="text-gray-400 hover:text-red-500"
+                            onClick={() => {
+                              const newTools = [...tools];
+                              newTools.splice(index, 1);
+                              setTools(newTools);
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -3269,6 +3453,16 @@ const AppConfig: React.FC = () => {
         isOpen={isEmbedModalOpen} 
         onClose={() => setIsEmbedModalOpen(false)} 
         publicUrl={publicUrl} 
+      />
+
+      <ToolSettingDrawer />
+      <ToolAuthDrawer 
+        isOpen={isAuthDrawerOpen}
+        onClose={() => setIsAuthDrawerOpen(false)}
+        tool={selectedToolForAuth}
+        toolDetail={toolDetailForAuth}
+        onAuthorize={handleAuthorize}
+        onEdit={handleEditTool}
       />
     </div>
   );
