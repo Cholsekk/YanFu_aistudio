@@ -64,7 +64,7 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import VariableEditModal, { Variable } from './VariableEditModal';
-import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, LogicalOperator, ComparisonOperator, IOnDataMoreInfo } from '../types';
+import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, WeightedScoreEnum, LogicalOperator, ComparisonOperator, IOnDataMoreInfo } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
 
@@ -3008,7 +3008,36 @@ const AppConfig: React.FC = () => {
         footer={
           <div className="flex justify-end gap-3 p-4 bg-gray-50 rounded-b-xl border-t border-gray-100">
             <Button onClick={() => setIsRecallSettingsModalOpen(false)} className="rounded-lg">取消</Button>
-            <Button type="primary" onClick={() => setIsRecallSettingsModalOpen(false)} className="rounded-lg bg-blue-600 hover:bg-blue-700">保存设置</Button>
+            <Button type="primary" onClick={() => {
+              if (editingKB) {
+                const updatedRetrievalConfig = {
+                  ...editingKB.retrieval_config,
+                  reranking_mode: rerankingMode,
+                  reranking_model: {
+                    reranking_provider_name: rerankingModel.provider,
+                    reranking_model_name: rerankingModel.model
+                  },
+                  weights: {
+                    vector_setting: {
+                      vector_weight: vectorWeight,
+                      embedding_provider_name: 'default', // Assuming default for now
+                      embedding_model_name: 'default'
+                    },
+                    keyword_setting: {
+                      keyword_weight: 1 - vectorWeight
+                    }
+                  },
+                  top_k: topK,
+                  score_threshold_enabled: scoreThresholdEnabled,
+                  score_threshold: scoreThreshold
+                };
+                setEditingKB({
+                  ...editingKB,
+                  retrieval_config: updatedRetrievalConfig
+                });
+              }
+              setIsRecallSettingsModalOpen(false);
+            }} className="rounded-lg bg-blue-600 hover:bg-blue-700">保存设置</Button>
           </div>
         }
         width={600}
@@ -3023,9 +3052,9 @@ const AppConfig: React.FC = () => {
             </div>
             <div className="flex p-1 bg-gray-100 rounded-xl border border-gray-200">
               <Button 
-                type={rerankingMode === RerankingModeEnum.Weight ? 'primary' : 'text'}
-                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.Weight ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-600'}`}
-                onClick={() => setRerankingMode(RerankingModeEnum.Weight)}
+                type={rerankingMode === RerankingModeEnum.WeightedScore ? 'primary' : 'text'}
+                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.WeightedScore ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-600'}`}
+                onClick={() => setRerankingMode(RerankingModeEnum.WeightedScore)}
               >
                 权重设置
               </Button>
@@ -3039,7 +3068,7 @@ const AppConfig: React.FC = () => {
             </div>
           </div>
 
-          {rerankingMode === RerankingModeEnum.Weight ? (
+          {rerankingMode === RerankingModeEnum.WeightedScore ? (
             <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 space-y-4">
               <div className="flex items-center justify-between text-sm font-bold text-gray-800">
                 <span>语义匹配</span>
