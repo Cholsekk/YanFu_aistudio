@@ -795,10 +795,39 @@ const AppConfig: React.FC = () => {
           if (config.opening_statement) setOpeningStatement(config.opening_statement);
           if (config.suggested_questions) setSuggestedQuestions(config.suggested_questions);
           if (config.agent_mode?.tools) {
-            const loadedTools = config.agent_mode.tools.map((t: any) => ({
-              ...t,
-              enabled: t.enabled !== false
-            }));
+            // Fetch all providers to backfill icons if missing
+            let allProviders: any[] = [];
+            try {
+              const providersRes = await apiService.fetchCollectionList();
+              allProviders = Array.isArray(providersRes) ? providersRes : (providersRes as any).data || [];
+            } catch (e) {
+              console.error('Failed to fetch providers for icon backfill:', e);
+            }
+
+            const loadedTools = config.agent_mode.tools.map((t: any) => {
+              let providerIcon = t.provider_icon || t.icon;
+              
+              // If icon is still missing, try to find it in allProviders
+              if (!providerIcon && allProviders.length > 0) {
+                const provider = allProviders.find(p => 
+                  p.id === t.provider_id || 
+                  p.name === t.provider_name || 
+                  p.provider === t.provider_name
+                );
+                if (provider) {
+                  providerIcon = provider.icon;
+                }
+              }
+
+              return {
+                ...t,
+                provider_icon: providerIcon,
+                tool_name: t.tool_name || t.name,
+                tool_label: t.tool_label || (typeof t.label === 'string' ? t.label : (t.label?.zh_Hans || t.name)),
+                tool_description: t.tool_description || (typeof t.description === 'string' ? t.description : (t.description?.zh_Hans || t.description?.en_US || '')),
+                enabled: t.enabled !== false
+              };
+            });
             setTools(loadedTools);
           }
 
@@ -1477,15 +1506,20 @@ const AppConfig: React.FC = () => {
     if (!iconData) return <Wand2 className="w-4 h-4 text-primary-600" />;
     
     let parsedIcon = iconData;
-    if (typeof iconData === 'string') {
-      if (iconData.startsWith('{')) {
+    // If iconData is an object that has an icon property, use that
+    if (typeof iconData === 'object' && iconData.icon) {
+      parsedIcon = iconData.icon;
+    }
+
+    if (typeof parsedIcon === 'string') {
+      if (parsedIcon.startsWith('{')) {
         try {
-          parsedIcon = JSON.parse(iconData);
+          parsedIcon = JSON.parse(parsedIcon);
         } catch (e) {
           // It's a URL string
         }
       } else {
-        return <img src={iconData} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+        return <img src={parsedIcon} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
       }
     }
     

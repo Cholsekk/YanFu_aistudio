@@ -1159,7 +1159,7 @@ const ToolExtensions: React.FC = () => {
           </p>
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => fetchTools(activeTab === 'custom' ? 'api' : activeTab)}
+              onClick={() => fetchTools(activeTab)}
               className="px-6 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors shadow-sm"
             >
               重试连接
@@ -1194,9 +1194,15 @@ const ToolExtensions: React.FC = () => {
                   <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:scale-105 transition-transform duration-300">
                     {(() => {
                       let iconObj = tool.icon;
-                      if (typeof tool.icon === 'string') {
+                      
+                      // If iconObj is an object that has an icon property, use that
+                      if (typeof iconObj === 'object' && iconObj !== null && (iconObj as any).icon) {
+                        iconObj = (iconObj as any).icon;
+                      }
+
+                      if (typeof iconObj === 'string') {
                         try {
-                          const trimmed = tool.icon.trim();
+                          const trimmed = iconObj.trim();
                           if (trimmed.startsWith('{')) {
                             iconObj = JSON.parse(trimmed);
                           } else if (!trimmed.includes('/') && !trimmed.startsWith('http') && !trimmed.startsWith('data:')) {
@@ -1214,14 +1220,14 @@ const ToolExtensions: React.FC = () => {
                       if (typeof iconObj === 'string') {
                         return <img src={iconObj || undefined} alt={tool.label.zh_Hans} className="w-7 h-7 object-contain" referrerPolicy="no-referrer" />;
                       } else if (iconObj && typeof iconObj === 'object') {
-                        const IconComponent = (LucideIcons as any)[iconObj.content];
-                        const isTailwindBg = iconObj.background?.startsWith('bg-');
+                        const IconComponent = (LucideIcons as any)[(iconObj as any).content];
+                        const isTailwindBg = (iconObj as any).background?.startsWith('bg-');
                         return (
                           <div 
-                            style={!isTailwindBg ? { backgroundColor: iconObj.background } : undefined} 
-                            className={`w-full h-full flex items-center justify-center text-lg text-white ${isTailwindBg ? iconObj.background : ''}`}
+                            style={!isTailwindBg ? { backgroundColor: (iconObj as any).background } : undefined} 
+                            className={`w-full h-full flex items-center justify-center text-lg text-white ${isTailwindBg ? (iconObj as any).background : ''}`}
                           >
-                            {IconComponent ? <IconComponent className="w-7 h-7" /> : iconObj.content}
+                            {IconComponent ? <IconComponent className="w-7 h-7" /> : (iconObj as any).content}
                           </div>
                         );
                       }

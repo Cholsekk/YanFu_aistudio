@@ -141,15 +141,20 @@ export const ToolSelectorPopover: React.FC<ToolSelectorPopoverProps> = ({ childr
     if (!iconData) return <div className="w-5 h-5 bg-gray-200 rounded-md" />;
     
     let parsedIcon = iconData;
-    if (typeof iconData === 'string') {
-      if (iconData.startsWith('{')) {
+    // If iconData is an object that has an icon property, use that
+    if (typeof iconData === 'object' && iconData.icon) {
+      parsedIcon = iconData.icon;
+    }
+
+    if (typeof parsedIcon === 'string') {
+      if (parsedIcon.startsWith('{')) {
         try {
-          parsedIcon = JSON.parse(iconData);
+          parsedIcon = JSON.parse(parsedIcon);
         } catch (e) {
           // It's a URL string
         }
       } else {
-        return <img src={iconData} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+        return <img src={parsedIcon} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
       }
     }
     
