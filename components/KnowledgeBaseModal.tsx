@@ -109,12 +109,6 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
     !(excludeIds || []).includes(ds.id)
   );
 
-  console.log('KnowledgeBaseModal - Current Datasets:', datasets);
-  console.log('KnowledgeBaseModal - Filtered Datasets:', filteredDatasets);
-  console.log('KnowledgeBaseModal - Search Query:', searchQuery);
-  console.log('KnowledgeBaseModal - Exclude IDs:', excludeIds);
-  console.log('KnowledgeBaseModal - Active Tab:', activeTab);
-
   const tabItems = [
     { key: 'all', label: '全部', icon: <LayoutGrid className="w-4 h-4" /> },
     { key: 'doc', label: '文档', icon: <FileText className="w-4 h-4" /> },
