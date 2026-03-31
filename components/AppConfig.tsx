@@ -7,6 +7,8 @@ import {
   Settings,
   MessageSquare, 
   Send, 
+  StopCircle,
+  Copy,
   RotateCcw, 
   Mic,
   Type,
@@ -66,6 +68,9 @@ import {
 } from 'antd';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
@@ -295,7 +300,7 @@ const AppConfig: React.FC = () => {
             conditions: manualFilters.map(f => ({
               id: f.key,
               name: f.key,
-              comparison_operator: ComparisonOperator.is,
+              comparison_operator: f.operator,
               value: f.value
             }))
           }
@@ -392,7 +397,7 @@ const AppConfig: React.FC = () => {
             conditions: manualFilters.map(f => ({
               id: f.key,
               name: f.key,
-              comparison_operator: ComparisonOperator.is,
+              comparison_operator: f.operator,
               value: f.value
             }))
           }
@@ -534,13 +539,16 @@ const AppConfig: React.FC = () => {
     setVariableValues(prev => ({ ...prev, [id]: value }));
   };
   const [models, setModels] = useState<LocalModelConfig[]>([DEFAULT_MODEL]);
-  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[] }[]>>({
+  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[]; time_taken?: number; total_tokens?: number; }[]>>({
     [DEFAULT_MODEL.id]: []
   });
   const [isStreaming, setIsStreaming] = useState<Record<string, boolean>>({});
+  const [taskIds, setTaskIds] = useState<Record<string, string>>({});
   const [inputValue, setInputValue] = useState('');
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [logModalVisible, setLogModalVisible] = useState(false);
+  const [currentLogMsg, setCurrentLogMsg] = useState<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<any[]>([]);
@@ -617,7 +625,7 @@ const AppConfig: React.FC = () => {
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [metadataFilter, setMetadataFilter] = useState<MetadataFilteringModeEnum>(MetadataFilteringModeEnum.disabled);
   const [metadataModelConfig, setMetadataModelConfig] = useState<any>(null);
-  const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
+  const [manualFilters, setManualFilters] = useState<{ key: string; operator: ComparisonOperator; value: string }[]>([]);
   const [metadataOptions, setMetadataOptions] = useState<any[]>([]);
   const [filterSearch, setFilterSearch] = useState('');
 
@@ -804,6 +812,13 @@ const AppConfig: React.FC = () => {
           }
           if (config.dataset_configs?.metadata_filtering_mode) {
             setMetadataFilter(config.dataset_configs.metadata_filtering_mode);
+            if (config.dataset_configs.metadata_filtering_mode === MetadataFilteringModeEnum.manual && config.dataset_configs.metadata_filtering_conditions?.conditions) {
+              setManualFilters(config.dataset_configs.metadata_filtering_conditions.conditions.map((c: any) => ({
+                key: c.name,
+                operator: c.comparison_operator || ComparisonOperator.is,
+                value: c.value
+              })));
+            }
           }
           if (config.dataset_configs?.metadata_model_config) {
             setMetadataModelConfig(config.dataset_configs.metadata_model_config);
@@ -911,7 +926,12 @@ const AppConfig: React.FC = () => {
       }
       if (config.metadataFilter) setMetadataFilter(config.metadataFilter);
       if (config.metadataModelConfig) setMetadataModelConfig(config.metadataModelConfig);
-      if (config.manualFilters) setManualFilters(config.manualFilters);
+      if (config.manualFilters) {
+        setManualFilters(config.manualFilters.map((f: any) => ({
+          ...f,
+          operator: f.operator || ComparisonOperator.is
+        })));
+      }
       setIsLoaded(true);
       return;
     }
@@ -1097,8 +1117,61 @@ const AppConfig: React.FC = () => {
     models.forEach(model => scrollToBottom(model.id));
   }, [messages, models]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || Object.values(isStreaming).some(s => s)) return;
+  const handleStopMessage = async () => {
+    for (const modelId of Object.keys(isStreaming)) {
+      if (isStreaming[modelId] && taskIds[modelId]) {
+        try {
+          await apiService.stopChatMessageResponding(appId!, taskIds[modelId]);
+        } catch (e) {
+          console.error('Failed to stop message:', e);
+        }
+      }
+    }
+    setIsStreaming({});
+  };
+
+  const handleSendMessage = () => sendMessage(inputValue);
+
+  const handleRegenerate = async (modelId: string, msgIndex: number) => {
+    const modelMsgs = messages[modelId];
+    let userMsgIndex = -1;
+    for (let i = msgIndex - 1; i >= 0; i--) {
+      if (modelMsgs[i].role === 'user') {
+        userMsgIndex = i;
+        break;
+      }
+    }
+    if (userMsgIndex === -1) return;
+
+    const userMsg = modelMsgs[userMsgIndex].content;
+    
+    // Remove the user message and everything after it
+    const newMsgs = modelMsgs.slice(0, userMsgIndex);
+    setMessages(prev => ({ ...prev, [modelId]: newMsgs }));
+    
+    // Send the message again
+    sendMessage(userMsg);
+  };
+
+  const handleViewLogs = (modelId: string, msgIndex: number) => {
+    const modelMsgs = messages[modelId];
+    let userMsgIndex = -1;
+    for (let i = msgIndex - 1; i >= 0; i--) {
+      if (modelMsgs[i].role === 'user') {
+        userMsgIndex = i;
+        break;
+      }
+    }
+    
+    const userMsg = userMsgIndex !== -1 ? modelMsgs[userMsgIndex] : null;
+    const assistantMsg = modelMsgs[msgIndex];
+    
+    setCurrentLogMsg({ userMsg, assistantMsg });
+    setLogModalVisible(true);
+  };
+
+  const sendMessage = async (query: string) => {
+    if (!query.trim() || Object.values(isStreaming).some(s => s)) return;
 
     // Validate required variables
     for (const v of variables) {
@@ -1111,7 +1184,6 @@ const AppConfig: React.FC = () => {
       }
     }
 
-    const query = inputValue.trim();
     setInputValue('');
     setAttachments([]);
 
@@ -1263,7 +1335,7 @@ const AppConfig: React.FC = () => {
                 conditions: manualFilters.map(f => ({
                   id: f.key,
                   name: f.key,
-                  comparison_operator: ComparisonOperator.is,
+                  comparison_operator: f.operator,
                   value: f.value
                 }))
               }
@@ -1335,8 +1407,11 @@ const AppConfig: React.FC = () => {
       try {
         if (app?.mode === 'completion') {
           await apiService.sendCompletionMessage(appId!, body, {
-            onData: (message: string, isFirstMessage: boolean, moreInfo: IOnDataMoreInfo) => {
-              const text = message || '';
+            onData: (message: any, isFirstMessage: boolean, moreInfo: IOnDataMoreInfo) => {
+              const text = message?.answer || (typeof message === 'string' ? message : '');
+              if (message?.task_id) {
+                setTaskIds(prev => ({ ...prev, [model.id]: message.task_id }));
+              }
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
                 if (modelMsgs.length > 0) {
@@ -1371,8 +1446,11 @@ const AppConfig: React.FC = () => {
           });
         } else {
           await apiService.sendChatMessage(appId!, body, {
-            onData: (message: string, isFirstMessage: boolean, moreInfo: IOnDataMoreInfo) => {
-              const text = message || '';
+            onData: (message: any, isFirstMessage: boolean, moreInfo: IOnDataMoreInfo) => {
+              const text = message?.answer || (typeof message === 'string' ? message : '');
+              if (message?.task_id) {
+                setTaskIds(prev => ({ ...prev, [model.id]: message.task_id }));
+              }
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
                 if (modelMsgs.length > 0) {
@@ -1394,7 +1472,25 @@ const AppConfig: React.FC = () => {
               message.error(`Error: ${errMsg}`);
               setIsStreaming(p => ({ ...p, [model.id]: false }));
             },
-            onMessageEnd: (data) => console.log('Message End:', data),
+            onMessageEnd: (data: any) => {
+              setMessages(prev => {
+                const modelMsgs = [...(prev[model.id] || [])];
+                if (modelMsgs.length > 0) {
+                  const lastMsg = modelMsgs[modelMsgs.length - 1];
+                  if (lastMsg.role === 'assistant') {
+                    const usage = data?.metadata?.usage || {};
+                    const timeTaken = usage.latency || data?.metadata?.time_taken || data?.metadata?.elapsed_time || 0;
+                    const totalTokens = usage.total_tokens || 0;
+                    modelMsgs[modelMsgs.length - 1] = { 
+                      ...lastMsg, 
+                      time_taken: timeTaken, 
+                      total_tokens: totalTokens 
+                    };
+                  }
+                }
+                return { ...prev, [model.id]: modelMsgs };
+              });
+            },
             onMessageReplace: (data) => {
               setMessages(prev => {
                 const modelMsgs = [...(prev[model.id] || [])];
@@ -1693,7 +1789,7 @@ const AppConfig: React.FC = () => {
   };
 
   const resetChat = () => {
-    const newMsgs: Record<string, { role: 'user' | 'assistant'; content: string }[] > = {};
+    const newMsgs: Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[]; time_taken?: number; total_tokens?: number; }[] > = {};
     models.forEach(m => newMsgs[m.id] = []);
     setMessages(newMsgs);
   };
@@ -1969,7 +2065,7 @@ const AppConfig: React.FC = () => {
                               size="middle" 
                               icon={<Plus className="w-4 h-4" />}
                               className="w-fit flex items-center gap-1 text-gray-600 border-gray-200"
-                              onClick={() => setManualFilters([...manualFilters, { key: '', value: '' }])}
+                              onClick={() => setManualFilters([...manualFilters, { key: '', operator: ComparisonOperator.is, value: '' }])}
                             >
                               添加条件
                             </Button>
@@ -2008,6 +2104,26 @@ const AppConfig: React.FC = () => {
                                         setManualFilters(newFilters);
                                       }}
                                       options={metadataOptions.map(opt => ({ label: opt.name, value: opt.name }))}
+                                    />
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">条件 (Operator)</span>
+                                    <Select
+                                      size="small"
+                                      placeholder="选择条件"
+                                      value={filter.operator}
+                                      className="w-full"
+                                      onChange={(value) => {
+                                        const newFilters = [...manualFilters];
+                                        newFilters[idx].operator = value;
+                                        setManualFilters(newFilters);
+                                      }}
+                                      options={[
+                                        { label: '等于', value: ComparisonOperator.is },
+                                        { label: '不等于', value: ComparisonOperator.isNot },
+                                        { label: '包含', value: ComparisonOperator.contains },
+                                        { label: '不包含', value: ComparisonOperator.notContains },
+                                        { label: '为空', value: ComparisonOperator.empty },
+                                        { label: '不为空', value: ComparisonOperator.notEmpty },
+                                      ]}
                                     />
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">值 (Value)</span>
                                     <Input 
@@ -2560,15 +2676,38 @@ const AppConfig: React.FC = () => {
                           key={i} 
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group/message`}
                         >
-                          <div className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          <div className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed relative ${
                             msg.role === 'user' 
                               ? 'bg-primary-600 text-white rounded-tr-none' 
                               : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-sm'
                           }`}>
-                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''} prose-p:my-0 prose-pre:my-2 prose-pre:bg-gray-800 prose-pre:text-gray-100`}>
-                              <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''} prose-p:leading-relaxed prose-p:first:mt-0 prose-p:last:mb-0 prose-pre:my-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 break-words`}>
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  code({ node, inline, className, children, ...props }: any) {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    return !inline && match ? (
+                                      <SyntaxHighlighter
+                                        {...props}
+                                        style={vscDarkPlus}
+                                        language={match[1]}
+                                        PreTag="div"
+                                      >
+                                        {String(children).replace(/\n$/, '')}
+                                      </SyntaxHighlighter>
+                                    ) : (
+                                      <code {...props} className={className}>
+                                        {children}
+                                      </code>
+                                    );
+                                  }
+                                }}
+                              >
+                                {msg.content}
+                              </ReactMarkdown>
                             </div>
                             {msg.role === 'assistant' && isStreaming[model.id] && i === messages[model.id].length - 1 && (
                               <span className="inline-block w-1.5 h-4 ml-1 bg-primary-500 animate-pulse align-middle" />
@@ -2594,6 +2733,51 @@ const AppConfig: React.FC = () => {
                                   ))}
                                 </div>
                               </div>
+                            )}
+                            {msg.role === 'assistant' && (
+                              <>
+                                {(msg.time_taken !== undefined || msg.total_tokens !== undefined) && (
+                                  <div className="mt-2 text-[10px] text-gray-400 flex items-center gap-2">
+                                    {msg.time_taken !== undefined && <span>耗时: {msg.time_taken.toFixed(2)}s</span>}
+                                    {msg.total_tokens !== undefined && <span>消费token: {msg.total_tokens}</span>}
+                                  </div>
+                                )}
+                                
+                                <div className="absolute -bottom-4 right-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 bg-white shadow-sm border border-gray-100 rounded-md p-1 z-10">
+                                  <Tooltip title="复制">
+                                    <Button 
+                                      type="text" 
+                                      size="small" 
+                                      icon={<Copy className="w-3 h-3 text-gray-500" />} 
+                                      className="w-6 h-6 p-0 flex items-center justify-center hover:bg-gray-50"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(msg.content);
+                                        message.success('已复制');
+                                      }}
+                                    />
+                                  </Tooltip>
+                                  <Tooltip title="重新生成">
+                                    <Button 
+                                      type="text" 
+                                      size="small" 
+                                      icon={<RotateCcw className="w-3 h-3 text-gray-500" />} 
+                                      className="w-6 h-6 p-0 flex items-center justify-center hover:bg-gray-50"
+                                      onClick={() => handleRegenerate(model.id, i)}
+                                    />
+                                  </Tooltip>
+                                  {app?.mode === 'agent-chat' && (
+                                    <Tooltip title="日志">
+                                      <Button 
+                                        type="text" 
+                                        size="small" 
+                                        icon={<FileText className="w-3 h-3 text-gray-500" />} 
+                                        className="w-6 h-6 p-0 flex items-center justify-center hover:bg-gray-50"
+                                        onClick={() => handleViewLogs(model.id, i)}
+                                      />
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              </>
                             )}
                           </div>
                         </motion.div>
@@ -2638,8 +2822,31 @@ const AppConfig: React.FC = () => {
                   </a>
                 )}
               </div>
-              <div className="prose prose-sm max-w-none bg-white p-6 rounded-xl border border-gray-100 shadow-sm min-h-[200px]">
-                <ReactMarkdown>{citationPreview.content || '暂无内容'}</ReactMarkdown>
+              <div className="prose prose-sm max-w-none bg-white p-6 rounded-xl border border-gray-100 shadow-sm min-h-[200px] prose-p:leading-relaxed prose-p:first:mt-0 prose-p:last:mb-0 break-words">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({ node, inline, className, children, ...props }: any) {
+                      const match = /language-(\w+)/.exec(className || '');
+                      return !inline && match ? (
+                        <SyntaxHighlighter
+                          {...props}
+                          style={vscDarkPlus}
+                          language={match[1]}
+                          PreTag="div"
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <code {...props} className={className}>
+                          {children}
+                        </code>
+                      );
+                    }
+                  }}
+                >
+                  {citationPreview.content || '暂无内容'}
+                </ReactMarkdown>
               </div>
             </div>
           )}
@@ -2685,10 +2892,9 @@ const AppConfig: React.FC = () => {
               />
               <Button 
                 type="primary" 
-                icon={<Send className="w-4 h-4" />} 
-                className="rounded-full h-10 w-10 flex items-center justify-center p-0 shadow-lg shadow-blue-500/20 bg-blue-600 border-none hover:scale-110 transition-transform disabled:opacity-50"
-                onClick={handleSendMessage}
-                disabled={Object.values(isStreaming).some(s => s)}
+                icon={Object.values(isStreaming).some(s => s) ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />} 
+                className={`rounded-full h-10 w-10 flex items-center justify-center p-0 shadow-lg border-none hover:scale-110 transition-transform ${Object.values(isStreaming).some(s => s) ? 'bg-red-500 shadow-red-500/20' : 'bg-blue-600 shadow-blue-500/20'}`}
+                onClick={Object.values(isStreaming).some(s => s) ? handleStopMessage : handleSendMessage}
               />
             </motion.div>
             
@@ -3603,6 +3809,50 @@ const AppConfig: React.FC = () => {
         onAuthorize={handleAuthorize}
         onEdit={handleEditTool}
       />
+
+      <Modal
+        title="日志详情"
+        open={logModalVisible}
+        onCancel={() => setLogModalVisible(false)}
+        footer={null}
+        width={800}
+        className="log-modal"
+      >
+        {currentLogMsg && (
+          <div className="space-y-4">
+            <div className="flex gap-8 border-b border-gray-100 pb-4">
+              <div>
+                <div className="text-gray-500 text-xs mb-1">状态</div>
+                <div className="text-green-500 text-sm font-medium flex items-center gap-1">
+                  <Check className="w-4 h-4" /> 成功
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-1">运行时间</div>
+                <div className="text-gray-800 text-sm font-medium">{currentLogMsg.assistantMsg?.time_taken?.toFixed(3) || '0.000'}s</div>
+              </div>
+              <div>
+                <div className="text-gray-500 text-xs mb-1">总消耗 Token</div>
+                <div className="text-gray-800 text-sm font-medium">{currentLogMsg.assistantMsg?.total_tokens || 0}</div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-gray-800 font-medium mb-2">输入</div>
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 font-mono text-xs text-gray-700 whitespace-pre-wrap">
+                {JSON.stringify({ query: currentLogMsg.userMsg?.content || '' }, null, 2)}
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-gray-800 font-medium mb-2">输出</div>
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 font-mono text-xs text-gray-700 whitespace-pre-wrap">
+                {JSON.stringify({ text: currentLogMsg.assistantMsg?.content || '' }, null, 2)}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
