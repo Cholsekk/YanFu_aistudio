@@ -56,7 +56,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
         window.location.href = response.url || response.redirect_url;
       } else {
         alert('认证成功');
-        // Ideally we would refresh the toolDetail here to update is_authed
+        // Ideally we would refresh the toolDetail here to update is_team_authorization
       }
     } catch (error) {
       console.error('Failed to authenticate MCP provider:', error);
@@ -292,8 +292,8 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                       </div>
                       <div className="flex flex-col gap-1">
                         <span className="text-xs text-gray-400">认证状态</span>
-                        <span className={`text-sm font-medium ${toolDetail.is_authed ? 'text-green-600' : 'text-amber-600'}`}>
-                          {toolDetail.is_authed ? '已认证' : '未认证'}
+                        <span className={`text-sm font-medium ${toolDetail.is_team_authorization ? 'text-green-600' : 'text-amber-600'}`}>
+                          {toolDetail.is_team_authorization ? '已认证' : '未认证'}
                         </span>
                       </div>
                     </div>
@@ -313,7 +313,7 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
                       className="flex-1 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       <Key className="w-4 h-4" />
-                      {toolDetail.is_authed ? '更新授权' : '去认证'}
+                      {toolDetail.is_team_authorization ? '更新授权' : '去认证'}
                     </button>
                   </div>
 

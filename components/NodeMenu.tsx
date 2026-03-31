@@ -101,7 +101,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ onAddNode, onAddTool, onClos
                 <button
                   key={cat}
                   onClick={() => setActiveToolCategory(cat)}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all ${
+                  className={`px-4 py-2.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all ${
                     activeToolCategory === cat 
                       ? 'bg-gray-100 text-gray-900' 
                       : 'text-gray-500 hover:bg-gray-50'

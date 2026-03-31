@@ -2055,7 +2055,7 @@ const AppConfig: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        {tool.is_authed === false ? (
+                        {tool.is_team_authorization === false ? (
                           <Button 
                             size="small" 
                             className="bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100"
@@ -2092,14 +2092,14 @@ const AppConfig: React.FC = () => {
                             }} 
                           />
                         )}
-                        <div className={`flex items-center gap-1 ${tool.is_authed === false ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                        <div className={`flex items-center gap-1 ${tool.is_team_authorization === false ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                           <Button 
                             type="text" 
                             size="small" 
                             icon={<Settings className="w-4 h-4" />}
                             className="text-gray-400 hover:text-primary-600"
                             onClick={() => setSelectedToolForParams(tool)}
-                            disabled={tool.is_authed === false}
+                            disabled={tool.is_team_authorization === false}
                           />
                           <Button 
                             type="text" 
