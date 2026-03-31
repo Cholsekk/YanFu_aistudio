@@ -37,7 +37,11 @@ import {
   Sun,
   LayoutGrid,
   Layers,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ExternalLink,
+  Filter,
+  ListFilter,
+  X
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { 
@@ -61,6 +65,7 @@ import {
   InputNumber
 } from 'antd';
 import { motion, AnimatePresence } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
 import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
@@ -613,6 +618,32 @@ const AppConfig: React.FC = () => {
   const [metadataFilter, setMetadataFilter] = useState<MetadataFilteringModeEnum>(MetadataFilteringModeEnum.disabled);
   const [metadataModelConfig, setMetadataModelConfig] = useState<any>(null);
   const [manualFilters, setManualFilters] = useState<{ key: string; value: string }[]>([]);
+  const [metadataOptions, setMetadataOptions] = useState<any[]>([]);
+  const [filterSearch, setFilterSearch] = useState('');
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      if (knowledgeBases.length > 0) {
+        try {
+          const allMetadata: any[] = [];
+          for (const kb of knowledgeBases) {
+            const res = await apiService.getDatasetMetadata(kb.id);
+            if (res && res.doc_metadata) {
+              allMetadata.push(...res.doc_metadata);
+            }
+          }
+          // Unique by name
+          const uniqueMetadata = Array.from(new Map(allMetadata.map(item => [item.name, item])).values());
+          setMetadataOptions(uniqueMetadata);
+        } catch (error) {
+          console.error('Failed to fetch metadata:', error);
+        }
+      } else {
+        setMetadataOptions([]);
+      }
+    };
+    fetchMetadata();
+  }, [knowledgeBases]);
 
   // Recall Settings State
   const [rerankingMode, setRerankingMode] = useState<RerankingModeEnum>(RerankingModeEnum.RerankingModel);
@@ -1909,23 +1940,110 @@ const AppConfig: React.FC = () => {
                     <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
                   </Tooltip>
                 </div>
-                <Select 
-                  value={metadataFilter}
-                  onChange={setMetadataFilter}
-                  size="small"
-                  className="w-32"
-                  options={[
-                    { value: MetadataFilteringModeEnum.disabled, label: '禁用', title: '禁用元数据过滤' },
-                    { value: MetadataFilteringModeEnum.automatic, label: '自动', title: '根据用户查询自动生成元数据过滤条件' },
-                    { value: MetadataFilteringModeEnum.manual, label: '手动', title: '手动添加元数据过滤条件' }
-                  ]}
-                  optionRender={(option) => (
-                    <div className="py-1">
-                      <div className="font-medium text-gray-900">{option.label}</div>
-                      <div className="text-[10px] text-gray-500">{option.data.title}</div>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <Select 
+                    value={metadataFilter}
+                    onChange={setMetadataFilter}
+                    size="small"
+                    className="w-20"
+                    options={[
+                      { value: MetadataFilteringModeEnum.disabled, label: '禁用' },
+                      { value: MetadataFilteringModeEnum.automatic, label: '自动' },
+                      { value: MetadataFilteringModeEnum.manual, label: '手动' }
+                    ]}
+                  />
+                  {metadataFilter === MetadataFilteringModeEnum.manual && (
+                    <Popover
+                      placement="bottomRight"
+                      trigger="click"
+                      overlayClassName="metadata-filter-popover"
+                      content={
+                        <div className="w-[320px] p-1">
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-base font-bold text-gray-900">元数据过滤条件</span>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <Button 
+                              type="default" 
+                              size="middle" 
+                              icon={<Plus className="w-4 h-4" />}
+                              className="w-fit flex items-center gap-1 text-gray-600 border-gray-200"
+                              onClick={() => setManualFilters([...manualFilters, { key: '', value: '' }])}
+                            >
+                              添加条件
+                            </Button>
+
+                            <div className="relative">
+                              <Input
+                                placeholder="搜索元数据"
+                                value={filterSearch}
+                                onChange={(e) => setFilterSearch(e.target.value)}
+                                prefix={<Search className="w-4 h-4 text-gray-400" />}
+                                className="bg-gray-50 border-none rounded-lg h-10"
+                              />
+                            </div>
+
+                            <div className="max-h-[300px] overflow-y-auto pr-1 space-y-3 custom-scrollbar">
+                              {manualFilters
+                                .filter(f => !filterSearch || f.key.toLowerCase().includes(filterSearch.toLowerCase()) || f.value.toLowerCase().includes(filterSearch.toLowerCase()))
+                                .map((filter, idx) => (
+                                <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-100 group relative">
+                                  <div className="flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">键 (Key)</span>
+                                      <X 
+                                        className="w-3.5 h-3.5 text-gray-300 hover:text-red-500 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" 
+                                        onClick={() => setManualFilters(manualFilters.filter((_, i) => i !== idx))}
+                                      />
+                                    </div>
+                                    <Select
+                                      size="small"
+                                      placeholder="选择元数据键"
+                                      value={filter.key}
+                                      className="w-full"
+                                      onChange={(value) => {
+                                        const newFilters = [...manualFilters];
+                                        newFilters[idx].key = value;
+                                        setManualFilters(newFilters);
+                                      }}
+                                      options={metadataOptions.map(opt => ({ label: opt.name, value: opt.name }))}
+                                    />
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">值 (Value)</span>
+                                    <Input 
+                                      size="small" 
+                                      placeholder="输入过滤值" 
+                                      value={filter.value}
+                                      onChange={(e) => {
+                                        const newFilters = [...manualFilters];
+                                        newFilters[idx].value = e.target.value;
+                                        setManualFilters(newFilters);
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                              {manualFilters.length === 0 && (
+                                <div className="py-8 text-center">
+                                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无过滤条件" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    >
+                      <Button 
+                        size="small" 
+                        className="flex items-center gap-1.5 border-gray-200 hover:border-primary-500 hover:text-primary-600"
+                      >
+                        <ListFilter className="w-3.5 h-3.5 text-primary-500" />
+                        <span className="text-xs">条件</span>
+                        <span className="text-xs font-bold text-gray-400">{manualFilters.length}</span>
+                      </Button>
+                    </Popover>
                   )}
-                />
+                </div>
               </div>
               
               <AnimatePresence>
@@ -1985,55 +2103,7 @@ const AppConfig: React.FC = () => {
                     )}
                   </motion.div>
                 )}
-                {metadataFilter === MetadataFilteringModeEnum.manual && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden space-y-2"
-                  >
-                    {manualFilters.map((filter, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <Input 
-                          size="small" 
-                          placeholder="键" 
-                          value={filter.key}
-                          className="text-xs"
-                          onChange={(e) => {
-                            const newFilters = [...manualFilters];
-                            newFilters[idx].key = e.target.value;
-                            setManualFilters(newFilters);
-                          }}
-                        />
-                        <Input 
-                          size="small" 
-                          placeholder="值" 
-                          value={filter.value}
-                          className="text-xs"
-                          onChange={(e) => {
-                            const newFilters = [...manualFilters];
-                            newFilters[idx].value = e.target.value;
-                            setManualFilters(newFilters);
-                          }}
-                        />
-                        <Trash2 
-                          className="w-3.5 h-3.5 text-gray-300 hover:text-red-500 cursor-pointer" 
-                          onClick={() => setManualFilters(manualFilters.filter((_, i) => i !== idx))}
-                        />
-                      </div>
-                    ))}
-                    <Button 
-                      type="dashed" 
-                      size="small" 
-                      block 
-                      icon={<Plus className="w-3 h-3" />}
-                      className="text-[10px]"
-                      onClick={() => setManualFilters([...manualFilters, { key: '', value: '' }])}
-                    >
-                      添加过滤条件
-                    </Button>
-                  </motion.div>
-                )}
+                {metadataFilter === MetadataFilteringModeEnum.manual && null}
               </AnimatePresence>
             </div>
           </motion.div>
@@ -2497,27 +2567,30 @@ const AppConfig: React.FC = () => {
                               ? 'bg-primary-600 text-white rounded-tr-none' 
                               : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-sm'
                           }`}>
-                            {msg.content}
+                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''} prose-p:my-0 prose-pre:my-2 prose-pre:bg-gray-800 prose-pre:text-gray-100`}>
+                              <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            </div>
                             {msg.role === 'assistant' && isStreaming[model.id] && i === messages[model.id].length - 1 && (
                               <span className="inline-block w-1.5 h-4 ml-1 bg-primary-500 animate-pulse align-middle" />
                             )}
                             {msg.citations && msg.citations.length > 0 && (
                               <div className="mt-3 pt-3 border-t border-gray-100">
-                                <div className="text-xs font-bold text-gray-500 mb-2">引用来源</div>
+                                <div className="text-xs font-bold text-gray-500 mb-2 flex items-center">
+                                  <Quote className="w-3 h-3 mr-1" />
+                                  引用来源
+                                </div>
                                 <div className="flex flex-wrap gap-2">
                                   {msg.citations.map((citation, cIdx) => (
-                                    <Button
+                                    <div
                                       key={cIdx}
-                                      type="default"
-                                      size="small"
-                                      className="text-xs h-7 rounded-lg border-gray-200 hover:border-primary-500 hover:text-primary-600"
-                                      onClick={() => {
-                                        setCitationPreview(citation);
-                                      }}
+                                      className="group relative flex items-center gap-1.5 px-2 py-1 bg-gray-50 hover:bg-primary-50 border border-gray-200 hover:border-primary-200 rounded-md cursor-pointer transition-all"
+                                      onClick={() => setCitationPreview(citation)}
                                     >
-                                      <FileText className="w-3 h-3 mr-1" />
-                                      {citation.title || `来源 ${cIdx + 1}`}
-                                    </Button>
+                                      <FileText className="w-3 h-3 text-gray-400 group-hover:text-primary-500" />
+                                      <span className="text-[10px] text-gray-600 group-hover:text-primary-700 font-medium truncate max-w-[120px]">
+                                        {citation.title || `来源 ${cIdx + 1}`}
+                                      </span>
+                                    </div>
                                   ))}
                                 </div>
                               </div>
@@ -2536,19 +2609,38 @@ const AppConfig: React.FC = () => {
 
         {/* Citation Preview Modal */}
         <Modal
-          title="引用预览"
+          title={
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary-500" />
+              <span>引用详情</span>
+            </div>
+          }
           open={!!citationPreview}
           onCancel={() => setCitationPreview(null)}
           footer={null}
           width={800}
+          centered
+          className="citation-preview-modal"
         >
           {citationPreview && (
-            <div className="prose prose-sm max-w-none">
-              <h3>{citationPreview.title}</h3>
-              <p>{citationPreview.content || '暂无内容'}</p>
-              {citationPreview.url && (
-                <a href={citationPreview.url} target="_blank" rel="noreferrer" className="text-blue-600">查看原文</a>
-              )}
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{citationPreview.title}</h3>
+                {citationPreview.url && (
+                  <a 
+                    href={citationPreview.url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-xs text-primary-600 hover:underline flex items-center gap-1"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    查看原文
+                  </a>
+                )}
+              </div>
+              <div className="prose prose-sm max-w-none bg-white p-6 rounded-xl border border-gray-100 shadow-sm min-h-[200px]">
+                <ReactMarkdown>{citationPreview.content || '暂无内容'}</ReactMarkdown>
+              </div>
             </div>
           )}
         </Modal>

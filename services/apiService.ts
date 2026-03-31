@@ -820,6 +820,10 @@ class ApiService {
     return this.get(`/apps/${id}`);
   }
 
+  async getDatasetMetadata(datasetId: string): Promise<{ doc_metadata: any[], built_in_field_enabled: boolean }> {
+    return this.get(`/datasets/${datasetId}/metadata`);
+  }
+
   async getAppDetail(id: string): Promise<any> {
     return this.post(`/explore/apps/${id}`);
   }
