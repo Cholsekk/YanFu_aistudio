@@ -10,7 +10,7 @@ interface ToolSelectorPopoverProps {
 }
 
 export const ToolSelectorPopover: React.FC<ToolSelectorPopoverProps> = ({ children, onSelectTool }) => {
-  const [activeTab, setActiveTab] = useState<'all' | 'builtin' | 'custom' | 'mcp' | 'workflow'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'builtin' | 'mcp' | 'workflow'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [tools, setTools] = useState<ToolItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,6 @@ export const ToolSelectorPopover: React.FC<ToolSelectorPopoverProps> = ({ childr
     try {
       let typeParam = '';
       if (activeTab === 'builtin') typeParam = 'builtin';
-      else if (activeTab === 'custom') typeParam = 'api';
       else if (activeTab === 'mcp') typeParam = 'mcp';
       else if (activeTab === 'workflow') typeParam = 'workflow';
       
@@ -188,7 +187,6 @@ export const ToolSelectorPopover: React.FC<ToolSelectorPopoverProps> = ({ childr
         {[
           { id: 'all', label: '全部' },
           { id: 'builtin', label: '内置' },
-          { id: 'custom', label: '自定义' },
           { id: 'mcp', label: 'MCP' },
           { id: 'workflow', label: '工作流' }
         ].map(tab => (

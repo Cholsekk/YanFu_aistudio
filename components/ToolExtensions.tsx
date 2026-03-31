@@ -623,8 +623,9 @@ const ToolExtensions: React.FC = () => {
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'builtin' | 'custom' | 'workflow' | 'mcp'>(() => {
-    return (sessionStorage.getItem('toolExtensionsTab') as any) || 'builtin';
+  const [activeTab, setActiveTab] = useState<'builtin' | 'workflow' | 'mcp'>(() => {
+    const savedTab = sessionStorage.getItem('toolExtensionsTab');
+    return (savedTab === 'custom' ? 'builtin' : savedTab as any) || 'builtin';
   });
 
   useEffect(() => {
@@ -654,7 +655,7 @@ const ToolExtensions: React.FC = () => {
 
   // Fetch tools when tab changes
   useEffect(() => {
-    fetchTools(activeTab === 'custom' ? 'api' : activeTab);
+    fetchTools(activeTab);
   }, [activeTab]);
 
   const fetchTools = async (type?: string) => {
@@ -988,8 +989,6 @@ const ToolExtensions: React.FC = () => {
       let matchesTab = false;
       if (activeTab === 'builtin') {
         matchesTab = tool.type === 'builtin';
-      } else if (activeTab === 'custom') {
-        matchesTab = tool.type === 'api' || tool.type === 'workflow';
       } else if (activeTab === 'workflow') {
         matchesTab = tool.type === 'workflow';
       } else if (activeTab === 'mcp') {
@@ -1030,16 +1029,6 @@ const ToolExtensions: React.FC = () => {
             }`}
           >
             内置工具
-          </button>
-          <button
-            onClick={() => setActiveTab('custom')}
-            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
-              activeTab === 'custom'
-                ? 'bg-white text-primary-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-900'
-            }`}
-          >
-            自定义工具
           </button>
           <button
             onClick={() => setActiveTab('workflow')}

@@ -97,7 +97,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ onAddNode, onAddTool, onClos
           <div className="py-2">
             {/* Tool Categories Filter */}
             <div className="px-3 mb-3 flex gap-1 overflow-x-auto no-scrollbar">
-              {['全部', '内置', '自定义', '工作流'].map(cat => (
+              {['全部', '内置', '工作流'].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setActiveToolCategory(cat)}
