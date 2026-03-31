@@ -27,7 +27,8 @@ import {
   Trash2,
   History,
   Copy,
-  ChevronUp
+  ChevronUp,
+  FileText
 } from 'lucide-react';
 import { 
   Select, 
@@ -54,6 +55,7 @@ import TimeRangeSelector from './TimeRangeSelector';
 import Markdown from 'react-markdown';
 import ModelSelect from './ModelSelect';
 import BatchImportModal from './BatchImportModal';
+import LogDetailModal from './LogDetailModal';
 
 // CodeBlock component for copy and expand
 const CodeBlock: React.FC<{ title: string, content: string }> = ({ title, content }) => {
@@ -222,6 +224,8 @@ const LogsPage: React.FC = () => {
   const [editForm, setEditForm] = useState({ question: '', answer: '' });
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [logModalVisible, setLogModalVisible] = useState(false);
+  const [currentLogMsg, setCurrentLogMsg] = useState<any>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1668,6 +1672,11 @@ const LogsPage: React.FC = () => {
       </Modal>
 
       {/* Log Detail Drawer */}
+      <LogDetailModal
+        visible={logModalVisible}
+        onClose={() => setLogModalVisible(false)}
+        currentLogMsg={currentLogMsg}
+      />
       <Drawer
         placement="right"
         onClose={() => setIsDetailOpen(false)}
@@ -1687,9 +1696,9 @@ const LogsPage: React.FC = () => {
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
                 <Bot className="w-4 h-4 text-primary-500" />
                 <span className="text-xs font-medium text-gray-700">
-                  {typeof selectedLog?.model_config.model === 'object' && selectedLog?.model_config.model !== null
-                    ? (selectedLog?.model_config.model as any).name 
-                    : (selectedLog?.model_config.model || 'deepseek-r1:14b')}
+                  {typeof selectedLog?.model_config?.model === 'object' && selectedLog?.model_config?.model !== null
+                    ? (selectedLog?.model_config?.model as any).name 
+                    : (selectedLog?.model_config?.model || 'deepseek-r1:14b')}
                 </span>
                 <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold rounded uppercase">Chat</span>
               </div>
@@ -1716,7 +1725,7 @@ const LogsPage: React.FC = () => {
               messages.map((msg) => (
                 <div key={msg.id} className="space-y-6">
                   {/* User Message */}
-                  <div className="flex justify-end items-start gap-4">
+                  <div className="flex justify-end items-start gap-4 group/user-message">
                     <div className="max-w-[80%] bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-sm relative group">
                       <p className="text-sm leading-relaxed">{(msg as any).annotation?.question || msg.query}</p>
                       {(msg as any).annotation?.question && (
@@ -1724,6 +1733,22 @@ const LogsPage: React.FC = () => {
                           <span className="text-[10px] bg-blue-500/20 text-blue-100 px-1.5 py-0.5 rounded border border-blue-400/30">已修改</span>
                         </div>
                       )}
+                      
+                      {/* Hover Actions */}
+                      <div className="absolute -bottom-4 left-0 opacity-0 group-hover/user-message:opacity-100 transition-opacity flex items-center gap-1 bg-white shadow-sm border border-gray-100 rounded-md p-1 z-10">
+                        <Tooltip title="复制">
+                          <Button 
+                            type="text" 
+                            size="small" 
+                            icon={<Copy className="w-3 h-3 text-gray-500" />} 
+                            className="w-6 h-6 p-0 flex items-center justify-center hover:bg-gray-50"
+                            onClick={() => {
+                              navigator.clipboard.writeText((msg as any).annotation?.question || msg.query);
+                              message.success('已复制');
+                            }}
+                          />
+                        </Tooltip>
+                      </div>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                       <User className="w-6 h-6 text-blue-600" />
@@ -1731,11 +1756,11 @@ const LogsPage: React.FC = () => {
                   </div>
 
                   {/* Bot Message */}
-                  <div className="flex justify-start items-start gap-4">
+                  <div className="flex justify-start items-start gap-4 group/message">
                     <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
                       <Bot className="w-6 h-6 text-primary-600" />
                     </div>
-                    <div className="max-w-[85%] space-y-3">
+                    <div className="max-w-[85%] space-y-3 relative">
                       {/* Thinking Process */}
                       {msg.agent_thoughts && msg.agent_thoughts.length > 0 && (
                         <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
@@ -1850,6 +1875,44 @@ const LogsPage: React.FC = () => {
                             {dayjs(msg.created_at).format('HH:mm:ss')}
                           </span>
                         </div>
+                      </div>
+                      
+                      {/* Hover Actions */}
+                      <div className="absolute -bottom-4 right-0 opacity-0 group-hover/message:opacity-100 transition-opacity flex items-center gap-1 bg-white shadow-sm border border-gray-100 rounded-md p-1 z-10">
+                        <Tooltip title="复制">
+                          <Button 
+                            type="text" 
+                            size="small" 
+                            icon={<Copy className="w-3 h-3 text-gray-500" />} 
+                            className="w-6 h-6 p-0 flex items-center justify-center hover:bg-gray-50"
+                            onClick={() => {
+                              navigator.clipboard.writeText((msg as any).annotation?.answer || msg.answer);
+                              message.success('已复制');
+                            }}
+                          />
+                        </Tooltip>
+                        {app?.mode === 'agent-chat' && (
+                          <Tooltip title="日志">
+                            <Button 
+                              type="text" 
+                              size="small" 
+                              icon={<FileText className="w-3 h-3 text-gray-500" />} 
+                              className="w-6 h-6 p-0 flex items-center justify-center hover:bg-gray-50"
+                              onClick={() => {
+                                setCurrentLogMsg({
+                                  userMsg: { content: msg.query },
+                                  assistantMsg: { 
+                                    content: msg.answer,
+                                    time_taken: (msg as any).time_taken || 0,
+                                    total_tokens: (msg as any).total_tokens || 0,
+                                    agent_thoughts: msg.agent_thoughts
+                                  }
+                                });
+                                setLogModalVisible(true);
+                              }}
+                            />
+                          </Tooltip>
+                        )}
                       </div>
                     </div>
                   </div>

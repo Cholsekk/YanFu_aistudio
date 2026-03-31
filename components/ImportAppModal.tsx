@@ -19,15 +19,31 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const processFile = (file: File) => {
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setFileContent(e.target?.result as string);
+    };
+    reader.readAsText(file);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFileContent(e.target?.result as string);
-      };
-      reader.readAsText(file);
+      processFile(file);
     }
   };
 
@@ -106,6 +122,8 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
           <div 
             className="border-2 border-dashed border-gray-100 rounded-xl py-12 flex flex-col items-center justify-center bg-gray-50/30 group hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer relative"
             onClick={() => fileInputRef.current?.click()}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
           >
             <input 
               type="file" 
@@ -129,7 +147,7 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 hidden">
             <label className="block text-sm font-bold text-gray-700">DSL URL</label>
             <input 
               type="text" 
