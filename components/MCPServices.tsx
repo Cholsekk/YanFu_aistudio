@@ -157,6 +157,9 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
           }
           const id = item.id || item.provider || (typeof item.name === 'string' ? item.name : '') || '';
           
+          const icon = item.icon || 'LayoutGrid';
+          const iconType = (typeof icon === 'string' && (icon.includes('http://') || icon.includes('https://'))) ? 'image' : 'sys-icon';
+          
           return {
             id: id,
             name: name,
@@ -166,8 +169,8 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
             updatedAt: item.updated_at ? dayjs(item.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : '刚刚',
             updated_at: item.updated_at,
             identifier: item.server_identifier || id,
-            icon: item.icon || 'LayoutGrid',
-            iconType: item.icon_type || (typeof item.icon === 'string' && item.icon.startsWith('http') ? 'image' : 'icon'),
+            icon: icon,
+            iconType: iconType,
             iconBgColor: item.icon_background || 'bg-indigo-600',
             iconUrl: item.icon_url || '',
             rawTools: item.tools || [],
@@ -182,9 +185,10 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
   };
 
   const renderServiceIcon = (service: any, containerClass: string, iconClass: string) => {
-    const isUrl = typeof service.icon === 'string' && (service.icon.startsWith('http') || service.icon.startsWith('/'));
+    const isUrl = typeof service.icon === 'string' && (service.icon.includes('http://') || service.icon.includes('https://') || service.icon.startsWith('/'));
+    const isSysIconId = typeof service.icon === 'string' && /^\d+$/.test(service.icon);
 
-    if (service.iconType === 'sys-icon') {
+    if (service.iconType === 'sys-icon' && isSysIconId) {
       return (
         <div className={`${containerClass} bg-gray-50 flex items-center justify-center overflow-hidden`}>
           <img 
@@ -291,14 +295,16 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
       if (typeof nameStr === 'object' && nameStr !== null) {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
-        const extra = detail?.extra || {};
+        const icon = detail?.icon || service.icon;
+        const iconType = (typeof icon === 'string' && (icon.includes('http://') || icon.includes('https://'))) ? 'image' : 'sys-icon';
+        
         const fullService = {
           ...service,
           name: nameStr,
           server_url: detail?.server_url || service.server_url || '',
           server_identifier: detail?.server_identifier || service.identifier || '',
-          icon: detail?.icon || service.icon,
-          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+          icon: icon,
+          iconType: iconType,
           iconBgColor: detail?.icon_background || service.iconBgColor,
           updatedAt: detail?.updated_at ? dayjs(detail.updated_at * 1000).format('YYYY-MM-DD HH:mm:ss') : service.updatedAt,
           updated_at: detail?.updated_at || service.updated_at,
@@ -331,14 +337,16 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
         nameStr = nameStr.zh_Hans || nameStr.en_US || JSON.stringify(nameStr);
       }
 
-        const extra = detail?.extra || {};
+        const icon = detail?.icon || service.icon;
+        const iconType = (typeof icon === 'string' && (icon.includes('http://') || icon.includes('https://'))) ? 'image' : 'sys-icon';
+
         fullService = {
           ...service,
           name: nameStr,
           server_url: detail?.server_url || service.server_url || '',
           identifier: detail?.server_identifier || service.identifier || '',
-          icon: detail?.icon || service.icon,
-          iconType: detail?.icon_type || (typeof detail?.icon === 'string' && detail.icon.startsWith('http') ? 'image' : service.iconType),
+          icon: icon,
+          iconType: iconType,
           iconBgColor: detail?.icon_background || service.iconBgColor,
           iconUrl: detail?.icon_url || service.iconUrl || '',
           is_team_authorization: detail?.is_team_authorization, // Ensure this is mapped

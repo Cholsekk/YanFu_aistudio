@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronRight, ChevronDown } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { ToolItem } from '../types';
 import { apiService } from '../services/apiService';
 import { Popover, Spin } from 'antd';
@@ -147,26 +148,43 @@ export const ToolSelectorPopover: React.FC<ToolSelectorPopoverProps> = ({ childr
     }
 
     if (typeof parsedIcon === 'string') {
-      if (parsedIcon.startsWith('{')) {
+      const trimmed = parsedIcon.trim();
+      if (trimmed.startsWith('{')) {
         try {
-          parsedIcon = JSON.parse(parsedIcon);
+          parsedIcon = JSON.parse(trimmed);
         } catch (e) {
           // It's a URL string
         }
+      } else if (/^\d+$/.test(trimmed)) {
+        return <img src={`/sys_icons/Component ${trimmed}.svg`} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+      } else if (trimmed.includes('http://') || trimmed.includes('https://') || trimmed.startsWith('/')) {
+        return <img src={trimmed} alt="icon" className="w-5 h-5 rounded-md object-cover" referrerPolicy="no-referrer" />;
       } else {
-        return <img src={parsedIcon} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+        // Try to render as Lucide icon
+        const IconComponent = (LucideIcons as any)[trimmed];
+        if (IconComponent) {
+          return (
+            <div className="w-5 h-5 rounded-md flex items-center justify-center bg-gray-100 text-gray-500">
+              <IconComponent className="w-3.5 h-3.5" />
+            </div>
+          );
+        }
+        return <div className="w-5 h-5 bg-gray-200 rounded-md" />;
       }
     }
     
-    if (parsedIcon && parsedIcon.content) {
-      return (
-        <div 
-          className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs"
-          style={{ background: parsedIcon.background }}
-        >
-          {parsedIcon.content.substring(0, 1)}
-        </div>
-      );
+    if (parsedIcon && typeof parsedIcon === 'object') {
+      if (parsedIcon.content) {
+        const IconComponent = (LucideIcons as any)[parsedIcon.content];
+        return (
+          <div 
+            className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs"
+            style={{ background: parsedIcon.background }}
+          >
+            {IconComponent ? <IconComponent className="w-3.5 h-3.5" /> : parsedIcon.content.substring(0, 1)}
+          </div>
+        );
+      }
     }
     return <div className="w-5 h-5 bg-gray-200 rounded-md" />;
   };

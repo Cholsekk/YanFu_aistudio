@@ -39,6 +39,7 @@ import {
   Layers,
   SlidersHorizontal
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { 
   Input, 
   Button, 
@@ -1512,26 +1513,38 @@ const AppConfig: React.FC = () => {
     }
 
     if (typeof parsedIcon === 'string') {
-      if (parsedIcon.startsWith('{')) {
+      const trimmed = parsedIcon.trim();
+      if (trimmed.startsWith('{')) {
         try {
-          parsedIcon = JSON.parse(parsedIcon);
+          parsedIcon = JSON.parse(trimmed);
         } catch (e) {
           // It's a URL string
         }
+      } else if (/^\d+$/.test(trimmed)) {
+        return <img src={`/sys_icons/Component ${trimmed}.svg`} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+      } else if (trimmed.includes('http://') || trimmed.includes('https://') || trimmed.startsWith('/')) {
+        return <img src={trimmed} alt="icon" className="w-5 h-5 rounded-md object-cover" referrerPolicy="no-referrer" />;
       } else {
-        return <img src={parsedIcon} alt="icon" className="w-5 h-5 rounded-md object-cover" />;
+        const IconComponent = (LucideIcons as any)[trimmed];
+        if (IconComponent) {
+          return <IconComponent className="w-4 h-4 text-primary-600" />;
+        }
+        return <Wand2 className="w-4 h-4 text-primary-600" />;
       }
     }
     
-    if (parsedIcon && parsedIcon.content) {
-      return (
-        <div 
-          className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs"
-          style={{ background: parsedIcon.background }}
-        >
-          {parsedIcon.content.substring(0, 1)}
-        </div>
-      );
+    if (parsedIcon && typeof parsedIcon === 'object') {
+      if (parsedIcon.content) {
+        const IconComponent = (LucideIcons as any)[parsedIcon.content];
+        return (
+          <div 
+            className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs"
+            style={{ background: parsedIcon.background }}
+          >
+            {IconComponent ? <IconComponent className="w-3 h-3" /> : parsedIcon.content.substring(0, 1)}
+          </div>
+        );
+      }
     }
     return <Wand2 className="w-4 h-4 text-primary-600" />;
   };

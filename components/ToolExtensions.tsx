@@ -1205,6 +1205,8 @@ const ToolExtensions: React.FC = () => {
                           const trimmed = iconObj.trim();
                           if (trimmed.startsWith('{')) {
                             iconObj = JSON.parse(trimmed);
+                          } else if (/^\d+$/.test(trimmed)) {
+                            return <img src={`/sys_icons/Component ${trimmed}.svg`} alt={tool.label.zh_Hans} className="w-full h-full object-cover" />;
                           } else if (!trimmed.includes('/') && !trimmed.startsWith('http') && !trimmed.startsWith('data:')) {
                             const systemIcon = SYSTEM_ICONS.find(i => i.name === trimmed);
                             iconObj = { 
