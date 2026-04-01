@@ -1,3 +1,5 @@
+import { apiService } from '../../services/apiService';
+
 export interface Skill {
   id: string;
   name: string;
@@ -41,78 +43,48 @@ export interface FileTreeResponse {
 }
 
 export const addSkill = async (name: string, template: boolean): Promise<{ status: string }> => {
-  const response = await fetch('/console/api/skills/add', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, template }),
-  });
-  return response.json();
+  return apiService.post('/skills/add', { name, template });
 };
 
 export const getSkillList = async (page?: number, limit?: number): Promise<SkillListResponse> => {
-  const query = new URLSearchParams();
-  if (page) query.append('page', page.toString());
-  if (limit) query.append('limit', limit.toString());
-  const response = await fetch(`/console/api/skills/list?${query.toString()}`);
-  return response.json();
+  const params: any = {};
+  if (page) params.page = page;
+  if (limit) params.limit = limit;
+  return apiService.get('/skills/list', params);
 };
 
 export const getFileContent = async (skill_id?: string, file_id?: string): Promise<FileContentResponse> => {
-  const query = new URLSearchParams();
-  if (skill_id) query.append('skill_id', skill_id);
-  if (file_id) query.append('file_id', file_id);
-  const response = await fetch(`/console/api/skills/file?${query.toString()}`);
-  return response.json();
+  const params: any = {};
+  if (skill_id) params.skill_id = skill_id;
+  if (file_id) params.file_id = file_id;
+  return apiService.get('/skills/file', params);
 };
 
 export const updateFileContent = async (skill_id: string, file_id: string, text: string): Promise<{ status: string }> => {
-  const response = await fetch('/console/api/skills/file', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ skill_id, file_id, text }),
-  });
-  return response.json();
+  return apiService.post('/skills/file', { skill_id, file_id, text });
 };
 
 export const getFileTree = async (skill_id?: string): Promise<FileTreeResponse> => {
-  const query = new URLSearchParams();
-  if (skill_id) query.append('skill_id', skill_id);
-  const response = await fetch(`/console/api/skills/tree?${query.toString()}`);
-  return response.json();
+  const params: any = {};
+  if (skill_id) params.skill_id = skill_id;
+  return apiService.get('/skills/tree', params);
 };
 
 export const renameNode = async (skill_id: string, tree_id: string, new_name: string): Promise<{ status: string }> => {
-  const response = await fetch('/console/api/skills/tree', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ skill_id, tree_id, new_name }),
-  });
-  return response.json();
+  return apiService.post('/skills/tree', { skill_id, tree_id, new_name });
 };
 
 export const deleteNode = async (skill_id: string, tree_id: string): Promise<{ status: string }> => {
-  const query = new URLSearchParams({ skill_id, tree_id });
-  const response = await fetch(`/console/api/skills/tree?${query.toString()}`, {
-    method: 'DELETE',
-  });
-  return response.json();
+  const query = new URLSearchParams({ skill_id, tree_id }).toString();
+  return apiService.del(`/skills/tree?${query}`);
 };
 
 export const uploadZip = async (file: File): Promise<{ status: string }> => {
   const formData = new FormData();
   formData.append('file', file);
-  const response = await fetch('/console/api/skills/upload/zip', {
-    method: 'POST',
-    body: formData,
-  });
-  return response.json();
+  return apiService.post('/skills/upload/zip', formData);
 };
 
 export const createNewNode = async (skill_id: string, parent_id: string, is_dir: boolean, name: string): Promise<{ status: string }> => {
-  const response = await fetch('/console/api/skills/tree/new', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ skill_id, parent_id, is_dir, name }),
-  });
-  return response.json();
+  return apiService.post('/skills/tree/new', { skill_id, parent_id, is_dir, name });
 };

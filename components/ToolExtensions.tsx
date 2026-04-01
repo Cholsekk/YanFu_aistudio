@@ -656,7 +656,9 @@ const ToolExtensions: React.FC = () => {
 
   // Fetch tools when tab changes
   useEffect(() => {
-    fetchTools(activeTab);
+    if (activeTab !== 'skills') {
+      fetchTools(activeTab);
+    }
   }, [activeTab]);
 
   const fetchTools = async (type?: string) => {
@@ -1064,7 +1066,7 @@ const ToolExtensions: React.FC = () => {
         </div>
 
         {/* Search & Filter */}
-        {activeTab !== 'mcp' && (
+        {activeTab !== 'mcp' && activeTab !== 'skills' && (
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative flex-grow md:flex-grow-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
