@@ -1014,7 +1014,7 @@ const ToolExtensions: React.FC = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* Header Section */}
-      <div>
+      <div className="hidden">
         <h2 className="text-2xl font-bold text-gray-900">工具拓展</h2>
         <p className="text-sm text-gray-500 mt-1">管理和配置您的AI插件、数据源及第三方集成工具。</p>
       </div>
