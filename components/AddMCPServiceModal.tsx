@@ -107,8 +107,8 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
       return acc;
     }, {} as Record<string, string>);
 
-    // If editing and server_url hasn't changed, pass "[HIDDEN]"
-    const finalServerUrl = (initialData && server_url === initialData.server_url) ? "[HIDDEN]" : server_url;
+    // If editing and server_url hasn't changed, pass '[__HIDDEN__]'
+    const finalServerUrl = (initialData && server_url === initialData.server_url) ? '[__HIDDEN__]' : server_url;
 
     onAdd({ 
       ...rest, 

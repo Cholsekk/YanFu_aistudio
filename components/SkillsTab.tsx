@@ -170,6 +170,14 @@ const SkillNode: React.FC<{
                 <FolderPlus className="w-4 h-4" />
               </button>
             </Tooltip>
+            <Tooltip title="删除 Skill" arrow={false}>
+              <button 
+                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
+                onClick={(e) => { e.stopPropagation(); onDelete(skill.id, skill.id); }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
         )}
       </div>
@@ -320,18 +328,21 @@ const SkillsTab: React.FC = () => {
       cancelText: '取消',
       onOk: () => {
         deleteNode(skillId, tree_id).then(() => {
-          refreshSkillTree(skillId);
+          if (tree_id === skillId) {
+            fetchSkills();
+          } else {
+            refreshSkillTree(skillId);
+          }
           
           // 如果删除的是当前正在预览的文件或所属的 Skill，则关闭预览面板
           if (tree_id === skillId || (selectedFile && selectedFile.id === tree_id)) {
-            if (tree_id === skillId) {
-              fetchSkills();
-            }
             setSelectedSkillId(null);
             setSelectedFile(null);
           }
           
           message.success('删除成功');
+        }).catch(err => {
+          message.error('删除失败: ' + (err.message || '未知错误'));
         });
       }
     });

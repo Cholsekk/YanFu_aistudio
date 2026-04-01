@@ -1,5 +1,6 @@
 import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType, ModelConfig, UpdateAppModelConfigResponse } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
+// import { request, ssePost } from '@/service/base';
 
 export const getBaseUrl = () => {
   return localStorage.getItem('console_api_base_url') || 'http://192.168.1.201:5005';
@@ -73,6 +74,7 @@ class ApiService {
     return { url, headers, finalBody };
   }
 
+  //集成到主项目时，注释掉这个request，使用base导入的request和ssePost，将this.request调用统一改成 request调用，this.ssePost 改成 ssePost
   private async request(endpoint: string, options: RequestInit = {}) {
     if (isMockMode()) {
       const fullEndpoint = endpoint.startsWith(API_PREFIX) ? endpoint : `${API_PREFIX}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
@@ -1148,8 +1150,18 @@ class ApiService {
     const formData = new FormData();
     formData.append('file', file);
     
-    return this.post('/files/upload', formData as any,
-    );
+    return this.post('/files/upload', formData as any,);
+    // 集成时使用👇 request 返回，注释掉👆单独运行的post返回
+    // return request('/files/upload?source=file', 
+    //   { 
+    //     method: 'POST', 
+    //     body: formData 
+    //   },
+    //   { 
+    //     bodyStringify: false, 
+    //     deleteContentType: true 
+    //   }
+    // );
   }
 
   // 9. 模型提供商 (Model Providers)
