@@ -126,14 +126,6 @@ const SkillNode: React.FC<{
   loading: boolean;
   isSidebarCollapsed?: boolean;
 }> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed }) => {
-  const menuItems: MenuProps['items'] = [
-    { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skill.id, tree?.id || '', false, 'new_file.txt') },
-    { key: 'new_folder', label: '新建目录', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skill.id, tree?.id || '', true, 'new_folder') },
-    { type: 'divider' as const },
-    { key: 'rename', label: '重命名 Skill', icon: <Pencil className="w-3.5 h-3.5" />, onClick: () => onRename(skill.id, { id: skill.id, name: skill.name, is_dir: true }) },
-    { key: 'delete', label: '删除 Skill', icon: <Trash2 className="w-3.5 h-3.5" />, danger: true, onClick: () => onDelete(skill.id, skill.id) },
-  ];
-
   return (
     <div className="relative group/skill">
       <div
@@ -178,14 +170,6 @@ const SkillNode: React.FC<{
                 <FolderPlus className="w-4 h-4" />
               </button>
             </Tooltip>
-            <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
-              <button 
-                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 transition-all border border-transparent hover:border-gray-100"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-            </Dropdown>
           </div>
         )}
       </div>
