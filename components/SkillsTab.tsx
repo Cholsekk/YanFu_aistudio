@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Download, Scissors, Pencil, Trash2, FilePlus, FolderPlus, FileUp, FolderUp } from 'lucide-react';
-import { Skill, FileNode, getFileTree, getFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem } from '../lib/api/skills';
+import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem } from '../lib/api/skills';
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -21,14 +21,14 @@ const FileTreeItem: React.FC<{
   item: FileNode;
   depth?: number;
   onSelectFile: (file: FileNode) => void;
-  selectedFile: string | null;
+  selectedFileId: string | null;
   onRename: (tree_id: string, new_name: string) => void;
   onDelete: (tree_id: string) => void;
   onCreate: (parent_id: string, is_dir: boolean, name: string) => void;
-}> = ({ item, depth = 0, onSelectFile, selectedFile, onRename, onDelete, onCreate }) => {
+}> = ({ item, depth = 0, onSelectFile, selectedFileId, onRename, onDelete, onCreate }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
-  const isSelected = selectedFile === item.name;
+  const isSelected = selectedFileId === item.id;
 
   return (
     <div className="relative group">
@@ -76,7 +76,7 @@ const FileTreeItem: React.FC<{
       )}
 
       {item.is_dir && isOpen && item.children?.map((child, i) => (
-        <FileTreeItem key={i} item={child} depth={depth + 1} onSelectFile={onSelectFile} selectedFile={selectedFile} onRename={onRename} onDelete={onDelete} onCreate={onCreate} />
+        <FileTreeItem key={i} item={child} depth={depth + 1} onSelectFile={onSelectFile} selectedFileId={selectedFileId} onRename={onRename} onDelete={onDelete} onCreate={onCreate} />
       ))}
     </div>
   );
@@ -89,6 +89,8 @@ const SkillsTab: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [fileContent, setFileContent] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
   const [skills, setSkills] = useState<SkillListItem[]>([]);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -116,6 +118,9 @@ const SkillsTab: React.FC = () => {
   useEffect(() => {
     if (selectedSkillId) {
       fetchFileTree(selectedSkillId);
+      setSelectedFile(null);
+      setFileContent('');
+      setIsEditing(false);
     }
   }, [selectedSkillId]);
 
@@ -123,9 +128,18 @@ const SkillsTab: React.FC = () => {
     if (selectedFile && selectedSkillId) {
       getFileContent(selectedSkillId, selectedFile.id).then(res => {
         setFileContent(res.text);
+        setEditedContent(res.text);
       });
     }
   }, [selectedFile, selectedSkillId]);
+
+  const handleSaveContent = () => {
+    if (!selectedSkillId || !selectedFile) return;
+    updateFileContent(selectedSkillId, selectedFile.id, editedContent).then(() => {
+      setFileContent(editedContent);
+      setIsEditing(false);
+    });
+  };
 
   const handleRename = (tree_id: string, new_name: string) => {
     if (!selectedSkillId) return;
@@ -177,109 +191,159 @@ const SkillsTab: React.FC = () => {
   }).filter(Boolean) as FileNode[];
 
   return (
-    <div className="flex h-[calc(100vh-200px)] bg-gray-50 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-      {/* Sidebar: File Tree */}
-      <div className="w-64 border-r border-gray-200 p-4 flex flex-col bg-white">
-        <div className="flex items-center justify-between mb-4 gap-2">
-          <div className="relative flex-grow">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="搜索文件..." 
-              className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <div className="flex flex-col gap-6 h-[calc(100vh-120px)]">
+      {/* Top Section: Skill Templates */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900">Skill 模板</h3>
+          <div className="flex gap-2">
+            <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 transition-colors">
+              <Plus className="w-4 h-4" /> 创建空白
+            </button>
+            <button onClick={() => setIsImportModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+              <Upload className="w-4 h-4" /> 导入
+            </button>
           </div>
-          <button 
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            onClick={() => selectedSkillId && handleCreate(fileTree[0]?.id || '', false, 'new_file.txt')}
-            disabled={!selectedSkillId}
-          >
-            <Plus className="w-4 h-4" />
-          </button>
         </div>
-        <div className="flex-grow overflow-y-auto">
-          {filteredFileTree.map((item, i) => <FileTreeItem key={i} item={item} onSelectFile={setSelectedFile} selectedFile={selectedFile?.name || null} onRename={handleRename} onDelete={handleDelete} onCreate={handleCreate} />)}
-          {!selectedSkillId && <div className="text-center py-8 text-gray-400 text-sm italic">请先选择一个 Skill</div>}
+        
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+          {skills.map(skill => (
+            <div 
+              key={skill.id} 
+              onClick={() => setSelectedSkillId(skill.id)}
+              className={`flex-shrink-0 w-64 p-4 rounded-xl border cursor-pointer transition-all ${selectedSkillId === skill.id ? 'border-primary-500 bg-primary-50/30 ring-1 ring-primary-500' : 'border-gray-100 bg-gray-50/50 hover:border-gray-300'}`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
+                  {skill.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-gray-900 text-sm truncate">{skill.name}</h4>
+                  <p className="text-[10px] text-gray-400 truncate">ID: {skill.id}</p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 line-clamp-1">{skill.description || '暂无描述'}</p>
+            </div>
+          ))}
+          {skills.length === 0 && (
+            <div className="w-full py-8 text-center text-gray-400 text-sm italic border border-dashed border-gray-200 rounded-xl">
+              暂无 Skill 模板
+            </div>
+          )}
         </div>
-        <button 
-          className="mt-4 w-full py-2 text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg flex items-center justify-center gap-2 hover:bg-gray-50"
-          onClick={() => setIsImportModalOpen(true)}
-        >
-          <Upload className="w-4 h-4" /> 拖放文件到此处上传
-        </button>
       </div>
 
-      {/* Main Content: Templates or Preview */}
-      <div className="flex-grow p-6 overflow-y-auto">
-        {selectedFile ? (
-          <div className="bg-white p-6 rounded-xl border border-gray-200 h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold">预览: {selectedFile.name}</h3>
-              <button onClick={() => setSelectedFile(null)} className="text-sm text-gray-500 hover:text-gray-900">关闭预览</button>
+      {/* Bottom Section: File Tree & Editor */}
+      <div className="flex-grow flex bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-0">
+        {/* Sidebar: File Tree */}
+        <div className="w-72 border-r border-gray-200 flex flex-col bg-white">
+          <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="搜索文件..." 
+                className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <pre className="text-sm text-gray-800 bg-gray-50 p-4 rounded-lg h-[calc(100%-40px)] overflow-auto">
-              {fileContent || `这里是 ${selectedFile.name} 的内容预览...`}
-            </pre>
+            <button 
+              onClick={() => selectedSkillId && handleCreate(fileTree[0]?.id || '', false, 'new_file.txt')}
+              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+              title="新建根目录文件"
+              disabled={!selectedSkillId}
+            >
+              <FilePlus className="w-4 h-4" />
+            </button>
           </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Header Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-primary-500 transition-all shadow-sm">
-                <div className="p-2 bg-primary-50 text-primary-600 rounded-lg">
-                  <Plus className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <div className="font-semibold text-gray-900">创建空白 Skill</div>
-                  <div className="text-xs text-gray-500">从文件夹结构开始</div>
-                </div>
-              </button>
-              <button onClick={() => setIsImportModalOpen(true)} className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-primary-500 transition-all shadow-sm">
-                <div className="p-2 bg-primary-50 text-primary-600 rounded-lg">
-                  <Upload className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <div className="font-semibold text-gray-900">导入 Skill</div>
-                  <div className="text-xs text-gray-500">从 skill.zip 文件导入</div>
-                </div>
-              </button>
-            </div>
-
-            {/* Templates Grid */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Skill 模板</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {skills.map(skill => (
-                  <div key={skill.id} className={`group bg-white rounded-xl border p-5 hover:shadow-md transition-all flex flex-col relative ${selectedSkillId === skill.id ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-200'}`}>
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
-                        {skill.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{skill.name}</h4>
-                        <p className="text-xs text-gray-500">ID: {skill.id}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4 flex-grow line-clamp-2">{skill.description || '暂无描述'}</p>
-                    <button 
-                      onClick={() => setSelectedSkillId(skill.id)}
-                      className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${selectedSkillId === skill.id ? 'bg-primary-50 text-primary-600' : 'bg-primary-600 text-white hover:bg-primary-700 opacity-0 group-hover:opacity-100'}`}
-                    >
-                      {selectedSkillId === skill.id ? '正在使用' : '+ 使用此 Skill'}
-                    </button>
-                  </div>
+          
+          <div className="flex-grow overflow-y-auto p-2">
+            {selectedSkillId ? (
+              <>
+                {filteredFileTree.map((item, i) => (
+                  <FileTreeItem 
+                    key={i} 
+                    item={item} 
+                    onSelectFile={setSelectedFile} 
+                    selectedFileId={selectedFile?.id || null} 
+                    onRename={handleRename} 
+                    onDelete={handleDelete} 
+                    onCreate={handleCreate} 
+                  />
                 ))}
-                {skills.length === 0 && (
-                  <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed border-gray-200">
-                    暂无 Skill 模板，请创建或导入。
-                  </div>
+                {filteredFileTree.length === 0 && (
+                  <div className="text-center py-8 text-gray-400 text-sm">未找到匹配文件</div>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm italic px-4 text-center">
+                <Folder className="w-8 h-8 mb-2 opacity-20" />
+                请先从上方选择一个 Skill 以查看文件目录
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+            <button 
+              className="w-full py-2 text-xs text-gray-500 border border-dashed border-gray-300 rounded-lg flex items-center justify-center gap-2 hover:bg-white hover:border-primary-400 transition-all"
+              onClick={() => setIsImportModalOpen(true)}
+              disabled={!selectedSkillId}
+            >
+              <Upload className="w-3 h-3" /> 上传文件
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content: Editor/Preview */}
+        <div className="flex-grow flex flex-col min-w-0 bg-gray-50/30">
+          {selectedFile ? (
+            <div className="flex flex-col h-full bg-white">
+              <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-white">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="w-4 h-4 text-gray-400" />
+                  <h3 className="text-sm font-bold text-gray-900 truncate">{selectedFile.name}</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  {isEditing ? (
+                    <>
+                      <button onClick={() => { setIsEditing(false); setEditedContent(fileContent); }} className="text-xs text-gray-500 hover:text-gray-700">取消</button>
+                      <button onClick={handleSaveContent} className="px-3 py-1 bg-primary-600 text-white rounded text-xs hover:bg-primary-700">保存</button>
+                    </>
+                  ) : (
+                    <button onClick={() => setIsEditing(true)} className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700">
+                      <Pencil className="w-3 h-3" /> 编辑
+                    </button>
+                  )}
+                  <button onClick={() => setSelectedFile(null)} className="p-1 text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-grow overflow-hidden relative">
+                {isEditing ? (
+                  <textarea
+                    className="w-full h-full p-6 font-mono text-sm bg-gray-50 focus:outline-none resize-none"
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                  />
+                ) : (
+                  <pre className="w-full h-full p-6 font-mono text-sm text-gray-800 bg-gray-50 overflow-auto whitespace-pre-wrap">
+                    {fileContent || `// ${selectedFile.name} 内容为空`}
+                  </pre>
                 )}
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 opacity-20" />
+              </div>
+              <p className="text-sm">在左侧目录中选择一个文件进行查看或编辑</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modals */}
