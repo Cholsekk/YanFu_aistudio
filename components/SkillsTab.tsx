@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Download, Scissors, Pencil, Trash2, FilePlus, FolderPlus, FileUp, FolderUp, Cpu, ChevronRight, ChevronDown } from 'lucide-react';
+import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Download, Scissors, Pencil, Trash2, FilePlus, FolderPlus, FileUp, FolderUp, Cpu, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Tooltip } from 'antd';
 import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem } from '../lib/api/skills';
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ isOpen, onClose, title, children }) => {
@@ -57,20 +58,22 @@ const FileTreeItem: React.FC<{
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           {item.is_dir && (
             <>
-              <button 
-                className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
-                onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, false, 'new_file.txt'); }}
-                title="新建文件"
-              >
-                <FilePlus className="w-3.5 h-3.5" />
-              </button>
-              <button 
-                className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
-                onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, true, 'new_folder'); }}
-                title="新建文件夹"
-              >
-                <FolderPlus className="w-3.5 h-3.5" />
-              </button>
+              <Tooltip title="新建文件" arrow={false}>
+                <button 
+                  className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
+                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, false, 'new_file.txt'); }}
+                >
+                  <FilePlus className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip title="新建文件夹" arrow={false}>
+                <button 
+                  className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
+                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, true, 'new_folder'); }}
+                >
+                  <FolderPlus className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
             </>
           )}
           <button 
@@ -129,42 +132,50 @@ const SkillNode: React.FC<{
   onToggle: (skillId: string) => void;
   tree: FileNode | null;
   loading: boolean;
-}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading }) => {
+  isSidebarCollapsed?: boolean;
+}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
     <div className="relative group/skill">
       <div
-        className={`flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-all border ${isExpanded ? 'bg-primary-50/30 border-primary-100 shadow-sm' : 'border-transparent'}`}
-        onClick={() => onToggle(skill.id)}
+        className={`flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-all border ${isExpanded ? 'bg-primary-50/30 border-primary-100 shadow-sm' : 'border-transparent'} ${isSidebarCollapsed ? 'justify-center' : ''}`}
+        onClick={() => !isSidebarCollapsed && onToggle(skill.id)}
       >
-        <div className="flex items-center gap-3 flex-grow min-w-0">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isExpanded ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
-            <Cpu className="w-5 h-5" />
-          </div>
-          <div className="min-w-0 flex-grow">
-            <h4 className={`text-sm font-bold truncate ${isExpanded ? 'text-primary-900' : 'text-gray-800'}`} title={skill.name}>{skill.name}</h4>
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">SKILL ROOT</p>
-              {loading && <div className="w-2.5 h-2.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />}
+        <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
+          <Tooltip title={isSidebarCollapsed ? skill.name : ""} placement="right" arrow={false}>
+            <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-all ${isExpanded ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
+              <Cpu className="w-5 h-5" />
             </div>
-          </div>
+          </Tooltip>
+          {!isSidebarCollapsed && (
+            <div className="min-w-0 flex-grow">
+              <h4 className={`text-sm font-bold truncate ${isExpanded ? 'text-primary-900' : 'text-gray-800'}`} title={skill.name}>{skill.name}</h4>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">SKILL ROOT</p>
+                {loading && <div className="w-2.5 h-2.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />}
+              </div>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover/skill:opacity-100 transition-opacity ml-2">
-          <button 
-            className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-            onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }}
-            title="在根目录新建文件"
-          >
-            <FilePlus className="w-4 h-4" />
-          </button>
-          <button 
-            className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-            onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }}
-            title="在根目录新建文件夹"
-          >
-            <FolderPlus className="w-4 h-4" />
-          </button>
+        {!isSidebarCollapsed && (
+          <div className="flex items-center gap-1 opacity-0 group-hover/skill:opacity-100 transition-opacity ml-2">
+          <Tooltip title="在目录新建文件" arrow={false}>
+            <button 
+              className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
+              onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }}
+            >
+              <FilePlus className="w-4 h-4" />
+            </button>
+          </Tooltip>
+          <Tooltip title="在目录新建文件夹" arrow={false}>
+            <button 
+              className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
+              onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }}
+            >
+              <FolderPlus className="w-4 h-4" />
+            </button>
+          </Tooltip>
           <button 
             className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 transition-all border border-transparent hover:border-gray-100"
             onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
@@ -172,14 +183,15 @@ const SkillNode: React.FC<{
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
-      </div>
+      )}
+    </div>
 
       {showMenu && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
           <div className="absolute right-0 top-10 w-44 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1.5 text-xs">
-            <button onClick={() => { setShowMenu(false); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FilePlus className="w-3.5 h-3.5 text-gray-400"/>新建根文件</button>
-            <button onClick={() => { setShowMenu(false); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FolderPlus className="w-3.5 h-3.5 text-gray-400"/>新建根目录</button>
+            <button onClick={() => { setShowMenu(false); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FilePlus className="w-3.5 h-3.5 text-gray-400"/>新建文件</button>
+            <button onClick={() => { setShowMenu(false); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FolderPlus className="w-3.5 h-3.5 text-gray-400"/>新建目录</button>
             <div className="h-px bg-gray-50 my-1" />
             <button onClick={() => { setShowMenu(false); onRename(skill.id, skill.id, prompt('输入新名称', skill.name) || skill.name); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><Pencil className="w-3.5 h-3.5 text-gray-400"/>重命名 Skill</button>
             <button onClick={() => { setShowMenu(false); onDelete(skill.id, skill.id); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"><Trash2 className="w-3.5 h-3.5 text-red-400"/>删除 Skill</button>
@@ -224,6 +236,7 @@ const SkillsTab: React.FC = () => {
   const [loadingTrees, setLoadingTrees] = useState<Record<string, boolean>>({});
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const fetchSkills = () => {
     getSkillList().then(res => {
@@ -319,43 +332,55 @@ const SkillsTab: React.FC = () => {
   const filteredSkills = skills.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-140px)] overflow-hidden">
+    <div className="flex gap-6 h-[calc(100vh-200px)] overflow-hidden relative">
       {/* Sidebar: Unified Skills & File Explorer */}
-      <div className="w-80 flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-100 bg-white flex items-center justify-between">
-          <h3 className="font-bold text-gray-900">Skills 资源管理器</h3>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setIsCreateModalOpen(true)} 
-              className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-all border border-transparent hover:border-primary-100"
-              title="创建 Skill"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={() => setIsImportModalOpen(true)} 
-              className="p-2 text-gray-500 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-200"
-              title="导入 Skill"
-            >
-              <Upload className="w-4 h-4" />
-            </button>
+      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 flex-shrink-0 relative`}>
+        <div className={`p-5 border-b border-gray-100 bg-white flex items-center justify-between ${isSidebarCollapsed ? 'flex-col gap-4' : ''}`}>
+          {!isSidebarCollapsed && <h3 className="font-bold text-gray-900 whitespace-nowrap">Skills 资源管理器</h3>}
+          <div className={`flex ${isSidebarCollapsed ? 'flex-col' : 'gap-2'}`}>
+            <Tooltip title="创建 Skill" arrow={false} placement={isSidebarCollapsed ? 'right' : 'top'}>
+              <button 
+                onClick={() => setIsCreateModalOpen(true)} 
+                className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-all border border-transparent hover:border-primary-100"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </Tooltip>
+            <Tooltip title="导入 Skill" arrow={false} placement={isSidebarCollapsed ? 'right' : 'top'}>
+              <button 
+                onClick={() => setIsImportModalOpen(true)} 
+                className="p-2 text-gray-500 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-200"
+              >
+                <Upload className="w-4 h-4" />
+              </button>
+            </Tooltip>
+            <Tooltip title={isSidebarCollapsed ? "展开侧边栏" : "收起侧边栏"} arrow={false} placement={isSidebarCollapsed ? 'right' : 'top'}>
+              <button 
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+                className="p-2 text-gray-400 hover:bg-gray-50 rounded-xl transition-all"
+              >
+                {isSidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
+            </Tooltip>
           </div>
         </div>
         
-        <div className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="搜索 Skill 或文件..." 
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/10 transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {!isSidebarCollapsed && (
+          <div className="p-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="搜索 Skill 或文件..." 
+                className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/10 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
+        )}
         
-        <div className="flex-grow overflow-y-auto px-3 pb-4 space-y-1 custom-scrollbar">
+        <div className={`flex-grow overflow-y-auto px-3 pb-4 space-y-1 custom-scrollbar ${isSidebarCollapsed ? 'items-center' : ''}`}>
           {filteredSkills.map(skill => (
             <SkillNode 
               key={skill.id}
@@ -365,13 +390,14 @@ const SkillsTab: React.FC = () => {
               onRename={handleRename}
               onDelete={handleDelete}
               onCreate={handleCreate}
-              isExpanded={!!expandedSkills[skill.id]}
+              isExpanded={isSidebarCollapsed ? false : !!expandedSkills[skill.id]}
               onToggle={handleToggleSkill}
               tree={skillTrees[skill.id]}
               loading={!!loadingTrees[skill.id]}
+              isSidebarCollapsed={isSidebarCollapsed}
             />
           ))}
-          {filteredSkills.length === 0 && (
+          {filteredSkills.length === 0 && !isSidebarCollapsed && (
             <div className="py-20 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
               <Folder className="w-8 h-8 text-gray-200 mx-auto mb-2" />
               <p className="text-xs text-gray-400">暂无 Skill</p>
