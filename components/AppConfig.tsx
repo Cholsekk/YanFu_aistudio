@@ -1845,12 +1845,11 @@ const AppConfig: React.FC = () => {
                 <Button 
                   type="text" 
                   size="small" 
-                  icon={<Sparkles className={`w-3.5 h-3.5 text-primary-600 ${isAutoGenerating ? 'animate-spin' : ''}`} />}
+                  icon={<Sparkles className="w-3.5 h-3.5 text-primary-600" />}
                   className="text-primary-600 hover:text-primary-700 hover:bg-primary-50 flex items-center gap-1.5 text-xs font-medium"
-                  onClick={handleAutoGenerate}
-                  disabled={isAutoGenerating}
+                  onClick={() => setPrompt("你是一个有用的助手，请根据用户的输入提供准确、简洁且有帮助的回答。")}
                 >
-                  {isAutoGenerating ? '生成中...' : '自动生成'}
+                  默认提示词
                 </Button>
               </div>
             </div>

@@ -74,7 +74,13 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
   }, [formData.appType]);
 
   const handleChange = (field: keyof ScheduledTask, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
+      if (field === 'appType' && value === 'external') {
+        next.request_body = '';
+      }
+      return next;
+    });
   };
 
   const handleAppSelect = async (app: any) => {
@@ -90,18 +96,33 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
       const appDetail = await apiService.fetchAppDetail(app.id);
       if (appDetail) {
         let endpoint = '';
+        let requestBodyTemplate = {};
         const mode = appDetail.mode;
+        
         if (['chat', 'advanced-chat', 'agent-chat'].includes(mode)) {
           endpoint = `/console/api/app_expand/${app.id}/chat-messages`;
+          requestBodyTemplate = {
+            query: "你好",
+            conversation_id: "",
+            inputs: {}
+          };
         } else if (mode === 'completion') {
           endpoint = `/console/api/app_expand/${app.id}/completion-messages`;
+          requestBodyTemplate = {
+            query: "你好",
+            inputs: {}
+          };
         } else if (mode === 'workflow') {
           endpoint = `/console/api/app_expand/${app.id}/workflows/run`;
+          requestBodyTemplate = {
+            inputs: {}
+          };
         }
         
         setFormData(prev => ({
           ...prev,
-          api_endpoint: endpoint
+          api_endpoint: endpoint,
+          request_body: JSON.stringify(requestBodyTemplate, null, 2)
         }));
       }
     } catch (error) {

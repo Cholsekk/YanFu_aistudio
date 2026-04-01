@@ -112,10 +112,11 @@ interface MCPServicesProps {
 }
 
 const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
-  const [services, setServices] = useState<any[]>(MOCK_MCP_SERVICES);
+  const [services, setServices] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState<any | null>(null);
   const [tools, setTools] = useState<any[]>([]);
   const [loadingTools, setLoadingTools] = useState(false);
+  const [hasFetchedTools, setHasFetchedTools] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<any | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -361,6 +362,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
 
       if (fullService.is_team_authorization) {
         setLoadingTools(true);
+        setHasFetchedTools(true);
         let fetchedTools = detail?.tools || service.rawTools;
         if (fetchedTools) {
           if (!Array.isArray(fetchedTools)) {
@@ -368,13 +370,12 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
           }
           setTools(fetchedTools);
         } else {
-          // 模拟请求
-          await new Promise(resolve => setTimeout(resolve, 500));
-          setTools(MOCK_TOOLS);
+          setTools([]);
         }
         setLoadingTools(false);
       } else {
         setTools([]);
+        setHasFetchedTools(true);
       }
     } catch (error) {
       console.error('Failed to fetch MCP details:', error);
@@ -702,8 +703,8 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                 <div className="space-y-3">
                   {loadingTools ? (
                     <p className="text-sm text-gray-400">加载中...</p>
-                  ) : (
-                    (tools || []).map((tool: any, index: number) => {
+                  ) : tools && tools.length > 0 ? (
+                    tools.map((tool: any, index: number) => {
                       const descText = typeof tool.description === 'string' 
                         ? tool.description 
                         : (tool.description?.zh_Hans || tool.description?.en_US || JSON.stringify(tool.description) || '');
@@ -741,6 +742,8 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                         </div>
                       );
                     })
+                  ) : (
+                    <p className="text-sm text-gray-400">暂无数据</p>
                   )}
                 </div>
               </div>

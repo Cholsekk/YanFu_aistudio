@@ -277,7 +277,7 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
                   <Sparkles className="w-8 h-8 text-gray-200" />
                 </div>
                 <p className="text-sm text-gray-400 leading-relaxed max-w-[280px] text-center">
-                  在左侧描述您的用例，点击生成查看结果。
+                  {instruction.trim() ? "未生成任何内容，请尝试修改指令后重试。" : "在左侧描述您的用例，点击生成查看结果。"}
                 </p>
               </motion.div>
             )}
