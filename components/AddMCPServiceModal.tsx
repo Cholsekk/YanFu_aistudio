@@ -98,7 +98,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
 
   const handleSubmit = () => {
     if (!isFormValid) return;
-    const { is_dynamic_registration, client_id, client_secret, timeout, sse_read_timeout, ...rest } = formData;
+    const { is_dynamic_registration, client_id, client_secret, timeout, sse_read_timeout, server_url, ...rest } = formData;
     
     const headerObject = headers.reduce((acc, header) => {
       if (header.key) {
@@ -107,8 +107,12 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
       return acc;
     }, {} as Record<string, string>);
 
+    // If editing and server_url hasn't changed, pass "[HIDDEN]"
+    const finalServerUrl = (initialData && server_url === initialData.server_url) ? "[HIDDEN]" : server_url;
+
     onAdd({ 
       ...rest, 
+      server_url: finalServerUrl,
       is_dynamic_registration,
       authentication: {
         client_id,
