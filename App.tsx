@@ -81,17 +81,22 @@ const App: React.FC = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [isConvertToWorkflowModalOpen, setIsConvertToWorkflowModalOpen] = useState(false);
   const [appToConvert, setAppToConvert] = useState<AppItem | null>(null);
-  const [selectedApp, setSelectedApp] = useState<AppItem | null>(() => {
-    const saved = sessionStorage.getItem('selectedApp');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return null;
+  const [tenantId, setTenantId] = useState(() => localStorage.getItem('console_tenant_id'));
+  const [selectedApp, setSelectedApp] = useState<AppItem | null>(null);
+
+  // Listen for tenant changes from other windows/iframes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'console_tenant_id') {
+        const newTenantId = localStorage.getItem('console_tenant_id');
+        setTenantId(newTenantId);
+        setSelectedApp(null);
       }
-    }
-    return null;
-  });
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Persist state to sessionStorage
   useEffect(() => {
@@ -113,14 +118,6 @@ const App: React.FC = () => {
   useEffect(() => {
     sessionStorage.setItem('sortBy', sortBy);
   }, [sortBy]);
-
-  useEffect(() => {
-    if (selectedApp) {
-      sessionStorage.setItem('selectedApp', JSON.stringify(selectedApp));
-    } else {
-      sessionStorage.removeItem('selectedApp');
-    }
-  }, [selectedApp]);
   
   const [editingApp, setEditingApp] = useState<AppItem | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -341,7 +338,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
     // Clear apps immediately when switching tabs to prevent stale data display
@@ -357,7 +354,7 @@ const App: React.FC = () => {
       fetchApps(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [activeNavTab, activeFilterTab, searchQuery]);
+  }, [activeNavTab, activeFilterTab, searchQuery, tenantId]);
 
   // Infinite scroll using IntersectionObserver for better compatibility in nested scroll contexts
   useEffect(() => {
