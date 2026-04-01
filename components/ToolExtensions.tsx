@@ -5,6 +5,7 @@ import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
 import EditCustomToolModal from './EditCustomToolModal';
 import CreateMcpToolModal from './CreateMcpToolModal';
 import MCPServices from './MCPServices';
+import SkillsTab from './SkillsTab';
 import { apiService } from '../services/apiService';
 import { getIcon, SYSTEM_ICONS } from '../constants';
 import * as LucideIcons from 'lucide-react';
@@ -623,7 +624,7 @@ const ToolExtensions: React.FC = () => {
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'builtin' | 'workflow' | 'mcp'>(() => {
+  const [activeTab, setActiveTab] = useState<'builtin' | 'workflow' | 'mcp' | 'skills'>(() => {
     const savedTab = sessionStorage.getItem('toolExtensionsTab');
     return (savedTab === 'custom' ? 'builtin' : savedTab as any) || 'builtin';
   });
@@ -1050,6 +1051,16 @@ const ToolExtensions: React.FC = () => {
           >
             MCP工具
           </button>
+          <button
+            onClick={() => setActiveTab('skills')}
+            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'skills'
+                ? 'bg-white text-primary-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            SKILLS
+          </button>
         </div>
 
         {/* Search & Filter */}
@@ -1143,6 +1154,8 @@ const ToolExtensions: React.FC = () => {
       {/* Grid Section */}
       {activeTab === 'mcp' ? (
         <MCPServices isEmbedded={true} />
+      ) : activeTab === 'skills' ? (
+        <SkillsTab />
       ) : loading ? (
         <div className="flex flex-col items-center justify-center py-32 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
           <div className="w-10 h-10 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin mb-4" />
