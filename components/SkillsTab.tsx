@@ -36,10 +36,7 @@ const FileTreeItem: React.FC<{
       { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, false, 'new_file.txt') },
       { key: 'new_folder', label: '新建文件夹', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, true, 'new_folder') },
       { type: 'divider' as const }
-    ] : [
-      { key: 'download', label: '下载文件', icon: <Download className="w-3.5 h-3.5" /> },
-      { type: 'divider' as const }
-    ]),
+    ] : []),
     { key: 'rename', label: '重命名', icon: <Pencil className="w-3.5 h-3.5" />, onClick: () => onRename(skillId, item) },
     { key: 'delete', label: '删除', icon: <Trash2 className="w-3.5 h-3.5" />, danger: true, onClick: () => onDelete(skillId, item.id) },
   ];
@@ -314,6 +311,12 @@ const SkillsTab: React.FC = () => {
     }
     renameNode(renameTarget.skillId, renameTarget.item.id, newName).then(() => {
       refreshSkillTree(renameTarget.skillId);
+      
+      // 同步更新预览面板的文件名
+      if (selectedFile && selectedFile.id === renameTarget.item.id) {
+        setSelectedFile({ ...selectedFile, name: newName });
+      }
+
       if (renameTarget.item.id === renameTarget.skillId) {
         fetchSkills();
       }
@@ -334,13 +337,16 @@ const SkillsTab: React.FC = () => {
       onOk: () => {
         deleteNode(skillId, tree_id).then(() => {
           refreshSkillTree(skillId);
-          if (tree_id === skillId) {
-            fetchSkills();
-            if (selectedSkillId === skillId) {
-              setSelectedSkillId(null);
-              setSelectedFile(null);
+          
+          // 如果删除的是当前正在预览的文件或所属的 Skill，则关闭预览面板
+          if (tree_id === skillId || (selectedFile && selectedFile.id === tree_id)) {
+            if (tree_id === skillId) {
+              fetchSkills();
             }
+            setSelectedSkillId(null);
+            setSelectedFile(null);
           }
+          
           message.success('删除成功');
         });
       }
