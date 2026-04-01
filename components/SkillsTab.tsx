@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Download, Scissors, Pencil, Trash2, FilePlus, FolderPlus, FileUp, FolderUp, Cpu, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { Tooltip } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Download, Scissors, Pencil, Trash2, FilePlus, FolderPlus, FileUp, FolderUp, Cpu, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen, FileArchive, AlertCircle } from 'lucide-react';
+import { Tooltip, Dropdown, Menu, Input, Modal as AntModal, Button, message, type MenuProps } from 'antd';
 import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem } from '../lib/api/skills';
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ isOpen, onClose, title, children }) => {
@@ -24,13 +24,25 @@ const FileTreeItem: React.FC<{
   depth?: number;
   onSelectFile: (file: FileNode, skillId: string) => void;
   selectedFileId: string | null;
-  onRename: (skillId: string, tree_id: string, new_name: string) => void;
+  onRename: (skillId: string, item: FileNode) => void;
   onDelete: (skillId: string, tree_id: string) => void;
   onCreate: (skillId: string, parent_id: string, is_dir: boolean, name: string) => void;
 }> = ({ item, skillId, depth = 0, onSelectFile, selectedFileId, onRename, onDelete, onCreate }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const isSelected = selectedFileId === item.id;
+
+  const menuItems: MenuProps['items'] = [
+    ...(item.is_dir ? [
+      { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, false, 'new_file.txt') },
+      { key: 'new_folder', label: '新建文件夹', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, true, 'new_folder') },
+      { type: 'divider' as const }
+    ] : [
+      { key: 'download', label: '下载文件', icon: <Download className="w-3.5 h-3.5" /> },
+      { type: 'divider' as const }
+    ]),
+    { key: 'rename', label: '重命名', icon: <Pencil className="w-3.5 h-3.5" />, onClick: () => onRename(skillId, item) },
+    { key: 'delete', label: '删除', icon: <Trash2 className="w-3.5 h-3.5" />, danger: true, onClick: () => onDelete(skillId, item.id) },
+  ];
 
   return (
     <div className="relative group">
@@ -76,33 +88,16 @@ const FileTreeItem: React.FC<{
               </Tooltip>
             </>
           )}
-          <button 
-            className="p-1 hover:bg-gray-200 rounded-md text-gray-500 transition-colors"
-            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-          >
-            <MoreHorizontal className="w-3.5 h-3.5" />
-          </button>
+          <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+            <button 
+              className="p-1 hover:bg-gray-200 rounded-md text-gray-500 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="w-3.5 h-3.5" />
+            </button>
+          </Dropdown>
         </div>
       </div>
-
-      {showMenu && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-8 w-44 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1.5 text-xs">
-            {item.is_dir ? (
-              <>
-                <button onClick={() => { setShowMenu(false); onCreate(skillId, item.id, false, 'new_file.txt'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FilePlus className="w-3.5 h-3.5 text-gray-400"/>新建文件</button>
-                <button onClick={() => { setShowMenu(false); onCreate(skillId, item.id, true, 'new_folder'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FolderPlus className="w-3.5 h-3.5 text-gray-400"/>新建文件夹</button>
-              </>
-            ) : (
-              <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><Download className="w-3.5 h-3.5 text-gray-400"/>下载文件</button>
-            )}
-            <div className="h-px bg-gray-50 my-1" />
-            <button onClick={() => { setShowMenu(false); onRename(skillId, item.id, prompt('输入新名称', item.name) || item.name); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><Pencil className="w-3.5 h-3.5 text-gray-400"/>重命名</button>
-            <button onClick={() => { setShowMenu(false); onDelete(skillId, item.id); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"><Trash2 className="w-3.5 h-3.5 text-red-400"/>删除</button>
-          </div>
-        </>
-      )}
 
       {item.is_dir && isOpen && item.children?.map((child, i) => (
         <FileTreeItem 
@@ -125,7 +120,7 @@ const SkillNode: React.FC<{
   skill: SkillListItem;
   onSelectFile: (file: FileNode, skillId: string) => void;
   selectedFileId: string | null;
-  onRename: (skillId: string, tree_id: string, new_name: string) => void;
+  onRename: (skillId: string, item: FileNode | { id: string; name: string; is_dir: boolean }) => void;
   onDelete: (skillId: string, tree_id: string) => void;
   onCreate: (skillId: string, parent_id: string, is_dir: boolean, name: string) => void;
   isExpanded: boolean;
@@ -134,7 +129,13 @@ const SkillNode: React.FC<{
   loading: boolean;
   isSidebarCollapsed?: boolean;
 }> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed }) => {
-  const [showMenu, setShowMenu] = useState(false);
+  const menuItems: MenuProps['items'] = [
+    { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skill.id, tree?.id || '', false, 'new_file.txt') },
+    { key: 'new_folder', label: '新建目录', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skill.id, tree?.id || '', true, 'new_folder') },
+    { type: 'divider' as const },
+    { key: 'rename', label: '重命名 Skill', icon: <Pencil className="w-3.5 h-3.5" />, onClick: () => onRename(skill.id, { id: skill.id, name: skill.name, is_dir: true }) },
+    { key: 'delete', label: '删除 Skill', icon: <Trash2 className="w-3.5 h-3.5" />, danger: true, onClick: () => onDelete(skill.id, skill.id) },
+  ];
 
   return (
     <div className="relative group/skill">
@@ -145,7 +146,11 @@ const SkillNode: React.FC<{
         <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
           <Tooltip title={isSidebarCollapsed ? skill.name : ""} placement="right" arrow={false}>
             <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-all ${isExpanded ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
-              <Cpu className="w-5 h-5" />
+              {isSidebarCollapsed ? (
+                <span className="text-xs font-bold">{skill.name.charAt(0).toUpperCase()}</span>
+              ) : (
+                <Cpu className="w-5 h-5" />
+              )}
             </div>
           </Tooltip>
           {!isSidebarCollapsed && (
@@ -160,44 +165,33 @@ const SkillNode: React.FC<{
         </div>
         {!isSidebarCollapsed && (
           <div className="flex items-center gap-1 opacity-0 group-hover/skill:opacity-100 transition-opacity ml-2">
-          <Tooltip title="在目录新建文件" arrow={false}>
-            <button 
-              className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-              onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }}
-            >
-              <FilePlus className="w-4 h-4" />
-            </button>
-          </Tooltip>
-          <Tooltip title="在目录新建文件夹" arrow={false}>
-            <button 
-              className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-              onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }}
-            >
-              <FolderPlus className="w-4 h-4" />
-            </button>
-          </Tooltip>
-          <button 
-            className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 transition-all border border-transparent hover:border-gray-100"
-            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-    </div>
-
-      {showMenu && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-          <div className="absolute right-0 top-10 w-44 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1.5 text-xs">
-            <button onClick={() => { setShowMenu(false); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FilePlus className="w-3.5 h-3.5 text-gray-400"/>新建文件</button>
-            <button onClick={() => { setShowMenu(false); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><FolderPlus className="w-3.5 h-3.5 text-gray-400"/>新建目录</button>
-            <div className="h-px bg-gray-50 my-1" />
-            <button onClick={() => { setShowMenu(false); onRename(skill.id, skill.id, prompt('输入新名称', skill.name) || skill.name); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><Pencil className="w-3.5 h-3.5 text-gray-400"/>重命名 Skill</button>
-            <button onClick={() => { setShowMenu(false); onDelete(skill.id, skill.id); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"><Trash2 className="w-3.5 h-3.5 text-red-400"/>删除 Skill</button>
+            <Tooltip title="新建文件" arrow={false}>
+              <button 
+                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
+                onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }}
+              >
+                <FilePlus className="w-4 h-4" />
+              </button>
+            </Tooltip>
+            <Tooltip title="新建文件夹" arrow={false}>
+              <button 
+                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
+                onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }}
+              >
+                <FolderPlus className="w-4 h-4" />
+              </button>
+            </Tooltip>
+            <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+              <button 
+                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 transition-all border border-transparent hover:border-gray-100"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </Dropdown>
           </div>
-        </>
-      )}
+        )}
+      </div>
 
       {isExpanded && tree && (
         <div className="mt-1 ml-4 border-l border-gray-100 pl-1">
@@ -237,6 +231,15 @@ const SkillsTab: React.FC = () => {
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
+  // Rename Modal State
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<{ skillId: string; item: { id: string; name: string; is_dir: boolean } } | null>(null);
+  const [newName, setNewName] = useState('');
+
+  // Import Modal State
+  const [isDragging, setIsDragging] = useState(false);
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
 
   const fetchSkills = () => {
     getSkillList().then(res => {
@@ -292,24 +295,64 @@ const SkillsTab: React.FC = () => {
     updateFileContent(selectedSkillId, selectedFile.id, editedContent).then(() => {
       setFileContent(editedContent);
       setIsEditing(false);
+      message.success('保存成功');
+    }).catch(err => {
+      message.error('保存失败: ' + (err.message || '未知错误'));
     });
   };
 
-  const handleRename = (skillId: string, tree_id: string, new_name: string) => {
-    renameNode(skillId, tree_id, new_name).then(() => {
-      refreshSkillTree(skillId);
+  const handleRenameClick = (skillId: string, item: { id: string; name: string; is_dir: boolean }) => {
+    setRenameTarget({ skillId, item });
+    setNewName(item.name);
+    setIsRenameModalOpen(true);
+  };
+
+  const handleConfirmRename = () => {
+    if (!renameTarget || !newName || newName === renameTarget.item.name) {
+      setIsRenameModalOpen(false);
+      return;
+    }
+    renameNode(renameTarget.skillId, renameTarget.item.id, newName).then(() => {
+      refreshSkillTree(renameTarget.skillId);
+      if (renameTarget.item.id === renameTarget.skillId) {
+        fetchSkills();
+      }
+      setIsRenameModalOpen(false);
+      message.success('重命名成功');
+    }).catch(err => {
+      message.error('重命名失败: ' + (err.message || '未知错误'));
     });
   };
 
   const handleDelete = (skillId: string, tree_id: string) => {
-    deleteNode(skillId, tree_id).then(() => {
-      refreshSkillTree(skillId);
+    AntModal.confirm({
+      title: '确认删除',
+      content: '此操作不可撤销，确定要删除吗？',
+      okText: '删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: () => {
+        deleteNode(skillId, tree_id).then(() => {
+          refreshSkillTree(skillId);
+          if (tree_id === skillId) {
+            fetchSkills();
+            if (selectedSkillId === skillId) {
+              setSelectedSkillId(null);
+              setSelectedFile(null);
+            }
+          }
+          message.success('删除成功');
+        });
+      }
     });
   };
 
   const handleCreate = (skillId: string, parent_id: string, is_dir: boolean, name: string) => {
     createNewNode(skillId, parent_id, is_dir, name).then(() => {
       refreshSkillTree(skillId);
+      message.success(`新建${is_dir ? '文件夹' : '文件'}成功`);
+    }).catch(err => {
+      message.error(`新建${is_dir ? '文件夹' : '文件'}失败: ` + (err.message || '未知错误'));
     });
   };
 
@@ -319,13 +362,23 @@ const SkillsTab: React.FC = () => {
       setIsCreateModalOpen(false);
       setNewSkillName('');
       fetchSkills();
+      message.success('创建 Skill 成功');
+    }).catch(err => {
+      message.error('创建 Skill 失败: ' + (err.message || '未知错误'));
     });
   };
 
   const handleImportSkill = (file: File) => {
+    const hide = message.loading('正在导入 Skill...', 0);
     uploadZip(file).then(() => {
+      hide();
       setIsImportModalOpen(false);
+      setPendingImportFile(null);
       fetchSkills();
+      message.success('导入 Skill 成功');
+    }).catch(err => {
+      hide();
+      message.error('导入 Skill 失败: ' + (err.message || '未知错误'));
     });
   };
 
@@ -387,7 +440,7 @@ const SkillsTab: React.FC = () => {
               skill={skill}
               onSelectFile={handleSelectFile}
               selectedFileId={selectedFile?.id || null}
-              onRename={handleRename}
+              onRename={handleRenameClick}
               onDelete={handleDelete}
               onCreate={handleCreate}
               isExpanded={isSidebarCollapsed ? false : !!expandedSkills[skill.id]}
@@ -505,35 +558,88 @@ const SkillsTab: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} title="导入 Skill">
+      <Modal isOpen={isImportModalOpen} onClose={() => { setIsImportModalOpen(false); setPendingImportFile(null); }} title="导入 Skill">
         <div 
-          className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center mb-6 hover:border-primary-400 transition-colors cursor-pointer"
-          onDragOver={(e) => e.preventDefault()}
+          className={`border-2 border-dashed rounded-xl p-8 text-center mb-6 transition-all cursor-pointer ${isDragging ? 'border-primary-500 bg-primary-50 scale-[1.02]' : 'border-gray-200 hover:border-primary-400'}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
           onDrop={(e) => {
             e.preventDefault();
+            setIsDragging(false);
             const file = e.dataTransfer.files[0];
             if (file && file.name.endsWith('.zip')) {
-              handleImportSkill(file);
+              setPendingImportFile(file);
+            } else {
+              message.error('请上传 .zip 格式的文件');
             }
           }}
           onClick={() => {
+            if (pendingImportFile) return;
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.zip';
             input.onchange = (e) => {
               const file = (e.target as HTMLInputElement).files?.[0];
-              if (file) handleImportSkill(file);
+              if (file) setPendingImportFile(file);
             };
             input.click();
           }}
         >
-          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">将 .zip 文件拖放到此处，或 <span className="text-primary-600 cursor-pointer">浏览文件</span></p>
+          {pendingImportFile ? (
+            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
+              <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mb-4">
+                <FileArchive className="w-8 h-8 text-primary-600" />
+              </div>
+              <p className="text-sm font-bold text-gray-900 mb-1">{pendingImportFile.name}</p>
+              <p className="text-xs text-gray-400">{(pendingImportFile.size / 1024).toFixed(1)} KB</p>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setPendingImportFile(null); }}
+                className="mt-4 text-xs text-red-500 hover:text-red-600 font-medium"
+              >
+                更换文件
+              </button>
+            </div>
+          ) : (
+            <>
+              <Upload className={`w-8 h-8 mx-auto mb-2 transition-transform ${isDragging ? 'scale-110 text-primary-600' : 'text-gray-400'}`} />
+              <p className="text-sm text-gray-600">将 .zip 文件拖放到此处，或 <span className="text-primary-600 cursor-pointer">浏览文件</span></p>
+            </>
+          )}
         </div>
         <div className="flex justify-end gap-3">
-          <button onClick={() => setIsImportModalOpen(false)} className="px-4 py-2 text-gray-600">取消</button>
+          <button onClick={() => { setIsImportModalOpen(false); setPendingImportFile(null); }} className="px-4 py-2 text-gray-600">取消</button>
+          <button 
+            onClick={() => pendingImportFile && handleImportSkill(pendingImportFile)}
+            className={`px-6 py-2 rounded-lg transition-all ${pendingImportFile ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+            disabled={!pendingImportFile}
+          >
+            确认导入
+          </button>
         </div>
       </Modal>
+
+      {/* Rename Modal */}
+      <AntModal
+        title={renameTarget?.item.is_dir ? "重命名文件夹" : "重命名文件"}
+        open={isRenameModalOpen}
+        onOk={handleConfirmRename}
+        onCancel={() => setIsRenameModalOpen(false)}
+        okText="确认"
+        cancelText="取消"
+        centered
+        width={400}
+      >
+        <div className="py-4">
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">新名称</label>
+          <Input 
+            value={newName} 
+            onChange={(e) => setNewName(e.target.value)} 
+            placeholder="请输入新名称"
+            onPressEnter={handleConfirmRename}
+            autoFocus
+          />
+        </div>
+      </AntModal>
     </div>
   );
 };
