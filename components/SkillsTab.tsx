@@ -185,7 +185,7 @@ const SkillNode: React.FC<{
               </Tooltip>
               <div className="flex items-center gap-2">
                 <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">
-                  SKILL ROOT {tree ? `· ${countFiles(tree)} 个文件` : (skill as any).file_count !== undefined ? `· ${(skill as any).file_count} 个文件` : ''}
+                  {tree ? `${countFiles(tree)} 个文件` : (skill as any).file_count !== undefined ? `${(skill as any).file_count} 个文件` : '0 个文件'}
                 </p>
                 {loading && <div className="w-2.5 h-2.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />}
               </div>
