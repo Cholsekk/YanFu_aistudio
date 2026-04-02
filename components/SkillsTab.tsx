@@ -294,6 +294,14 @@ const SkillsTab: React.FC = () => {
     getSkillList().then(res => {
       if (res.data?.list) {
         setSkills(res.data.list);
+        // Pre-fetch all trees to get file counts for the root nodes
+        res.data.list.forEach(skill => {
+          getFileTree(skill.id).then(treeRes => {
+            if (treeRes.data) {
+              setSkillTrees(prev => ({ ...prev, [skill.id]: treeRes.data }));
+            }
+          }).catch(err => console.error(`Failed to fetch tree for skill ${skill.id}:`, err));
+        });
       }
     });
   };
