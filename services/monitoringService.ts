@@ -323,6 +323,12 @@ export const monitoringService = {
   updateAppSiteConfig: (appId: string, params: any) => 
     apiService.post<App>(`/apps/${appId}/site`, params),
 
+  updateAppSiteStatus: (appId: string, enable: boolean) =>
+    apiService.post<App>(`/apps/${appId}/site-enable`, { enable_site: enable }),
+
+  updateAppApiStatus: (appId: string, enable: boolean) =>
+    apiService.post<App>(`/apps/${appId}/api-enable`, { enable_api: enable }),
+
   updateAppSiteAccessToken: (appId: string) =>
     apiService.post<UpdateAppSiteCodeResponse>(`/apps/${appId}/site/access-token-reset`),
 

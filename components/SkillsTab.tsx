@@ -26,15 +26,15 @@ const FileTreeItem: React.FC<{
   selectedFileId: string | null;
   onRename: (skillId: string, item: FileNode) => void;
   onDelete: (skillId: string, tree_id: string) => void;
-  onCreate: (skillId: string, parent_id: string, is_dir: boolean, name: string) => void;
+  onCreate: (skillId: string, parent_id: string, is_dir: boolean, parentNode: FileNode) => void;
 }> = ({ item, skillId, depth = 0, onSelectFile, selectedFileId, onRename, onDelete, onCreate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isSelected = selectedFileId === item.id;
 
   const menuItems: MenuProps['items'] = [
     ...(item.is_dir ? [
-      { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, false, 'new_file.txt') },
-      { key: 'new_folder', label: '新建文件夹', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, true, 'new_folder') },
+      { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, false, item) },
+      { key: 'new_folder', label: '新建文件夹', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, true, item) },
       { type: 'divider' as const }
     ] : []),
     { key: 'rename', label: '重命名', icon: <Pencil className="w-3.5 h-3.5" />, onClick: () => onRename(skillId, item) },
@@ -70,7 +70,7 @@ const FileTreeItem: React.FC<{
               <Tooltip title="新建文件" arrow={false}>
                 <button 
                   className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
-                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, false, 'new_file.txt'); }}
+                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, false, item); }}
                 >
                   <FilePlus className="w-3.5 h-3.5" />
                 </button>
@@ -78,7 +78,7 @@ const FileTreeItem: React.FC<{
               <Tooltip title="新建文件夹" arrow={false}>
                 <button 
                   className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
-                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, true, 'new_folder'); }}
+                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, true, item); }}
                 >
                   <FolderPlus className="w-3.5 h-3.5" />
                 </button>
@@ -113,19 +113,55 @@ const FileTreeItem: React.FC<{
   );
 };
 
+const countFiles = (node: FileNode): number => {
+  let count = 0;
+  if (!node.is_dir) count += 1;
+  if (node.children) {
+    for (const child of node.children) {
+      count += countFiles(child);
+    }
+  }
+  return count;
+};
+
 const SkillNode: React.FC<{
   skill: SkillListItem;
   onSelectFile: (file: FileNode, skillId: string) => void;
   selectedFileId: string | null;
   onRename: (skillId: string, item: FileNode | { id: string; name: string; is_dir: boolean }) => void;
   onDelete: (skillId: string, tree_id: string, isRoot?: boolean) => void;
-  onCreate: (skillId: string, parent_id: string, is_dir: boolean, name: string) => void;
+  onCreate: (skillId: string, parent_id: string, is_dir: boolean, parentNode: FileNode) => void;
   isExpanded: boolean;
   onToggle: (skillId: string) => void;
   tree: FileNode | null;
   loading: boolean;
   isSidebarCollapsed?: boolean;
 }> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed }) => {
+  const tooltipContent = (
+    <div>
+      <div className="font-bold">{skill.name}</div>
+      {skill.description && <div className="text-xs opacity-80 mt-1">{skill.description}</div>}
+    </div>
+  );
+
+  const handleCreateClick = async (e: React.MouseEvent, isDir: boolean) => {
+    e.stopPropagation();
+    let targetTree = tree;
+    if (!targetTree) {
+      try {
+        const res = await getFileTree(skill.id);
+        targetTree = res.data;
+        if (!isExpanded) onToggle(skill.id);
+      } catch (err) {
+        message.error('获取目录信息失败');
+        return;
+      }
+    }
+    if (targetTree) {
+      onCreate(skill.id, targetTree.id, isDir, targetTree);
+    }
+  };
+
   return (
     <div className="relative group/skill">
       <div
@@ -133,7 +169,7 @@ const SkillNode: React.FC<{
         onClick={() => !isSidebarCollapsed && onToggle(skill.id)}
       >
         <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
-          <Tooltip title={isSidebarCollapsed ? skill.name : ""} placement="right" arrow={false}>
+          <Tooltip title={isSidebarCollapsed ? tooltipContent : ""} placement="right" arrow={false}>
             <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-all ${isExpanded ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
               {isSidebarCollapsed ? (
                 <span className="text-xs font-bold">{skill.name.charAt(0).toUpperCase()}</span>
@@ -144,9 +180,13 @@ const SkillNode: React.FC<{
           </Tooltip>
           {!isSidebarCollapsed && (
             <div className="min-w-0 flex-grow">
-              <h4 className={`text-sm font-bold truncate ${isExpanded ? 'text-primary-900' : 'text-gray-800'}`} title={skill.name}>{skill.name}</h4>
+              <Tooltip title={tooltipContent} placement="top" arrow={false} mouseEnterDelay={0.5}>
+                <h4 className={`text-sm font-bold truncate ${isExpanded ? 'text-primary-900' : 'text-gray-800'}`}>{skill.name}</h4>
+              </Tooltip>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">SKILL ROOT</p>
+                <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">
+                  SKILL ROOT {tree ? `· ${countFiles(tree)} 个文件` : (skill as any).file_count !== undefined ? `· ${(skill as any).file_count} 个文件` : ''}
+                </p>
                 {loading && <div className="w-2.5 h-2.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />}
               </div>
             </div>
@@ -157,7 +197,7 @@ const SkillNode: React.FC<{
             <Tooltip title="新建文件" arrow={false}>
               <button 
                 className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-                onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', false, 'new_file.txt'); }}
+                onClick={(e) => handleCreateClick(e, false)}
               >
                 <FilePlus className="w-4 h-4" />
               </button>
@@ -165,7 +205,7 @@ const SkillNode: React.FC<{
             <Tooltip title="新建文件夹" arrow={false}>
               <button 
                 className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-                onClick={(e) => { e.stopPropagation(); if (!isExpanded) onToggle(skill.id); onCreate(skill.id, tree?.id || '', true, 'new_folder'); }}
+                onClick={(e) => handleCreateClick(e, true)}
               >
                 <FolderPlus className="w-4 h-4" />
               </button>
@@ -244,6 +284,11 @@ const SkillsTab: React.FC = () => {
   // Import Modal State
   const [isDragging, setIsDragging] = useState(false);
   const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+
+  // Create Node Modal State
+  const [isCreateNodeModalOpen, setIsCreateNodeModalOpen] = useState(false);
+  const [createNodeParams, setCreateNodeParams] = useState<{ skillId: string; parentId: string; isDir: boolean; parentNode: FileNode } | null>(null);
+  const [newNodeName, setNewNodeName] = useState('');
 
   const fetchSkills = () => {
     getSkillList().then(res => {
@@ -364,12 +409,32 @@ const SkillsTab: React.FC = () => {
     });
   };
 
-  const handleCreate = (skillId: string, parent_id: string, is_dir: boolean, name: string) => {
-    createNewNode(skillId, parent_id, is_dir, name).then(() => {
+  const handleCreate = (skillId: string, parent_id: string, is_dir: boolean, parentNode: FileNode) => {
+    setCreateNodeParams({ skillId, parentId: parent_id, isDir: is_dir, parentNode });
+    setNewNodeName('');
+    setIsCreateNodeModalOpen(true);
+  };
+
+  const handleConfirmCreateNode = () => {
+    if (!createNodeParams || !newNodeName) return;
+    
+    const { parentNode, isDir, skillId, parentId } = createNodeParams;
+    
+    // 检查重名
+    if (parentNode && parentNode.children) {
+      const exists = parentNode.children.some(child => child.name === newNodeName && child.is_dir === isDir);
+      if (exists) {
+        message.error(`当前目录下已存在同名${isDir ? '文件夹' : '文件'}`);
+        return;
+      }
+    }
+
+    createNewNode(skillId, parentId, isDir, newNodeName).then(() => {
       refreshSkillTree(skillId);
-      message.success(`新建${is_dir ? '文件夹' : '文件'}成功`);
+      message.success(`新建${isDir ? '文件夹' : '文件'}成功`);
+      setIsCreateNodeModalOpen(false);
     }).catch(err => {
-      message.error(`新建${is_dir ? '文件夹' : '文件'}失败: ` + (err.message || '未知错误'));
+      message.error(`新建${isDir ? '文件夹' : '文件'}失败: ` + (err.message || '未知错误'));
     });
   };
 
@@ -653,6 +718,29 @@ const SkillsTab: React.FC = () => {
             onChange={(e) => setNewName(e.target.value)} 
             placeholder="请输入新名称"
             onPressEnter={handleConfirmRename}
+            autoFocus
+          />
+        </div>
+      </AntModal>
+
+      {/* Create Node Modal */}
+      <AntModal
+        title={createNodeParams?.isDir ? "新建文件夹" : "新建文件"}
+        open={isCreateNodeModalOpen}
+        onOk={handleConfirmCreateNode}
+        onCancel={() => setIsCreateNodeModalOpen(false)}
+        okText="确认"
+        cancelText="取消"
+        centered
+        width={400}
+      >
+        <div className="py-4">
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">名称</label>
+          <Input 
+            value={newNodeName} 
+            onChange={(e) => setNewNodeName(e.target.value)} 
+            placeholder={`请输入${createNodeParams?.isDir ? '文件夹' : '文件'}名称`}
+            onPressEnter={handleConfirmCreateNode}
             autoFocus
           />
         </div>

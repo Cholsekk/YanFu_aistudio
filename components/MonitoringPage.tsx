@@ -98,8 +98,9 @@ const MonitoringPage = () => {
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [apiCopied, setApiCopied] = useState(false);
-  const [isServiceRunning, setIsServiceRunning] = useState(true);
-  const [isApiRunning, setIsApiRunning] = useState(true);
+  const [appDetail, setAppDetail] = useState<any>(null);
+  const [isServiceRunning, setIsServiceRunning] = useState(false);
+  const [isApiRunning, setIsApiRunning] = useState(false);
   const [metrics, setMetrics] = useState({
     dailyMessages: 0,
     dailyConversations: 0,
@@ -109,13 +110,14 @@ const MonitoringPage = () => {
     tps: 0,
     satisfactionRate: 0,
   });
-  const [appDetail, setAppDetail] = useState<any>(null);
 
   useEffect(() => {
     const fetchAppDetail = async () => {
       try {
         const detail = await monitoringService.getAppDetail(app.id);
         setAppDetail(detail);
+        setIsServiceRunning(detail.enable_site);
+        setIsApiRunning(detail.enable_api);
       } catch (error) {
         console.error('Failed to fetch app detail:', error);
       }
@@ -124,7 +126,7 @@ const MonitoringPage = () => {
   }, [app.id]);
 
   const appMode = appDetail ? ((appDetail.mode !== 'completion' && appDetail.mode !== 'workflow') ? 'chat' : appDetail.mode) : 'chat';
-  const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.code}` : "";
+  const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.access_token}` : "";
   const apiUrl = appDetail?.api_base_url || "";
 
   const fetchData = async (start?: string, end?: string) => {
@@ -240,7 +242,16 @@ const MonitoringPage = () => {
                 {isServiceRunning ? '运行中' : '已停用'}
               </span>
               <button 
-                onClick={() => setIsServiceRunning(!isServiceRunning)}
+                onClick={async () => {
+                  const newStatus = !isServiceRunning;
+                  try {
+                    await monitoringService.updateAppSiteStatus(app.id, newStatus);
+                    setIsServiceRunning(newStatus);
+                    message.success(newStatus ? '已开启公开访问' : '已关闭公开访问');
+                  } catch (err) {
+                    message.error('更新状态失败');
+                  }
+                }}
                 className={`w-10 h-5 rounded-full relative transition-colors ${isServiceRunning ? 'bg-blue-600' : 'bg-gray-300'}`}
               >
                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isServiceRunning ? 'right-1' : 'left-1'}`} />
@@ -295,7 +306,16 @@ const MonitoringPage = () => {
                 {isApiRunning ? '运行中' : '已停用'}
               </span>
               <button 
-                onClick={() => setIsApiRunning(!isApiRunning)}
+                onClick={async () => {
+                  const newStatus = !isApiRunning;
+                  try {
+                    await monitoringService.updateAppApiStatus(app.id, newStatus);
+                    setIsApiRunning(newStatus);
+                    message.success(newStatus ? '已开启 API 访问' : '已关闭 API 访问');
+                  } catch (err) {
+                    message.error('更新状态失败');
+                  }
+                }}
                 className={`w-10 h-5 rounded-full relative transition-colors ${isApiRunning ? 'bg-blue-600' : 'bg-gray-300'}`}
               >
                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isApiRunning ? 'right-1' : 'left-1'}`} />

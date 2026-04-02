@@ -87,6 +87,7 @@ import EmbedModal from './EmbedModal';
 import { ToolSelectorPopover } from './ToolSelectorPopover';
 import ToolAuthDrawer from './ToolAuthDrawer';
 import LogDetailModal from './LogDetailModal';
+import { monitoringService } from '../services/monitoringService';
 
 const { TextArea } = Input;
 
@@ -216,7 +217,7 @@ const AppConfig: React.FC = () => {
   const lastSavedConfigRef = useRef<string>('');
 
   const appMode = appDetail ? ((appDetail.mode !== 'completion' && appDetail.mode !== 'workflow') ? 'chat' : appDetail.mode) : 'chat';
-  const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.code}` : "";
+  const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.access_token}` : "";
 
   const [relativeTimeString, setRelativeTimeString] = useState<string>('');
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
@@ -468,6 +469,12 @@ const AppConfig: React.FC = () => {
       } else {
         // 5. 创建逻辑
         await apiService.post('/explore/apps', publishData);
+        // 自动开启公开访问
+        try {
+          await monitoringService.updateAppSiteStatus(appId, true);
+        } catch (e) {
+          console.error('Failed to enable app site automatically:', e);
+        }
         message.success('已成功发布到应用市场');
       }
 
@@ -1028,14 +1035,14 @@ const AppConfig: React.FC = () => {
       await apiService.updateAppModelConfig(appId, modelConfig);
       
       // Also update app basic info if needed
-      await apiService.updateApp(appId, {
-        name: app.name,
-        icon_type: app.iconType as any,
-        icon: app.icon,
-        icon_background: app.iconBgColor,
-        description: app.description,
-        config: getCurrentConfig()
-      } as any);
+      // await apiService.updateApp(appId, {
+      //   name: app.name,
+      //   icon_type: app.iconType as any,
+      //   icon: app.icon,
+      //   icon_background: app.iconBgColor,
+      //   description: app.description,
+      //   config: getCurrentConfig()
+      // } as any);
       
       message.success('配置发布成功！');
       setDraftUpdatedAt(Date.now());
