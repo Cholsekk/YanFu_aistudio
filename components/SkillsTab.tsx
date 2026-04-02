@@ -118,7 +118,7 @@ const SkillNode: React.FC<{
   onSelectFile: (file: FileNode, skillId: string) => void;
   selectedFileId: string | null;
   onRename: (skillId: string, item: FileNode | { id: string; name: string; is_dir: boolean }) => void;
-  onDelete: (skillId: string, tree_id: string) => void;
+  onDelete: (skillId: string, tree_id: string, isRoot?: boolean) => void;
   onCreate: (skillId: string, parent_id: string, is_dir: boolean, name: string) => void;
   isExpanded: boolean;
   onToggle: (skillId: string) => void;
@@ -173,7 +173,22 @@ const SkillNode: React.FC<{
             <Tooltip title="删除 Skill" arrow={false}>
               <button 
                 className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
-                onClick={(e) => { e.stopPropagation(); onDelete(skill.id, skill.id); }}
+                onClick={async (e) => { 
+                  e.stopPropagation(); 
+                  let targetTreeId = tree?.id;
+                  if (!targetTreeId) {
+                    try {
+                      const res = await getFileTree(skill.id);
+                      targetTreeId = res.data?.id;
+                    } catch (err) {
+                      message.error('获取目录信息失败');
+                      return;
+                    }
+                  }
+                  if (targetTreeId) {
+                    onDelete(skill.id, targetTreeId, true);
+                  }
+                }}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -319,7 +334,7 @@ const SkillsTab: React.FC = () => {
     });
   };
 
-  const handleDelete = (skillId: string, tree_id: string) => {
+  const handleDelete = (skillId: string, tree_id: string, isRoot: boolean = false) => {
     AntModal.confirm({
       title: '确认删除',
       content: '此操作不可撤销，确定要删除吗？',
@@ -328,14 +343,14 @@ const SkillsTab: React.FC = () => {
       cancelText: '取消',
       onOk: () => {
         deleteNode(skillId, tree_id).then(() => {
-          if (tree_id === skillId) {
+          if (isRoot) {
             fetchSkills();
           } else {
             refreshSkillTree(skillId);
           }
           
           // 如果删除的是当前正在预览的文件或所属的 Skill，则关闭预览面板
-          if (tree_id === skillId || (selectedFile && selectedFile.id === tree_id)) {
+          if (isRoot || (selectedFile && selectedFile.id === tree_id)) {
             setSelectedSkillId(null);
             setSelectedFile(null);
           }
