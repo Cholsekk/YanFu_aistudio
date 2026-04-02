@@ -1798,13 +1798,6 @@ export type ConversationListResponse = {
 }
 
 /**
- * 获取日志方法
- */
-export const fetchLogs = (url: string) =>
-  fetch(url).then<ConversationListResponse>(r => r.json())
-
-
-/**
  * 补全参数类型
  */
 export type CompletionParamType = typeof CompletionParams[number]

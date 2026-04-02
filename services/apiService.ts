@@ -131,6 +131,10 @@ class ApiService {
     return this.request(endpoint, { ...options, method: 'PUT', body });
   }
 
+  public async patch<T = any>(endpoint: string, body?: any, options: any = {}): Promise<T> {
+    return this.request(endpoint, { ...options, method: 'PATCH', body });
+  }
+
   public async del<T = any>(endpoint: string, body?: any, options: any = {}): Promise<T> {
     return this.request(endpoint, { ...options, method: 'DELETE', body });
   }
@@ -792,7 +796,7 @@ class ApiService {
   async updateDatasetSetting(datasetId: string, body: Partial<Pick<DataSet,
     'name' | 'description' | 'permission' | 'partial_member_list' | 'indexing_technique' | 'retrieval_model' | 'embedding_model' | 'embedding_model_provider'
   >>): Promise<DataSet> {
-    return this.request(`/datasets/${datasetId}`, { method: 'PATCH', body: body as any });
+    return this.patch(`/datasets/${datasetId}`, body);
   }
 
   async getApps(params: Record<string, any> = { page: 1, limit: 30, built_in: false }): Promise<any> {
@@ -1122,7 +1126,7 @@ class ApiService {
   }
 
   async updateTag(tagID: string, name: string): Promise<Tag> {
-    return this.request(`/tags/${tagID}`, { method: 'PATCH', body: { name } as any });
+    return this.patch(`/tags/${tagID}`, { name });
   }
 
   async deleteTag(tagID: string): Promise<void> {
