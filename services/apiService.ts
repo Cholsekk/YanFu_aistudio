@@ -139,6 +139,7 @@ class ApiService {
     return this.request(endpoint, { ...options, method: 'DELETE', body });
   }
 
+  //集成时注释掉，使用base导入的ssePost，this.ssePost调用 改成 ssePost
   public async ssePost(endpoint: string, options: any, callbacks: any) {
     const { onData, onCompleted, onThought, onFile, onError, getAbortController, onMessageEnd, onMessageReplace } = callbacks;
     const { url, headers, finalBody } = this.prepareRequest(endpoint, { ...options, method: 'POST' });
@@ -813,6 +814,9 @@ class ApiService {
       if (queryParams.limit) {
         exploreParams.append('limit', queryParams.limit.toString());
       }
+      if (queryParams.mode) {
+        exploreParams.append('mode', queryParams.mode);
+      }
       
       return this.get(`/explore/apps?${exploreParams.toString()}`);
     }
@@ -1278,11 +1282,11 @@ class ApiService {
   }
 
   async generateRule(body: Record<string, any>) {
-    return this.post<AutomaticRes>('/rule-generate', { body });
+    return this.post<AutomaticRes>('/rule-generate', { body });//集成时传 body 不传{body}
   }
 
   async generateRuleCode(body: Record<string, any>) {
-    return this.post<CodeGenRes>('/rule-code-generate', { body });
+    return this.post<CodeGenRes>('/rule-code-generate', { body });//集成时传 body 不传{body}
   }
 
   async fetchModelParams(providerName: string, modelId: string) {

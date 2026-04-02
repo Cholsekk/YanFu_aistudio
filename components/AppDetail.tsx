@@ -17,6 +17,9 @@ import WorkflowEditor from './WorkflowEditor';
 import MonitoringPage from './MonitoringPage';
 import LogsPage from './LogsPage';
 import AppConfig from './AppConfig';
+// 集成时使用👇
+// import WorkflowPage from '../../apps/app/(appDetailLayout)/[appId]/workflow/page';
+// import { useStore as useAppStore } from '@/app/components/app/store';
 
 interface AppDetailProps {
   app: AppItem;
@@ -24,6 +27,15 @@ interface AppDetailProps {
 }
 
 const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
+  // 集成时使用👇
+  // const setAppDetail = useAppStore(s => s.setAppDetail);
+  // const currentAppDetail = useAppStore(s => s.appDetail);
+
+  // // 同步设置 appDetail，确保在渲染前就有值
+  // if (app && currentAppDetail?.id !== app.id) {
+  //   setAppDetail(app as any);
+  // }
+
   const getTabs = () => {
     const type = app.type;
     const isWorkflowOrAdvancedChat = app.mode === 'workflow' || app.mode === 'advanced-chat';
@@ -131,6 +143,8 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
       return (
         <div className="h-full w-full">
           <WorkflowEditor />
+          {/* 集成时使用👇 */}
+          {/*<WorkflowPage /> */}
         </div>
       );
     }

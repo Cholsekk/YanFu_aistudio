@@ -213,6 +213,7 @@ const App: React.FC = () => {
           // For custom apps, we only need to flag it. 
           // The API service will only use tenant_id and limit.
           params.is_custom_app_list = true;
+          params.mode = 'custom';
           params.limit = 30;
         } else {
           params.built_in = false;
