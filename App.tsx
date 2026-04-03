@@ -1,4 +1,4 @@
-
+'use client'
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Header from './components/Header';
@@ -17,6 +17,8 @@ import ApiDocPage from './components/ApiDocPage';
 import { APP_TYPES } from './constants';
 import { AppItem, AppMode, Tag, MenuItem } from './types';
 import { apiService } from './services/apiService';
+import { setContextTenantId } from './utils/auth';
+// import { useAppContext } from '@/context/app-context';
 import { 
   Plus, 
   Search as SearchIcon, 
@@ -39,9 +41,18 @@ import { ConfirmDialog } from './components/ConfirmDialog';
 // import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';
 
 const App: React.FC = () => {
+  // const { currentWorkspace } = useAppContext();//集成时使用，独立运行时 AppContext 未提供
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Sync context tenant ID to apiService auth logic//集成时使用，独立运行时通过监听 localStorage 变化实现
+  // useEffect(() => {
+  //   if (currentWorkspace?.id) {
+  //     setContextTenantId(currentWorkspace.id);
+  //   }
+  // }, [currentWorkspace?.id]);
+
   const [activeNavTab, setActiveNavTab] = useState(() => {
     return sessionStorage.getItem('activeNavTab') || 'app-dev';
   });

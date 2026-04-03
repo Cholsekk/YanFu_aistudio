@@ -354,7 +354,9 @@ const SkillsTab: React.FC = () => {
       setIsEditing(false);
       message.success('保存成功');
     }).catch(err => {
-      message.error('保存失败: ' + (err.message || '未知错误'));
+      if(err.status !== 400){
+        message.error('保存失败: ' + (err.message || '未知错误'));
+      }
     });
   };
 

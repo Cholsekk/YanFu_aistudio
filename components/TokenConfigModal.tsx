@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Key, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Key, CheckCircle, XCircle, Loader2, Info } from 'lucide-react';
 import Modal from './Modal';
 import { apiService } from '../services/apiService';
 import { getTenantId, setTenantId as saveTenantId, getToken, setToken as saveToken } from '../utils/auth';
+// import { useAppContext } from '@/context/app-context';//集成时使用，独立运行时 AppContext 未提供
 
 interface TokenConfigModalProps {
   isOpen: boolean;
@@ -10,12 +11,20 @@ interface TokenConfigModalProps {
 }
 
 const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) => {
+  // const { currentWorkspace } = useAppContext();//集成时使用，独立运行时通过监听 localStorage 变化实现
   const [token, setToken] = useState(getToken() || '');
   const [tenantId, setTenantId] = useState(getTenantId() || '');
   const [baseUrl, setBaseUrl] = useState(localStorage.getItem('console_api_base_url') || 'http://192.168.1.201:5005');
   const [mockMode, setMockMode] = useState(localStorage.getItem('console_mock_mode') === 'true');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
+
+  // Update tenantId if currentWorkspace changes and we don't have a manual one//集成时使用，独立运行时通过监听 localStorage 变化实现
+  // useEffect(() => {
+  //   if (currentWorkspace?.id && !localStorage.getItem('console_tenant_id')) {
+  //     setTenantId(currentWorkspace.id);
+  //   }
+  // }, [currentWorkspace?.id]);
 
   const handleTestConnection = async () => {
     setTestStatus('testing');
@@ -131,7 +140,15 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">tenant_id (可选)</label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">tenant_id (可选)</label>
+            {/* 集成当前工作空间 */}
+            {/* {currentWorkspace?.id === tenantId && (
+              <span className="text-[10px] text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                <CheckCircle className="w-2.5 h-2.5" /> 已同步当前工作空间
+              </span>
+            )} */}
+          </div>
           <input 
             type="text"
             value={tenantId}
@@ -139,6 +156,9 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
             placeholder="请输入您的 tenant_id"
             className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-mono"
           />
+          <p className="text-[10px] text-gray-400 px-1">
+            提示：默认使用当前项目选中的工作空间 ID，配置后将优先使用配置值。
+          </p>
         </div>
 
         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">

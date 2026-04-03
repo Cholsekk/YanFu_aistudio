@@ -214,7 +214,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button
+                            {/* <button
                               className="opacity-0 group-hover:opacity-100 text-[10px] text-primary-500 hover:text-primary-600 transition-opacity"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -222,7 +222,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
                               }}
                             >
                               设为默认
-                            </button>
+                            </button> */}
                             {isSelected && (
                               <div className="w-5 h-5 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
                                 <Check className="w-3 h-3 text-primary-600" />
@@ -241,12 +241,12 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
               </div>
             )}
           </div>
-          <div className="mt-2 pt-2 border-t border-gray-100 shrink-0">
+          {/* <div className="mt-2 pt-2 border-t border-gray-100 shrink-0">
             <button className="w-full py-2 text-xs text-primary-600 font-bold hover:bg-primary-50 rounded-lg transition-all flex items-center justify-center gap-1.5">
               <Settings className="w-3.5 h-3.5" />
               模型管理与设置
             </button>
-          </div>
+          </div> */}
         </div>
       )}
     />
