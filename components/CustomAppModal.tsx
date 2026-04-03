@@ -7,6 +7,7 @@ import { AppItem, AppCategory, MenuItem } from '../types';
 import { getIcon } from '../constants';
 import { apiService } from '../services/apiService';
 import { message, Modal as AntModal } from 'antd';
+import { v4 as uuid4 } from 'uuid';
 
 interface CustomAppModalProps {
   isOpen: boolean;
@@ -181,17 +182,24 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     }
 
     try {
+      const isCustomApp = initialData?.type === '定制应用' || initialData?.mode === 'custom';
+      const updateId = isCustomApp ? initialData?.itemId : initialData?.id;
+      
+      // 确保 app_id 和 app.id 不为空，避免列表渲染时 key 重复导致无限请求
+      const appId = initialData?.id || uuid4();
+      const itemId = initialData?.itemId || uuid4();
+
       const customAppPayload = {
-        id: initialData?.itemId, // Outer ID for update
+        id: itemId, // Outer ID
         app: {
-          id: initialData?.id, // Inner ID
+          id: appId, // Inner ID
           name: formData.name,
           mode: 'custom',
           icon: formData.icon,
           icon_type: formData.iconType,
           url: formData.appUrl
         },
-        app_id: initialData?.id,
+        app_id: appId,
         description: formData.description,
         copyright: 'Yanfu.AI',
         privacy_policy: '',
@@ -211,21 +219,11 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d'
       };
 
-      const isCustomApp = initialData?.type === '定制应用' || initialData?.mode === 'custom';
-      const updateId = isCustomApp ? initialData?.itemId : initialData?.id;
-
       if (updateId) {
         await apiService.updateCustomApp(customAppPayload);
         message.success('应用更新成功');
       } else {
-        const createPayload = { ...customAppPayload };
-        // @ts-ignore
-        delete createPayload.id;
-        // @ts-ignore
-        delete createPayload.app.id;
-        // @ts-ignore
-        delete createPayload.app_id;
-        await apiService.createCustomApp(createPayload);
+        await apiService.createCustomApp(customAppPayload);
         message.success('应用创建成功');
       }
       

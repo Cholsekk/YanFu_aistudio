@@ -262,15 +262,22 @@ const App: React.FC = () => {
 
       if (Array.isArray(response)) {
         appList = response;
+        // Arrays are typically full results, so no more data unless specified otherwise
+        hasMoreData = false;
       } else if (response && Array.isArray(response.recommended_apps)) {
         appList = response.recommended_apps;
-        // If we need categories, we can extract them here: response.categories
+        hasMoreData = false;
       } else if (response && Array.isArray(response.data)) {
         appList = response.data;
-        hasMoreData = response.has_more || (activeFilterTab !== '全部' && appList.length > 0);
+        hasMoreData = !!response.has_more;
       } else if (response && Array.isArray(response.items)) {
         appList = response.items;
-        hasMoreData = (response.current_page < response.pages) || (activeFilterTab !== '全部' && appList.length > 0);
+        hasMoreData = (response.current_page < response.pages);
+      }
+
+      // Final safety check: if no apps were returned, we definitely don't have more
+      if (appList.length === 0) {
+        hasMoreData = false;
       }
 
       const mappedApps: AppItem[] = appList.map((item: any) => {
@@ -325,7 +332,11 @@ const App: React.FC = () => {
       });
       
       if (isLoadMore) {
-        setApps(prev => [...prev, ...mappedApps]);
+        setApps(prev => {
+          const existingIds = new Set(prev.map(app => app.id));
+          const newUniqueApps = mappedApps.filter(app => !existingIds.has(app.id));
+          return [...prev, ...newUniqueApps];
+        });
         setPage(currentPage);
       } else {
         setApps(mappedApps);
