@@ -124,13 +124,21 @@ const EditCustomToolModal: React.FC<EditCustomToolModalProps> = ({
         form: parameterForms[p.name] || p.form
       })) || [];
 
+      let finalIcon = icon;
+      if (typeof finalIcon === 'string' && finalIcon.includes('/file-preview')) {
+        const match = finalIcon.match(/\/files\/([^\/]+)\/file-preview/);
+        if (match && match[1]) {
+          finalIcon = match[1];
+        }
+      }
+
       const data = {
         ...tool,
         label: name || tool.label.zh_Hans,
         name: toolCallName,
         description: { ...tool.description, zh_Hans: description },
         labels: selectedLabels,
-        icon,
+        icon: finalIcon,
         team_credentials: {
           ...tool.team_credentials,
           privacy_policy: privacyPolicy

@@ -98,8 +98,16 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
 
   const handleSubmit = () => {
     if (!isFormValid) return;
-    const { is_dynamic_registration, client_id, client_secret, timeout, sse_read_timeout, server_url, ...rest } = formData;
+    const { is_dynamic_registration, client_id, client_secret, timeout, sse_read_timeout, server_url, icon, ...rest } = formData;
     
+    let finalIcon = icon;
+    if (typeof finalIcon === 'string' && finalIcon.includes('/file-preview')) {
+      const match = finalIcon.match(/\/files\/([^\/]+)\/file-preview/);
+      if (match && match[1]) {
+        finalIcon = match[1];
+      }
+    }
+
     const headerObject = headers.reduce((acc, header) => {
       if (header.key) {
         acc[header.key] = header.value;
@@ -112,6 +120,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
 
     onAdd({ 
       ...rest, 
+      icon: finalIcon,
       server_url: finalServerUrl,
       is_dynamic_registration,
       authentication: {

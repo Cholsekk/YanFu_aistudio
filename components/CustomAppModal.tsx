@@ -189,13 +189,21 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
       const appId = initialData?.id || uuid4();
       const itemId = initialData?.itemId || uuid4();
 
+      let finalIcon = formData.icon;
+      if (typeof finalIcon === 'string' && finalIcon.includes('/file-preview')) {
+        const match = finalIcon.match(/\/files\/([^\/]+)\/file-preview/);
+        if (match && match[1]) {
+          finalIcon = match[1];
+        }
+      }
+
       const customAppPayload = {
         id: itemId, // Outer ID
         app: {
           id: appId, // Inner ID
           name: formData.name,
           mode: 'custom',
-          icon: formData.icon,
+          icon: finalIcon,
           icon_type: formData.iconType,
           url: formData.appUrl
         },

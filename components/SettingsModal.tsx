@@ -38,6 +38,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, app, onU
 
   const handleSave = async () => {
     try {
+      let finalIcon = icon;
+      if (typeof finalIcon === 'string' && finalIcon.includes('/file-preview')) {
+        const match = finalIcon.match(/\/files\/([^\/]+)\/file-preview/);
+        if (match && match[1]) {
+          finalIcon = match[1];
+        }
+      }
+
       await monitoringService.updateAppSiteConfig(app.id, {
         title: name,
         description,
@@ -46,7 +54,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, app, onU
         copyright,
         privacy_policy: privacyPolicy,
         custom_disclaimer: customDisclaimer,
-        icon,
+        icon: finalIcon,
         icon_type: iconType
       });
       message.success('已更新');

@@ -71,6 +71,14 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       return;
     }
 
+    let finalIcon = formData.icon;
+    if (typeof finalIcon === 'string' && finalIcon.includes('/file-preview')) {
+      const match = finalIcon.match(/\/files\/([^\/]+)\/file-preview/);
+      if (match && match[1]) {
+        finalIcon = match[1];
+      }
+    }
+
     onCreate({
       ...(initialData ? { id: initialData.id } : {}),
       name: formData.name,
@@ -78,7 +86,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       typeLabel: formData.type,
       type: formData.type.includes('助手') ? '对话应用' : formData.type,
       mode: formData.type === '对话助手' ? (formData.subType === '对话助手工作流' ? 'advanced-chat' : 'chat') : undefined,
-      icon: formData.icon,
+      icon: finalIcon,
       iconType: formData.iconType,
       iconBgColor: formData.iconBgColor,
       tags: initialData?.tags || [],

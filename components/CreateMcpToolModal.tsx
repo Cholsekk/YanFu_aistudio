@@ -89,8 +89,8 @@ const CreateMcpToolModal: React.FC<CreateMcpToolModalProps> = ({
       let iconStr = typeof icon === 'string' ? icon : JSON.stringify(icon);
       const iconBackground = typeof icon === 'object' ? icon.background : '';
 
-      // Extract file ID from file-preview URL if iconType is image
-      if (iconType === 'image' && typeof iconStr === 'string' && iconStr.includes('/file-preview')) {
+      // Extract file ID from file-preview URL
+      if (typeof iconStr === 'string' && iconStr.includes('/file-preview')) {
         const match = iconStr.match(/\/files\/([^\/]+)\/file-preview/);
         if (match && match[1]) {
           iconStr = match[1];

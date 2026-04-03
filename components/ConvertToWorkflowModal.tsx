@@ -49,10 +49,18 @@ const ConvertToWorkflowModal: React.FC<ConvertToWorkflowModalProps> = ({ isOpen,
   };
 
   const handleStartMigration = () => {
+    let finalIcon = icon;
+    if (typeof finalIcon === 'string' && finalIcon.includes('/file-preview')) {
+      const match = finalIcon.match(/\/files\/([^\/]+)\/file-preview/);
+      if (match && match[1]) {
+        finalIcon = match[1];
+      }
+    }
+
     onConfirm({ 
       name, 
       deleteOriginal,
-      icon,
+      icon: finalIcon,
       iconType,
       iconBgColor
     });
