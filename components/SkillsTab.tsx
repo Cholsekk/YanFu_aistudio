@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Trash2, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen, FileArchive, Cpu, ChevronRight, ChevronDown } from 'lucide-react';
-import { Tooltip, Dropdown, Input, Modal as AntModal, message, type MenuProps } from 'antd';
-import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem } from '../lib/api/skills';
+import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Trash2, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen, FileArchive, Cpu, ChevronRight, ChevronDown, Filter } from 'lucide-react';
+import { Tooltip, Dropdown, Input, Modal as AntModal, message, type MenuProps, Switch } from 'antd';
+import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem, useSkill } from '../lib/api/skills';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -147,7 +147,8 @@ const SkillNode: React.FC<{
   tree: FileNode | null;
   loading: boolean;
   isSidebarCollapsed?: boolean;
-}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed }) => {
+  onToggleAvailable: (skillId: string, used: boolean) => void;
+}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed, onToggleAvailable }) => {
   const tooltipContent = (
     <div>
       <div className="font-bold">{skill.name}</div>
@@ -205,6 +206,13 @@ const SkillNode: React.FC<{
         </div>
         {!isSidebarCollapsed && (
           <div className="flex items-center gap-1 opacity-0 group-hover/skill:opacity-100 transition-opacity ml-2">
+            <Tooltip title="启用/禁用" arrow={false}>
+              <Switch
+                checked={skill.available === 'true'}
+                onChange={(checked) => onToggleAvailable(skill.id, checked)}
+                size="small"
+              />
+            </Tooltip>
             <Tooltip title="新建文件" arrow={false}>
               <button 
                 className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
@@ -280,6 +288,7 @@ const SkillsTab: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [skills, setSkills] = useState<SkillListItem[]>([]);
+  const [viewMode, setViewMode] = useState<'all' | 'available'>('all');
   const [skillTrees, setSkillTrees] = useState<Record<string, FileNode>>({});
   const [expandedSkills, setExpandedSkills] = useState<Record<string, boolean>>({});
   const [loadingTrees, setLoadingTrees] = useState<Record<string, boolean>>({});
@@ -329,6 +338,16 @@ const SkillsTab: React.FC = () => {
         }
         setLoadingTrees(prev => ({ ...prev, [skillId]: false }));
       });
+    }
+  };
+
+  const handleToggleAvailable = async (skillId: string, used: boolean) => {
+    try {
+      await useSkill(skillId, used);
+      message.success('Skill 状态已更新');
+      fetchSkills();
+    } catch (err) {
+      message.error('更新 Skill 状态失败');
     }
   };
 
@@ -486,7 +505,13 @@ const SkillsTab: React.FC = () => {
     });
   };
 
-  const filteredSkills = skills.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredSkills = useMemo(() => {
+    let filtered = skills;
+    if (viewMode === 'available') {
+      filtered = filtered.filter(skill => skill.available === 'true');
+    }
+    return filtered.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [skills, viewMode, searchTerm]);
 
   return (
     <div className="flex h-[calc(100vh-200px)] overflow-hidden relative border border-gray-200 rounded-2xl shadow-sm">
@@ -531,15 +556,26 @@ const SkillsTab: React.FC = () => {
         
         {!isSidebarCollapsed && (
           <div className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="搜索 Skill 或文件..." 
-                className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/10 transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="搜索 Skill 或文件..." 
+                  className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/10 transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Tooltip title={viewMode === 'all' ? "只看可用" : "查看全部"} arrow={false} placement="top">
+              <button 
+                  onClick={() => setViewMode(viewMode === 'all' ? 'available' : 'all')} 
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all border text-xs font-medium ${viewMode === 'available' ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  {viewMode === 'available' ? '仅可用' : '全部'}
+                </button>
+              </Tooltip>
             </div>
           </div>
         )}
@@ -556,6 +592,7 @@ const SkillsTab: React.FC = () => {
               onCreate={handleCreate}
               isExpanded={isSidebarCollapsed ? false : !!expandedSkills[skill.id]}
               onToggle={handleToggleSkill}
+              onToggleAvailable={handleToggleAvailable}
               tree={skillTrees[skill.id]}
               loading={!!loadingTrees[skill.id]}
               isSidebarCollapsed={isSidebarCollapsed}

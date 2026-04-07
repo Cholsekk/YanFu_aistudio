@@ -13,6 +13,8 @@ export interface SkillListItem {
   description: string | null;
   tenant_id: string;
   created_by: string;
+  me: boolean;
+  available: string;
 }
 
 export interface SkillListResponse {
@@ -46,10 +48,11 @@ export const addSkill = async (name: string, template: boolean): Promise<{ statu
   return apiService.post('/skills/add', { name, template });
 };
 
-export const getSkillList = async (page?: number, limit?: number): Promise<SkillListResponse> => {
+export const getSkillList = async (page?: number, limit?: number, only_me?: boolean): Promise<SkillListResponse> => {
   const params: any = {};
   if (page) params.page = page;
   if (limit) params.limit = limit;
+  if (only_me !== undefined) params.only_me = only_me;
   return apiService.get('/skills/list', params);
 };
 
@@ -87,4 +90,12 @@ export const uploadZip = async (file: File): Promise<{ status: string }> => {
 
 export const createNewNode = async (skill_id: string, parent_id: string, is_dir: boolean, name: string): Promise<{ status: string }> => {
   return apiService.post('/skills/tree/new', { skill_id, parent_id, is_dir, name });
+};
+
+export const useSkill = async (skill_id: string, used: boolean): Promise<{ skill_id: string; used: boolean }> => {
+  return apiService.post('/skills/use', { skill_id, used });
+};
+
+export const getAvailableSkills = async (): Promise<{ data: SkillListItem[]; status: string }> => {
+  return apiService.get('/skill/use');
 };
