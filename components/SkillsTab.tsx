@@ -17,7 +17,7 @@ const getFileIcon = (name: string, isDir: boolean, isOpen: boolean) => {
 };
 
 const getFileColor = (name: string, isDir: boolean) => {
-  if (isDir) return 'text-gray-900 font-semibold';
+  if (isDir) return 'text-amber-700';
   if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'text-blue-700';
   if (name.endsWith('.css')) return 'text-sky-700';
   if (name.endsWith('.json')) return 'text-yellow-700';
@@ -176,7 +176,7 @@ const SkillNode: React.FC<{
   return (
     <div className="relative group/skill">
       <div
-        className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-all ${isExpanded ? 'bg-gray-100' : ''} ${isSidebarCollapsed ? 'justify-center' : ''}`}
+        className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-all ${isExpanded ? 'bg-gray-100' : ''} ${isSidebarCollapsed ? 'justify-center bg-blue-50 text-blue-600' : ''}`}
         onClick={() => !isSidebarCollapsed && onToggle(skill.id)}
       >
         <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
