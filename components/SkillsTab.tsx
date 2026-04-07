@@ -44,7 +44,7 @@ const FileTreeItem: React.FC<{
   return (
     <div className="relative group">
       <div
-        className={`flex items-center justify-between py-1 px-1.5 hover:bg-gray-50 cursor-pointer text-xs rounded-lg transition-colors ${isSelected ? 'bg-primary-50 text-primary-700' : 'text-gray-600'}`}
+        className={`flex items-center justify-between py-1 px-1.5 cursor-pointer text-xs rounded-lg transition-colors ${isSelected ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
         style={{ paddingLeft: `${depth * 12 + 6}px` }}
         onClick={() => {
           if (!item.is_dir) onSelectFile(item, skillId);
@@ -165,23 +165,23 @@ const SkillNode: React.FC<{
   return (
     <div className="relative group/skill">
       <div
-        className={`flex items-center justify-between py-2.5 px-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-all border ${isExpanded ? 'bg-primary-50/30 border-primary-100 shadow-sm' : 'border-transparent'} ${isSidebarCollapsed ? 'justify-center' : ''}`}
+        className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-all ${isExpanded ? 'bg-gray-100' : ''} ${isSidebarCollapsed ? 'justify-center' : ''}`}
         onClick={() => !isSidebarCollapsed && onToggle(skill.id)}
       >
         <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
           <Tooltip title={isSidebarCollapsed ? tooltipContent : ""} placement="right" arrow={false}>
-            <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center transition-all ${isExpanded ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
+            <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all ${isExpanded ? 'bg-white shadow-sm' : 'bg-white'}`}>
               {isSidebarCollapsed ? (
                 <span className="text-xs font-bold">{skill.name.charAt(0).toUpperCase()}</span>
               ) : (
-                <Folder className="w-5 h-5" />
+                <Folder className={`w-4 h-4 ${isExpanded ? 'text-primary-600' : 'text-gray-500'}`} />
               )}
             </div>
           </Tooltip>
           {!isSidebarCollapsed && (
             <div className="min-w-0 flex-grow">
               <Tooltip title={tooltipContent} placement="top" arrow={false} mouseEnterDelay={0.5}>
-                <h4 className={`text-sm font-bold truncate ${isExpanded ? 'text-primary-900' : 'text-gray-800'}`}>{skill.name}</h4>
+                <h4 className={`text-sm font-medium truncate ${isExpanded ? 'text-gray-900' : 'text-gray-700'}`}>{skill.name}</h4>
               </Tooltip>
               <div className="flex items-center gap-2">
                 <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">
@@ -336,7 +336,6 @@ const SkillsTab: React.FC = () => {
 
   useEffect(() => {
     fetchSkills();
-    getFileTree().then(res => console.log('Project File Tree:', res)).catch(err => console.error('Failed to fetch project tree:', err));
   }, []);
 
   useEffect(() => {
@@ -482,7 +481,14 @@ const SkillsTab: React.FC = () => {
       {/* Sidebar: Unified Skills & File Explorer */}
       <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 flex-shrink-0 relative`}>
         <div className={`p-5 border-b border-gray-100 bg-white flex items-center justify-between ${isSidebarCollapsed ? 'flex-col gap-4' : ''}`}>
-          {!isSidebarCollapsed && <h3 className="font-bold text-gray-900 whitespace-nowrap">资源管理器</h3>}
+          {!isSidebarCollapsed && (
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-primary-50 rounded-lg">
+                <Cpu className="w-4 h-4 text-primary-600" />
+              </div>
+              <h3 className="font-bold text-gray-900 whitespace-nowrap">资源管理器</h3>
+            </div>
+          )}
           <div className={`flex ${isSidebarCollapsed ? 'flex-col' : 'gap-2'}`}>
             <Tooltip title="创建 Skill" arrow={false} placement={isSidebarCollapsed ? 'right' : 'top'}>
               <button 
