@@ -335,6 +335,7 @@ const SkillsTab: React.FC = () => {
   const handleSelectFile = (file: FileNode, skillId: string) => {
     setSelectedFile(file);
     setSelectedSkillId(skillId);
+    setIsEditing(false);
   };
 
   const refreshSkillTree = (skillId: string) => {
@@ -610,7 +611,7 @@ const SkillsTab: React.FC = () => {
                   </button>
                 )}
                 <button 
-                  onClick={() => setSelectedFile(null)} 
+                  onClick={() => { setSelectedFile(null); setIsEditing(false); }} 
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                 >
                   <X className="w-5 h-5" />
