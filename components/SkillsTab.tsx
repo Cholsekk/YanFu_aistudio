@@ -181,7 +181,7 @@ const SkillNode: React.FC<{
       >
         <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
           <Tooltip title={isSidebarCollapsed ? tooltipContent : ""} placement="right" arrow={false}>
-            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-all border ${isSidebarCollapsed ? 'bg-orange-50 border-orange-100' : isExpanded ? 'bg-primary-50 border-primary-200 shadow-sm' : 'bg-gray-100 border-gray-200'}`}>
+            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-all border ${isSidebarCollapsed ? 'bg-orange-50 border-orange-100' : isExpanded ? 'bg-orange-50 border-orange-200 shadow-sm' : 'bg-gray-100 border-gray-200'}`}>
               {isSidebarCollapsed ? (
                 <span className="text-sm font-bold text-orange-600">{skill.name.charAt(0).toUpperCase()}</span>
               ) : (
