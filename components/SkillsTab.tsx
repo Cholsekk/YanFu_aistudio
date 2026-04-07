@@ -11,6 +11,8 @@ const getFileIcon = (name: string, isDir: boolean, isOpen: boolean) => {
   if (name.endsWith('.tsx') || name.endsWith('.ts')) return <FileText className="w-4 h-4 text-blue-500" />;
   if (name.endsWith('.css')) return <FileText className="w-4 h-4 text-sky-400" />;
   if (name.endsWith('.json')) return <FileText className="w-4 h-4 text-yellow-500" />;
+  if (name.endsWith('.py')) return <FileText className="w-4 h-4 text-green-500" />;
+  if (name.endsWith('.md')) return <FileText className="w-4 h-4 text-purple-500" />;
   return <FileText className="w-4 h-4 text-gray-400" />;
 };
 
@@ -19,6 +21,8 @@ const getFileColor = (name: string, isDir: boolean) => {
   if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'text-blue-600';
   if (name.endsWith('.css')) return 'text-sky-600';
   if (name.endsWith('.json')) return 'text-yellow-600';
+  if (name.endsWith('.py')) return 'text-green-600';
+  if (name.endsWith('.md')) return 'text-purple-600';
   return 'text-gray-600';
 };
 
@@ -168,11 +172,11 @@ const SkillNode: React.FC<{
       >
         <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
           <Tooltip title={isSidebarCollapsed ? tooltipContent : ""} placement="right" arrow={false}>
-            <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all ${isExpanded ? 'bg-white shadow-sm' : 'bg-white'}`}>
+            <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all border ${isExpanded ? 'bg-primary-50 border-primary-200 shadow-sm' : 'bg-gray-100 border-gray-200'}`}>
               {isSidebarCollapsed ? (
-                <span className="text-xs font-bold">{skill.name.charAt(0).toUpperCase()}</span>
+                <span className="text-xs font-bold text-gray-600">{skill.name.charAt(0).toUpperCase()}</span>
               ) : (
-                <Folder className={`w-4 h-4 ${isExpanded ? 'text-primary-600' : 'text-gray-500'}`} />
+                <Folder className={`w-4 h-4 ${isExpanded ? 'text-primary-600' : 'text-gray-600'}`} />
               )}
             </div>
           </Tooltip>
