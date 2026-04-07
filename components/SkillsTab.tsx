@@ -205,7 +205,7 @@ const SkillNode: React.FC<{
           )}
         </div>
         {!isSidebarCollapsed && (
-          <div className="flex items-center gap-1 opacity-0 group-hover/skill:opacity-100 transition-opacity ml-2">
+          <div className="flex items-center gap-1 ml-2">
             <Tooltip title="启用/禁用" arrow={false}>
               <Switch
                 checked={skill.available === 'true'}
@@ -213,45 +213,56 @@ const SkillNode: React.FC<{
                 size="small"
               />
             </Tooltip>
-            <Tooltip title="新建文件" arrow={false}>
-              <button 
-                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-                onClick={(e) => handleCreateClick(e, false)}
-              >
-                <FilePlus className="w-4 h-4" />
-              </button>
-            </Tooltip>
-            <Tooltip title="新建文件夹" arrow={false}>
-              <button 
-                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
-                onClick={(e) => handleCreateClick(e, true)}
-              >
-                <FolderPlus className="w-4 h-4" />
-              </button>
-            </Tooltip>
-            <Tooltip title="删除 Skill" arrow={false}>
-              <button 
-                className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
-                onClick={async (e) => { 
-                  e.stopPropagation(); 
-                  let targetTreeId = tree?.id;
-                  if (!targetTreeId) {
-                    try {
-                      const res = await getFileTree(skill.id);
-                      targetTreeId = res.data?.id;
-                    } catch (err) {
-                      message.error('获取目录信息失败');
-                      return;
+            <div className="opacity-0 group-hover/skill:opacity-100 transition-opacity">
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'new-file',
+                      label: '新建文件',
+                      icon: <FilePlus className="w-4 h-4" />,
+                      onClick: (e) => { e.domEvent.stopPropagation(); handleCreateClick(e as any, false); }
+                    },
+                    {
+                      key: 'new-folder',
+                      label: '新建文件夹',
+                      icon: <FolderPlus className="w-4 h-4" />,
+                      onClick: (e) => { e.domEvent.stopPropagation(); handleCreateClick(e as any, true); }
+                    },
+                    {
+                      key: 'delete',
+                      label: '删除 Skill',
+                      icon: <Trash2 className="w-4 h-4" />,
+                      danger: true,
+                      onClick: async (e) => { 
+                        e.domEvent.stopPropagation(); 
+                        let targetTreeId = tree?.id;
+                        if (!targetTreeId) {
+                          try {
+                            const res = await getFileTree(skill.id);
+                            targetTreeId = res.data?.id;
+                          } catch (err) {
+                            message.error('获取目录信息失败');
+                            return;
+                          }
+                        }
+                        if (targetTreeId) {
+                          onDelete(skill.id, targetTreeId, true);
+                        }
+                      }
                     }
-                  }
-                  if (targetTreeId) {
-                    onDelete(skill.id, targetTreeId, true);
-                  }
+                  ]
                 }}
+                trigger={['click']}
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </Tooltip>
+                <button 
+                  className="p-1.5 hover:bg-white hover:shadow-sm rounded-lg text-gray-500 hover:text-primary-600 transition-all border border-transparent hover:border-gray-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+              </Dropdown>
+            </div>
           </div>
         )}
       </div>
