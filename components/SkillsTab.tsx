@@ -3,7 +3,24 @@ import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Tras
 import { Tooltip, Dropdown, Input, Modal as AntModal, message, type MenuProps } from 'antd';
 import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem } from '../lib/api/skills';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+// Helper to determine icon/color based on file type/name
+const getFileIcon = (name: string, isDir: boolean, isOpen: boolean) => {
+  if (isDir) return isOpen ? <Folder className="w-4 h-4 text-amber-500" /> : <Folder className="w-4 h-4 text-amber-400" />;
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return <FileText className="w-4 h-4 text-blue-500" />;
+  if (name.endsWith('.css')) return <FileText className="w-4 h-4 text-sky-400" />;
+  if (name.endsWith('.json')) return <FileText className="w-4 h-4 text-yellow-500" />;
+  return <FileText className="w-4 h-4 text-gray-400" />;
+};
+
+const getFileColor = (name: string, isDir: boolean) => {
+  if (isDir) return 'text-gray-800 font-semibold';
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'text-blue-600';
+  if (name.endsWith('.css')) return 'text-sky-600';
+  if (name.endsWith('.json')) return 'text-yellow-600';
+  return 'text-gray-600';
+};
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -60,11 +77,11 @@ const FileTreeItem: React.FC<{
             <div className="w-4" />
           )}
           {item.is_dir ? (
-            <Folder className={`w-4 h-4 flex-shrink-0 ${isOpen ? 'text-blue-500' : 'text-gray-400'}`} />
+            getFileIcon(item.name, true, isOpen)
           ) : (
-            <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            getFileIcon(item.name, false, false)
           )}
-          <span className={`truncate flex-grow ${isSelected ? 'font-bold' : ''}`} title={item.name}>
+          <span className={`truncate flex-grow ${isSelected ? 'font-bold' : ''} ${getFileColor(item.name, item.is_dir)}`} title={item.name}>
             {item.name}
           </span>
         </div>
@@ -599,8 +616,8 @@ const SkillsTab: React.FC = () => {
               ) : (
                 <SyntaxHighlighter
                   language="javascript"
-                  style={vscDarkPlus}
-                  customStyle={{ margin: 0, height: '100%', fontSize: '14px' }}
+                  style={oneLight}
+                  customStyle={{ margin: 0, height: '100%', fontSize: '14px', background: 'transparent' }}
                 >
                   {fileContent || `// 文件内容为空`}
                 </SyntaxHighlighter>
