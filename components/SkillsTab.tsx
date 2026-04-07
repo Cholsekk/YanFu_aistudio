@@ -44,8 +44,8 @@ const FileTreeItem: React.FC<{
   return (
     <div className="relative group">
       <div
-        className={`flex items-center justify-between py-1.5 px-2 hover:bg-gray-50 cursor-pointer text-sm rounded-lg transition-colors ${isSelected ? 'bg-primary-50 text-primary-700' : 'text-gray-600'}`}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        className={`flex items-center justify-between py-1 px-1.5 hover:bg-gray-50 cursor-pointer text-xs rounded-lg transition-colors ${isSelected ? 'bg-primary-50 text-primary-700' : 'text-gray-600'}`}
+        style={{ paddingLeft: `${depth * 12 + 6}px` }}
         onClick={() => {
           if (!item.is_dir) onSelectFile(item, skillId);
           else setIsOpen(!isOpen);
@@ -174,7 +174,7 @@ const SkillNode: React.FC<{
               {isSidebarCollapsed ? (
                 <span className="text-xs font-bold">{skill.name.charAt(0).toUpperCase()}</span>
               ) : (
-                <Cpu className="w-5 h-5" />
+                <Folder className="w-5 h-5" />
               )}
             </div>
           </Tooltip>
@@ -336,6 +336,7 @@ const SkillsTab: React.FC = () => {
 
   useEffect(() => {
     fetchSkills();
+    getFileTree().then(res => console.log('Project File Tree:', res)).catch(err => console.error('Failed to fetch project tree:', err));
   }, []);
 
   useEffect(() => {
@@ -481,7 +482,7 @@ const SkillsTab: React.FC = () => {
       {/* Sidebar: Unified Skills & File Explorer */}
       <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 flex-shrink-0 relative`}>
         <div className={`p-5 border-b border-gray-100 bg-white flex items-center justify-between ${isSidebarCollapsed ? 'flex-col gap-4' : ''}`}>
-          {!isSidebarCollapsed && <h3 className="font-bold text-gray-900 whitespace-nowrap">Skills 资源管理器</h3>}
+          {!isSidebarCollapsed && <h3 className="font-bold text-gray-900 whitespace-nowrap">资源管理器</h3>}
           <div className={`flex ${isSidebarCollapsed ? 'flex-col' : 'gap-2'}`}>
             <Tooltip title="创建 Skill" arrow={false} placement={isSidebarCollapsed ? 'right' : 'top'}>
               <button 
@@ -525,7 +526,7 @@ const SkillsTab: React.FC = () => {
           </div>
         )}
         
-        <div className={`flex-grow overflow-y-auto px-3 pb-4 space-y-1 custom-scrollbar ${isSidebarCollapsed ? 'items-center' : ''}`}>
+        <div className={`flex-grow overflow-y-auto px-2 pb-4 space-y-0.5 custom-scrollbar ${isSidebarCollapsed ? 'items-center' : ''}`}>
           {filteredSkills.map(skill => (
             <SkillNode 
               key={skill.id}
@@ -555,7 +556,7 @@ const SkillsTab: React.FC = () => {
       <div className="flex-grow flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden min-w-0">
         {selectedFile ? (
           <div className="flex flex-col h-full">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
+            <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between bg-white">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="p-2 bg-blue-50 rounded-xl">
                   <FileText className="w-4 h-4 text-blue-600" />
