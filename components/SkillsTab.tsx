@@ -7,23 +7,32 @@ import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 // Helper to determine icon/color based on file type/name
 const getFileIcon = (name: string, isDir: boolean, isOpen: boolean) => {
-  if (isDir) return isOpen ? <Folder className="w-4 h-4 text-amber-500" /> : <Folder className="w-4 h-4 text-amber-400" />;
-  if (name.endsWith('.tsx') || name.endsWith('.ts')) return <FileText className="w-4 h-4 text-blue-500" />;
-  if (name.endsWith('.css')) return <FileText className="w-4 h-4 text-sky-400" />;
-  if (name.endsWith('.json')) return <FileText className="w-4 h-4 text-yellow-500" />;
-  if (name.endsWith('.py')) return <FileText className="w-4 h-4 text-green-500" />;
-  if (name.endsWith('.md')) return <FileText className="w-4 h-4 text-purple-500" />;
-  return <FileText className="w-4 h-4 text-gray-400" />;
+  if (isDir) return isOpen ? <Folder className="w-4 h-4 text-amber-600" /> : <Folder className="w-4 h-4 text-amber-500" />;
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return <FileText className="w-4 h-4 text-blue-600" />;
+  if (name.endsWith('.css')) return <FileText className="w-4 h-4 text-sky-500" />;
+  if (name.endsWith('.json')) return <FileText className="w-4 h-4 text-yellow-600" />;
+  if (name.endsWith('.py')) return <FileText className="w-4 h-4 text-emerald-500" />;
+  if (name.endsWith('.md')) return <FileText className="w-4 h-4 text-indigo-500" />;
+  return <FileText className="w-4 h-4 text-gray-500" />;
 };
 
 const getFileColor = (name: string, isDir: boolean) => {
-  if (isDir) return 'text-gray-800 font-semibold';
-  if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'text-blue-600';
-  if (name.endsWith('.css')) return 'text-sky-600';
-  if (name.endsWith('.json')) return 'text-yellow-600';
-  if (name.endsWith('.py')) return 'text-green-600';
-  if (name.endsWith('.md')) return 'text-purple-600';
-  return 'text-gray-600';
+  if (isDir) return 'text-gray-900 font-semibold';
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'text-blue-700';
+  if (name.endsWith('.css')) return 'text-sky-700';
+  if (name.endsWith('.json')) return 'text-yellow-700';
+  if (name.endsWith('.py')) return 'text-emerald-700';
+  if (name.endsWith('.md')) return 'text-indigo-700';
+  return 'text-gray-700';
+};
+
+const getLanguage = (name: string) => {
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'typescript';
+  if (name.endsWith('.css')) return 'css';
+  if (name.endsWith('.json')) return 'json';
+  if (name.endsWith('.py')) return 'python';
+  if (name.endsWith('.md')) return 'markdown';
+  return 'javascript';
 };
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ isOpen, onClose, title, children }) => {
@@ -619,7 +628,7 @@ const SkillsTab: React.FC = () => {
                 />
               ) : (
                 <SyntaxHighlighter
-                  language="javascript"
+                  language={getLanguage(selectedFile.name)}
                   style={oneLight}
                   customStyle={{ margin: 0, height: '100%', fontSize: '14px', background: 'transparent' }}
                 >
