@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { NavTab } from '../types';
 import { NAV_TABS } from '../constants';
-import { Settings } from 'lucide-react';
+import { Settings, BookOpen } from 'lucide-react';
 import TokenConfigModal from './TokenConfigModal';
+import UserGuideModal from './UserGuideModal';
 
 interface HeaderProps {
   activeTab: string;
@@ -12,6 +13,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   React.useEffect(() => {
     const handleUnauthorized = () => {
@@ -45,7 +47,14 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsGuideModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm"
+          >
+            <BookOpen className="w-4 h-4" />
+            新手指引
+          </button>
           <button 
             onClick={() => setIsTokenModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all shadow-sm"
@@ -59,6 +68,11 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       <TokenConfigModal 
         isOpen={isTokenModalOpen}
         onClose={() => setIsTokenModalOpen(false)}
+      />
+      <UserGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+        activeTab={activeTab}
       />
     </header>
   );
