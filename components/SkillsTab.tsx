@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Download, Scissors, Pencil, Trash2, FilePlus, FolderPlus, FileUp, FolderUp, Cpu, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen, FileArchive, AlertCircle } from 'lucide-react';
-import { Tooltip, Dropdown, Menu, Input, Modal as AntModal, Button, message, type MenuProps } from 'antd';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Trash2, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen, FileArchive, Cpu, ChevronRight, ChevronDown } from 'lucide-react';
+import { Tooltip, Dropdown, Input, Modal as AntModal, message, type MenuProps } from 'antd';
 import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem } from '../lib/api/skills';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -42,54 +44,33 @@ const FileTreeItem: React.FC<{
   ];
 
   return (
-    <div className="relative group">
+    <div className="relative">
       <div
-        className={`flex items-center justify-between py-1 px-1.5 cursor-pointer text-xs rounded-lg transition-colors ${isSelected ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-        style={{ paddingLeft: `${depth * 12 + 6}px` }}
+        className={`flex items-center gap-1 py-0.5 cursor-pointer text-sm rounded transition-colors ${isSelected ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+        style={{ paddingLeft: `${depth * 12 + 4}px` }}
         onClick={() => {
           if (!item.is_dir) onSelectFile(item, skillId);
           else setIsOpen(!isOpen);
         }}
       >
-        <div className="flex items-center gap-2 flex-grow min-w-0">
+        <div className="flex items-center gap-1 flex-grow min-w-0">
+          {item.is_dir ? (
+            isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />
+          ) : (
+            <div className="w-4" />
+          )}
           {item.is_dir ? (
             <Folder className={`w-4 h-4 flex-shrink-0 ${isOpen ? 'text-blue-500' : 'text-gray-400'}`} />
           ) : (
             <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
           )}
-          <span 
-            className={`truncate flex-grow ${isSelected ? 'font-bold' : 'font-medium'}`} 
-            title={item.name}
-          >
+          <span className={`truncate flex-grow ${isSelected ? 'font-bold' : ''}`} title={item.name}>
             {item.name}
           </span>
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          {item.is_dir && (
-            <>
-              <Tooltip title="新建文件" arrow={false}>
-                <button 
-                  className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
-                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, false, item); }}
-                >
-                  <FilePlus className="w-3.5 h-3.5" />
-                </button>
-              </Tooltip>
-              <Tooltip title="新建文件夹" arrow={false}>
-                <button 
-                  className="p-1 hover:bg-gray-200 rounded-md text-gray-500 hover:text-primary-600 transition-colors"
-                  onClick={(e) => { e.stopPropagation(); onCreate(skillId, item.id, true, item); }}
-                >
-                  <FolderPlus className="w-3.5 h-3.5" />
-                </button>
-              </Tooltip>
-            </>
-          )}
           <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
-            <button 
-              className="p-1 hover:bg-gray-200 rounded-md text-gray-500 transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <button className="p-0.5 hover:bg-gray-200 rounded text-gray-500" onClick={(e) => e.stopPropagation()}>
               <MoreHorizontal className="w-3.5 h-3.5" />
             </button>
           </Dropdown>
@@ -477,9 +458,9 @@ const SkillsTab: React.FC = () => {
   const filteredSkills = skills.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-200px)] overflow-hidden relative">
+    <div className="flex h-[calc(100vh-200px)] overflow-hidden relative border border-gray-200 rounded-2xl shadow-sm">
       {/* Sidebar: Unified Skills & File Explorer */}
-      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 flex-shrink-0 relative`}>
+      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-80'} flex flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-300 flex-shrink-0 relative`}>
         <div className={`p-5 border-b border-gray-100 bg-white flex items-center justify-between ${isSidebarCollapsed ? 'flex-col gap-4' : ''}`}>
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-2">
@@ -559,7 +540,7 @@ const SkillsTab: React.FC = () => {
       </div>
 
       {/* Main Content: Editor (Clean Light Theme) */}
-      <div className="flex-grow flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden min-w-0">
+      <div className="flex-grow flex flex-col bg-white overflow-hidden min-w-0">
         {selectedFile ? (
           <div className="flex flex-col h-full">
             <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between bg-white">
@@ -616,10 +597,17 @@ const SkillsTab: React.FC = () => {
                   spellCheck={false}
                 />
               ) : (
-                <pre className="w-full h-full p-8 font-mono text-sm text-gray-700 bg-white overflow-auto whitespace-pre-wrap leading-relaxed">
+                <SyntaxHighlighter
+                  language="javascript"
+                  style={vscDarkPlus}
+                  customStyle={{ margin: 0, height: '100%', fontSize: '14px' }}
+                >
                   {fileContent || `// 文件内容为空`}
-                </pre>
+                </SyntaxHighlighter>
               )}
+              <div className="absolute bottom-2 right-4 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
+                行: {fileContent.split('\n').length} | 字数: {fileContent.length}
+              </div>
             </div>
           </div>
         ) : (
