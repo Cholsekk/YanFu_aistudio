@@ -176,14 +176,14 @@ const SkillNode: React.FC<{
   return (
     <div className="relative group/skill">
       <div
-        className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-all ${isExpanded ? 'bg-gray-100' : ''} ${isSidebarCollapsed ? 'justify-center bg-blue-50 text-blue-600' : ''}`}
+        className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-all ${isExpanded ? 'bg-gray-100' : ''} ${isSidebarCollapsed ? 'justify-center' : ''}`}
         onClick={() => !isSidebarCollapsed && onToggle(skill.id)}
       >
         <div className={`flex items-center gap-3 min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'flex-grow'}`}>
           <Tooltip title={isSidebarCollapsed ? tooltipContent : ""} placement="right" arrow={false}>
-            <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center transition-all border ${isExpanded ? 'bg-primary-50 border-primary-200 shadow-sm' : 'bg-gray-100 border-gray-200'}`}>
+            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center transition-all border ${isSidebarCollapsed ? 'bg-orange-50 border-orange-100' : isExpanded ? 'bg-primary-50 border-primary-200 shadow-sm' : 'bg-gray-100 border-gray-200'}`}>
               {isSidebarCollapsed ? (
-                <span className="text-xs font-bold text-gray-600">{skill.name.charAt(0).toUpperCase()}</span>
+                <span className="text-sm font-bold text-orange-600">{skill.name.charAt(0).toUpperCase()}</span>
               ) : (
                 <Folder className={`w-4 h-4 ${isExpanded ? 'text-primary-600' : 'text-gray-600'}`} />
               )}
