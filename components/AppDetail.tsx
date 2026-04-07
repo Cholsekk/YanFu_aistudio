@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { AppItem } from '../types';
 import { AppDevHubContext } from '../context/AppContext';
 import { Tooltip } from 'antd';
+import { getIcon } from '../constants';
 import { 
   ChevronLeft, 
   Settings, 
@@ -91,39 +92,85 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
 
   const renderAppIcon = () => {
     const containerClass = "w-10 h-10 flex-shrink-0";
-    const iconClass = "w-6 h-6";
+    const iconClass = "text-xl";
+    const defaultIcon = '/sys_icons/Component 156.svg';
 
-    if (app.iconType === 'sys-icon') {
-      return (
-        <div className={`${containerClass} bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm`}>
-          <img 
-            src={`/sys_icons/Component ${app.icon}.svg`} 
-            alt={app.name} 
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg'; // Fallback
-            }}
-          />
-        </div>
-      );
-    }
+    const isEmoji = (str: string) => {
+      const emojiRegex = /\p{Emoji}/u;
+      return emojiRegex.test(str);
+    };
 
+    // Case 1: iconType is 'image'
     if (app.iconType === 'image') {
       const src = app.icon_url || app.icon;
+      // If src is an emoji (like '🤖') or missing, fallback to default system icon
+      if (!src || isEmoji(src)) {
+        return (
+          <div className={`${containerClass} bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm`}>
+            <img 
+              src={defaultIcon} 
+              alt={app.name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        );
+      }
       return (
         <img 
-          src={src || undefined} 
+          src={src} 
           alt={app.name} 
-          className={`${containerClass} rounded-xl object-cover border border-gray-100 shadow-sm`} 
+          className={`${containerClass} rounded-xl object-cover border border-gray-100 shadow-sm`}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = defaultIcon;
+          }}
         />
       );
     }
 
+    // Case 2: iconType is 'icon'
+    if (app.iconType === 'icon') {
+      if (app.icon && isEmoji(app.icon)) {
+        return (
+          <div className={`${containerClass} ${app.iconBgColor || 'bg-primary-100'} rounded-xl flex items-center justify-center border border-gray-100 shadow-sm`}>
+            <span className={iconClass} role="img" aria-label="app icon">
+              {app.icon}
+            </span>
+          </div>
+        );
+      }
+      
+      // If it's a UUID (length > 20), it's invalid for 'icon' type, fallback to default system icon
+      if (app.icon && app.icon.length > 20) {
+        return (
+          <div className={`${containerClass} bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm`}>
+            <img 
+              src={defaultIcon} 
+              alt={app.name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        );
+      }
+
+      // Otherwise, assume it's a Lucide icon name
+      return (
+        <div className={`${containerClass} ${app.iconBgColor || 'bg-primary-600'} rounded-xl text-white flex items-center justify-center border border-gray-100 shadow-sm`}>
+          {getIcon(app.icon || 'Bot', iconClass)}
+        </div>
+      );
+    }
+
+    // Case 3: iconType is 'sys-icon' or missing/invalid
     return (
-      <div className={`${containerClass} ${app.iconBgColor || 'bg-primary-100'} rounded-xl flex items-center justify-center border border-gray-100 shadow-sm`}>
-        <span className={iconClass} role="img" aria-label="app icon">
-          {app.icon || '🤖'}
-        </span>
+      <div className={`${containerClass} bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm`}>
+        <img 
+          src={app.icon ? `/sys_icons/Component ${app.icon}.svg` : defaultIcon} 
+          alt={app.name} 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = defaultIcon;
+          }}
+        />
       </div>
     );
   };

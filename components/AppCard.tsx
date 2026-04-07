@@ -132,37 +132,101 @@ const AppCard: React.FC<AppCardProps> = ({
     const containerClass = isList ? "w-8 h-8 flex-shrink-0" : "w-11 h-11 flex-shrink-0";
     const iconClass = isList ? "w-5 h-5" : "w-6 h-6";
     const paddingClass = isList ? "p-1.5" : "p-2.5";
+    const defaultIcon = '/sys_icons/Component 156.svg';
 
-    if (app.iconType === 'sys-icon') {
+    const isEmoji = (str: string) => {
+      const emojiRegex = /\p{Emoji}/u;
+      return emojiRegex.test(str);
+    };
+
+    // Case 1: iconType is 'image'
+    if (app.iconType === 'image') {
+      const src = app.icon_url || app.icon;
+      if (!src || isEmoji(src)) {
+        return (
+          <div className={`${containerClass} bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100`}>
+            <img 
+              src={defaultIcon} 
+              alt={app.name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        );
+      }
       return (
-        <div className={`${containerClass} bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden`}>
+        <img 
+          src={src} 
+          alt={app.name} 
+          className={`${containerClass} rounded-lg object-cover border border-gray-100`} 
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = defaultIcon;
+          }}
+        />
+      );
+    }
+
+    // Case 2: iconType is 'icon'
+    if (app.iconType === 'icon') {
+      if (app.icon && isEmoji(app.icon)) {
+        return (
+          <div className={`${containerClass} ${app.iconBgColor || 'bg-primary-100'} rounded-lg flex items-center justify-center border border-gray-100`}>
+            <span className={iconClass} role="img" aria-label="app icon">
+              {app.icon}
+            </span>
+          </div>
+        );
+      }
+      
+      // If it's a UUID (length > 20), it's invalid for 'icon' type, fallback to default system icon
+      if (app.icon && app.icon.length > 20) {
+        return (
+          <div className={`${containerClass} bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100`}>
+            <img 
+              src={defaultIcon} 
+              alt={app.name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        );
+      }
+
+      // Otherwise, assume it's a Lucide icon name
+      return (
+        <div className={`${app.iconBgColor || 'bg-primary-600'} ${paddingClass} rounded-lg text-white flex items-center justify-center`}>
+          {getIcon(app.icon || 'Bot', iconClass)}
+        </div>
+      );
+    }
+
+    // Case 3: iconType is 'sys-icon' or missing/invalid
+    // If iconType is missing, we treat it as sys-icon and try to load it. 
+    // If it fails (e.g. it's a UUID or invalid), it will fallback to defaultIcon.
+    // However, if it's explicitly a Lucide icon (e.g. from older data), we might want to support it.
+    // But the user requested: "icon_type没有正确返回类型... 让它显示系统的默认图标Component 156.svg"
+    // So we will just use the sys-icon logic.
+    if (!app.iconType || app.iconType === 'sys-icon') {
+      return (
+        <div className={`${containerClass} bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100`}>
           <img 
-            src={`/sys_icons/Component ${app.icon}.svg`} 
+            src={app.icon ? `/sys_icons/Component ${app.icon}.svg` : defaultIcon} 
             alt={app.name} 
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/sys_icons/Component 156.svg'; // Fallback
+              (e.target as HTMLImageElement).src = defaultIcon;
             }}
           />
         </div>
       );
     }
 
-    if (app.iconType === 'image') {
-      const src = app.icon_url || app.icon;
-      return (
-        <img 
-          src={src || undefined} 
-          alt={app.name} 
-          className={`${containerClass} rounded-lg object-cover border border-gray-100`} 
-        />
-      );
-    }
-
-    // Default 'icon' (Lucide)
+    // Default fallback for any other unknown iconType
     return (
-      <div className={`${app.iconBgColor} ${paddingClass} rounded-lg text-white flex items-center justify-center`}>
-        {getIcon(app.icon, iconClass)}
+      <div className={`${containerClass} bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100`}>
+        <img 
+          src={defaultIcon} 
+          alt={app.name} 
+          className="w-full h-full object-cover"
+        />
       </div>
     );
   };
