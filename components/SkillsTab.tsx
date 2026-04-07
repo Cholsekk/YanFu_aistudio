@@ -208,7 +208,7 @@ const SkillNode: React.FC<{
           <div className="flex items-center gap-1 ml-2">
             <Tooltip title="启用/禁用" arrow={false}>
               <Switch
-                checked={skill.available === 'true'}
+                checked={skill.available === 'true' || skill.available === true}
                 onChange={(checked) => onToggleAvailable(skill.id, checked)}
                 size="small"
               />
@@ -322,7 +322,7 @@ const SkillsTab: React.FC = () => {
   const [newNodeName, setNewNodeName] = useState('');
 
   const fetchSkills = () => {
-    getSkillList().then(res => {
+    getSkillList(viewMode === 'available' ? { only_me: false } : {}).then(res => {
       if (res.data?.list) {
         setSkills(res.data.list);
         // Pre-fetch all trees to get file counts for the root nodes
@@ -336,6 +336,10 @@ const SkillsTab: React.FC = () => {
       }
     });
   };
+
+  useEffect(() => {
+    fetchSkills();
+  }, [viewMode]);
 
   const handleToggleSkill = (skillId: string) => {
     const isNowExpanded = !expandedSkills[skillId];
@@ -375,10 +379,6 @@ const SkillsTab: React.FC = () => {
       }
     });
   };
-
-  useEffect(() => {
-    fetchSkills();
-  }, []);
 
   useEffect(() => {
     if (selectedFile && selectedSkillId) {
