@@ -185,14 +185,14 @@ const SkillNode: React.FC<{
               {isSidebarCollapsed ? (
                 <span className="text-sm font-bold text-orange-600">{skill.name.charAt(0).toUpperCase()}</span>
               ) : (
-                <Folder className={`w-4 h-4 ${isExpanded ? 'text-primary-600' : 'text-gray-600'}`} />
+                <Folder className={`w-4 h-4 ${isExpanded ? 'text-orange-600' : 'text-gray-600'}`} />
               )}
             </div>
           </Tooltip>
           {!isSidebarCollapsed && (
             <div className="min-w-0 flex-grow">
               <Tooltip title={tooltipContent} placement="top" arrow={false} mouseEnterDelay={0.5}>
-                <h4 className={`text-sm font-medium truncate ${isExpanded ? 'text-gray-900' : 'text-gray-700'}`}>{skill.name}</h4>
+                <h4 className={`text-sm font-medium truncate ${isExpanded ? 'text-orange-900' : 'text-gray-700'}`}>{skill.name}</h4>
               </Tooltip>
               <div className="flex items-center gap-2">
                 <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">
