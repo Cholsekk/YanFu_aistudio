@@ -97,5 +97,5 @@ export const useSkill = async (skill_id: string, used: boolean): Promise<{ statu
 };
 
 export const getAvailableSkills = async (): Promise<{ data: SkillListItem[]; status: string }> => {
-  return apiService.get('/skill/use');
+  return apiService.get('/skills/use');
 };

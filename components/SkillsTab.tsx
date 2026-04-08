@@ -65,18 +65,18 @@ const FileTreeItem: React.FC<{
 
   const menuItems: MenuProps['items'] = [
     ...(item.is_dir ? [
-      { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, false, item) },
-      { key: 'new_folder', label: '新建文件夹', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: () => onCreate(skillId, item.id, true, item) },
+      { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); onCreate(skillId, item.id, false, item); } },
+      { key: 'new_folder', label: '新建文件夹', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); onCreate(skillId, item.id, true, item); } },
       { type: 'divider' as const }
     ] : []),
-    { key: 'rename', label: '重命名', icon: <Pencil className="w-3.5 h-3.5" />, onClick: () => onRename(skillId, item) },
-    { key: 'delete', label: '删除', icon: <Trash2 className="w-3.5 h-3.5" />, danger: true, onClick: () => onDelete(skillId, item.id) },
+    { key: 'rename', label: '重命名', icon: <Pencil className="w-3.5 h-3.5" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); onRename(skillId, item); } },
+    { key: 'delete', label: '删除', icon: <Trash2 className="w-3.5 h-3.5" />, danger: true, onClick: ({ domEvent }) => { domEvent.stopPropagation(); onDelete(skillId, item.id); } },
   ];
 
   return (
     <div className="relative">
       <div
-        className={`flex items-center gap-1 py-0.5 cursor-pointer text-sm rounded transition-colors ${isSelected ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+        className={`group flex items-center gap-1 py-0.5 cursor-pointer text-sm rounded transition-colors ${isSelected ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
         style={{ paddingLeft: `${depth * 12 + 4}px` }}
         onClick={() => {
           if (!item.is_dir) onSelectFile(item, skillId);
@@ -156,8 +156,10 @@ const SkillNode: React.FC<{
     </div>
   );
 
-  const handleCreateClick = async (e: React.MouseEvent, isDir: boolean) => {
-    e.stopPropagation();
+  const handleCreateClick = async (e: any, isDir: boolean) => {
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
     let targetTree = tree;
     if (!targetTree) {
       try {
@@ -224,13 +226,13 @@ const SkillNode: React.FC<{
                       key: 'new-file',
                       label: '新建文件',
                       icon: <FilePlus className="w-4 h-4" />,
-                      onClick: (e) => { e.domEvent.stopPropagation(); handleCreateClick(e as any, false); }
+                      onClick: (e) => { e.domEvent.stopPropagation(); handleCreateClick(e.domEvent, false); }
                     },
                     {
                       key: 'new-folder',
                       label: '新建文件夹',
                       icon: <FolderPlus className="w-4 h-4" />,
-                      onClick: (e) => { e.domEvent.stopPropagation(); handleCreateClick(e as any, true); }
+                      onClick: (e) => { e.domEvent.stopPropagation(); handleCreateClick(e.domEvent, true); }
                     },
                     {
                       key: 'delete',
