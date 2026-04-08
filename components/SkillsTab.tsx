@@ -208,7 +208,7 @@ const SkillNode: React.FC<{
           <div className="flex items-center gap-1 ml-2">
             <Tooltip title="启用/禁用" arrow={false}>
               <Switch
-                checked={skill.available === 'true' || skill.available === true}
+                checked={skill.available === 'true'}
                 onChange={(checked) => onToggleAvailable(skill.id, checked)}
                 size="small"
               />
@@ -299,34 +299,50 @@ const SkillsTab: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [skills, setSkills] = useState<SkillListItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'all' | 'available'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [skillCache, setSkillCache] = useState<Record<number, SkillListItem[]>>({});
   const [skillTrees, setSkillTrees] = useState<Record<string, FileNode>>({});
   const [expandedSkills, setExpandedSkills] = useState<Record<string, boolean>>({});
   const [loadingTrees, setLoadingTrees] = useState<Record<string, boolean>>({});
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  
+
   // Rename Modal State
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ skillId: string; item: { id: string; name: string; is_dir: boolean } } | null>(null);
   const [newName, setNewName] = useState('');
-
-  // Import Modal State
-  const [isDragging, setIsDragging] = useState(false);
-  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
 
   // Create Node Modal State
   const [isCreateNodeModalOpen, setIsCreateNodeModalOpen] = useState(false);
   const [createNodeParams, setCreateNodeParams] = useState<{ skillId: string; parentId: string; isDir: boolean; parentNode: FileNode } | null>(null);
   const [newNodeName, setNewNodeName] = useState('');
 
-  const fetchSkills = () => {
-    getSkillList(viewMode === 'available' ? { only_me: false } : {}).then(res => {
+  const fetchSkills = async (page: number, reset = false) => {
+    if (isLoadingMore || (!reset && !hasMore)) return;
+    
+    // Check cache
+    if (!reset && skillCache[page]) {
+      setSkills(prev => reset ? skillCache[page] : [...prev, ...skillCache[page]]);
+      return;
+    }
+
+    setIsLoadingMore(true);
+    try {
+      const res = await getSkillList(page, 10, viewMode === 'available' ? true : undefined);
       if (res.data?.list) {
-        setSkills(res.data.list);
+        const newList = res.data.list;
+        setSkillCache(prev => ({ ...prev, [page]: newList }));
+        setSkills(prev => reset ? newList : [...prev, ...newList]);
+        setHasMore(newList.length === 10);
+        
         // Pre-fetch all trees to get file counts for the root nodes
-        res.data.list.forEach(skill => {
+        newList.forEach(skill => {
           getFileTree(skill.id).then(treeRes => {
             if (treeRes.data) {
               setSkillTrees(prev => ({ ...prev, [skill.id]: treeRes.data }));
@@ -334,11 +350,19 @@ const SkillsTab: React.FC = () => {
           }).catch(err => console.error(`Failed to fetch tree for skill ${skill.id}:`, err));
         });
       }
-    });
+    } catch (err) {
+      console.error('Failed to fetch skills:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   useEffect(() => {
-    fetchSkills();
+    setSkills([]);
+    setSkillCache({});
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchSkills(1, true);
   }, [viewMode]);
 
   const handleToggleSkill = (skillId: string) => {
@@ -360,7 +384,7 @@ const SkillsTab: React.FC = () => {
     try {
       await useSkill(skillId, used);
       message.success('Skill 状态已更新');
-      fetchSkills();
+      fetchSkills(1, true);
     } catch (err) {
       message.error('更新 Skill 状态失败');
     }
@@ -422,7 +446,7 @@ const SkillsTab: React.FC = () => {
       }
 
       if (renameTarget.item.id === renameTarget.skillId) {
-        fetchSkills();
+        fetchSkills(1, true);
       }
       setIsRenameModalOpen(false);
       message.success('重命名成功');
@@ -442,7 +466,7 @@ const SkillsTab: React.FC = () => {
       onOk: () => {
         deleteNode(skillId, tree_id).then(() => {
           if (isRoot) {
-            fetchSkills();
+            fetchSkills(1, true);
           } else {
             refreshSkillTree(skillId);
           }
@@ -495,7 +519,7 @@ const SkillsTab: React.FC = () => {
     addSkill(newSkillName, false).then(() => {
       setIsCreateModalOpen(false);
       setNewSkillName('');
-      fetchSkills();
+      fetchSkills(1, true);
       message.success('创建 Skill 成功');
     }).catch(err => {
       message.error('创建 Skill 失败: ' + (err.message || '未知错误'));
@@ -508,7 +532,7 @@ const SkillsTab: React.FC = () => {
       hide();
       setIsImportModalOpen(false);
       setPendingImportFile(null);
-      fetchSkills();
+      fetchSkills(1, true);
       message.success('导入 Skill 成功');
     }).catch(err => {
       hide();
@@ -591,7 +615,17 @@ const SkillsTab: React.FC = () => {
           </div>
         )}
         
-        <div className={`flex-grow overflow-y-auto px-2 pb-4 space-y-0.5 custom-scrollbar ${isSidebarCollapsed ? 'items-center' : ''}`}>
+        <div 
+          className={`flex-grow overflow-y-auto px-2 pb-4 space-y-0.5 custom-scrollbar ${isSidebarCollapsed ? 'items-center' : ''}`}
+          onScroll={(e) => {
+            const target = e.target as HTMLDivElement;
+            if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50 && hasMore && !isLoadingMore) {
+              const nextPage = currentPage + 1;
+              setCurrentPage(nextPage);
+              fetchSkills(nextPage);
+            }
+          }}
+        >
           {filteredSkills.map(skill => (
             <SkillNode 
               key={skill.id}
@@ -609,7 +643,8 @@ const SkillsTab: React.FC = () => {
               isSidebarCollapsed={isSidebarCollapsed}
             />
           ))}
-          {filteredSkills.length === 0 && !isSidebarCollapsed && (
+          {isLoadingMore && <div className="text-center py-2 text-xs text-gray-400">加载中...</div>}
+          {filteredSkills.length === 0 && !isSidebarCollapsed && !isLoadingMore && (
             <div className="py-20 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
               <Folder className="w-8 h-8 text-gray-200 mx-auto mb-2" />
               <p className="text-xs text-gray-400">暂无 Skill</p>
