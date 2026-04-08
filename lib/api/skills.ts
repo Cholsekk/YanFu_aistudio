@@ -92,7 +92,7 @@ export const createNewNode = async (skill_id: string, parent_id: string, is_dir:
   return apiService.post('/skills/tree/new', { skill_id, parent_id, is_dir, name });
 };
 
-export const useSkill = async (skill_id: string, used: boolean): Promise<{ skill_id: string; used: boolean }> => {
+export const useSkill = async (skill_id: string, used: boolean): Promise<{ status: string; message: string; skill_id?: string; used?: boolean }> => {
   return apiService.post('/skills/use', { skill_id, used });
 };
 

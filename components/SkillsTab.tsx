@@ -388,11 +388,20 @@ const SkillsTab: React.FC = () => {
 
   const handleToggleAvailable = async (skillId: string, used: boolean) => {
     try {
-      await useSkill(skillId, used);
-      message.success('Skill 状态已更新');
+      const res = await useSkill(skillId, used);
+      if (res.status === 'error') {
+        message.error(res.message || '更新 Skill 状态失败');
+      } else {
+        if (res.message) {
+          message.success(res.message);
+        } else {
+          message.success('Skill 状态已更新');
+        }
+      }
       fetchSkills(1, true);
-    } catch (err) {
-      message.error('更新 Skill 状态失败');
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || err.message || '更新 Skill 状态失败';
+      message.error(errorMsg);
     }
   };
 
