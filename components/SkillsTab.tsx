@@ -196,8 +196,11 @@ const SkillNode: React.FC<{
                 <h4 className={`text-sm font-medium truncate ${isExpanded ? 'text-orange-900' : 'text-gray-700'}`}>{skill.name}</h4>
               </Tooltip>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider">
+                <p className="text-[10px] text-gray-400 truncate font-bold uppercase tracking-wider flex items-center gap-1">
                   {tree ? `${countFiles(tree)} 个文件` : (skill as any).file_count !== undefined ? `${(skill as any).file_count} 个文件` : '0 个文件'}
+                  {skill.me && (
+                    <span className="bg-orange-100 text-orange-600 px-1 rounded-[2px] text-[8px]">我创建的</span>
+                  )}
                 </p>
                 {loading && <div className="w-2.5 h-2.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />}
               </div>
@@ -305,6 +308,7 @@ const SkillsTab: React.FC = () => {
   const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'all' | 'available'>('all');
+  const [onlyMe, setOnlyMe] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -334,7 +338,7 @@ const SkillsTab: React.FC = () => {
 
     setIsLoadingMore(true);
     try {
-      const res = await getSkillList(page, 10, viewMode === 'available' ? true : undefined);
+      const res = await getSkillList(page, 10, onlyMe);
 
       if (res.data?.list) {
         const newList = res.data.list;
@@ -365,7 +369,7 @@ const SkillsTab: React.FC = () => {
     setCurrentPage(1);
     setHasMore(true);
     fetchSkills(1, true);
-  }, [viewMode]);
+  }, [viewMode, onlyMe]);
 
   const handleToggleSkill = (skillId: string) => {
     const isNowExpanded = !expandedSkills[skillId];
@@ -604,15 +608,48 @@ const SkillsTab: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Tooltip title={viewMode === 'all' ? "只看可用" : "查看全部"} arrow={false} placement="top">
-              <button 
-                  onClick={() => setViewMode(viewMode === 'all' ? 'available' : 'all')} 
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all border text-xs font-medium ${viewMode === 'available' ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'all',
+                      label: '全部',
+                      onClick: () => {
+                        setViewMode('all');
+                        setOnlyMe(false);
+                      },
+                      className: viewMode === 'all' && !onlyMe ? 'text-primary-600 font-medium' : ''
+                    },
+                    {
+                      key: 'available',
+                      label: '仅可用',
+                      onClick: () => {
+                        setViewMode('available');
+                        setOnlyMe(false);
+                      },
+                      className: viewMode === 'available' ? 'text-primary-600 font-medium' : ''
+                    },
+                    {
+                      key: 'onlyMe',
+                      label: '我创建的',
+                      onClick: () => {
+                        setViewMode('all');
+                        setOnlyMe(true);
+                      },
+                      className: onlyMe ? 'text-primary-600 font-medium' : ''
+                    }
+                  ]
+                }}
+                placement="bottomRight"
+                trigger={['click']}
+              >
+                <button 
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all border text-xs font-medium ${(viewMode === 'available' || onlyMe) ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100'}`}
                 >
                   <Filter className="w-3.5 h-3.5" />
-                  {viewMode === 'available' ? '仅可用' : '全部'}
+                  {onlyMe ? '我创建的' : viewMode === 'available' ? '仅可用' : '筛选'}
                 </button>
-              </Tooltip>
+              </Dropdown>
             </div>
           </div>
         )}
