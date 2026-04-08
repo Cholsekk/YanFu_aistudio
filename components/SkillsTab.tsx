@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Trash2, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen, FileArchive, Cpu, ChevronRight, ChevronDown, Filter } from 'lucide-react';
 import { Tooltip, Dropdown, Input, Modal as AntModal, message, type MenuProps, Switch } from 'antd';
-import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem, useSkill } from '../lib/api/skills';
+import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem, useSkill, getAvailableSkills } from '../lib/api/skills';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -338,17 +338,27 @@ const SkillsTab: React.FC = () => {
 
     setIsLoadingMore(true);
     try {
-      const res = await getSkillList(page, 10, onlyMe);
+      let res;
+      if (viewMode === 'available') {
+        // Use getAvailableSkills for 'available' view mode
+        res = await getAvailableSkills();
+      } else {
+        // Use getSkillList for 'all' or 'onlyMe' view modes
+        res = await getSkillList(page, 10, onlyMe);
+      }
 
-      if (res.data?.list) {
-        const newList = res.data.list;
+      if (res.data) {
+        // Handle both list format and direct array format
+        const newList = Array.isArray(res.data) ? res.data : (res.data as any).list || [];
 
         setSkillCache(prev => ({ ...prev, [page]: newList }));
         setSkills(prev => reset ? newList : [...prev, ...newList]);
-        setHasMore(newList.length === 10);
+        
+        // For getAvailableSkills, we might not have pagination info, assume no more if it's an array
+        setHasMore(Array.isArray(res.data) ? false : newList.length === 10);
         
         // Pre-fetch all trees to get file counts for the root nodes
-        newList.forEach(skill => {
+        newList.forEach((skill: SkillListItem) => {
           getFileTree(skill.id).then(treeRes => {
             if (treeRes.data) {
               setSkillTrees(prev => ({ ...prev, [skill.id]: treeRes.data }));
@@ -556,12 +566,8 @@ const SkillsTab: React.FC = () => {
   };
 
   const filteredSkills = useMemo(() => {
-    let filtered = skills;
-    if (viewMode === 'available') {
-      filtered = filtered.filter(skill => String(skill.available) === 'true');
-    }
-    return filtered.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [skills, viewMode, searchTerm]);
+    return skills.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [skills, searchTerm]);
 
   return (
     <div className="flex h-[calc(100vh-200px)] overflow-hidden relative border border-gray-200 rounded-2xl shadow-sm">
