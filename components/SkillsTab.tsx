@@ -208,7 +208,7 @@ const SkillNode: React.FC<{
           <div className="flex items-center gap-1 ml-2">
             <Tooltip title="启用/禁用" arrow={false}>
               <Switch
-                checked={skill.available === 'true'}
+                checked={String(skill.available) === 'true'}
                 onChange={(checked) => onToggleAvailable(skill.id, checked)}
                 size="small"
               />
@@ -335,8 +335,10 @@ const SkillsTab: React.FC = () => {
     setIsLoadingMore(true);
     try {
       const res = await getSkillList(page, 10, viewMode === 'available' ? true : undefined);
+
       if (res.data?.list) {
         const newList = res.data.list;
+
         setSkillCache(prev => ({ ...prev, [page]: newList }));
         setSkills(prev => reset ? newList : [...prev, ...newList]);
         setHasMore(newList.length === 10);
@@ -543,7 +545,7 @@ const SkillsTab: React.FC = () => {
   const filteredSkills = useMemo(() => {
     let filtered = skills;
     if (viewMode === 'available') {
-      filtered = filtered.filter(skill => skill.available === 'true');
+      filtered = filtered.filter(skill => String(skill.available) === 'true');
     }
     return filtered.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [skills, viewMode, searchTerm]);

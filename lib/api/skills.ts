@@ -14,7 +14,7 @@ export interface SkillListItem {
   tenant_id: string;
   created_by: string;
   me: boolean;
-  available: string;
+  available: boolean | string;
 }
 
 export interface SkillListResponse {
