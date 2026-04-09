@@ -167,7 +167,7 @@ const SkillNode: React.FC<{
         targetTree = res.data;
         if (!isExpanded) onToggle(skill.id);
       } catch (err) {
-        message.error('获取目录信息失败');
+        console.error('获取目录信息失败:', err);
         return;
       }
     }
@@ -247,7 +247,7 @@ const SkillNode: React.FC<{
                             const res = await getFileTree(skill.id);
                             targetTreeId = res.data?.id;
                           } catch (err) {
-                            message.error('获取目录信息失败');
+                            console.error('获取目录信息失败:', err);
                             return;
                           }
                         }
@@ -412,8 +412,9 @@ const SkillsTab: React.FC = () => {
       }
       fetchSkills(1, true);
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.message || '更新 Skill 状态失败';
-      message.error(errorMsg);
+      if (err?.status !== 400 && err?.response?.status !== 400) {
+        console.error('更新 Skill 状态失败:', err);
+      }
     }
   };
 
@@ -442,13 +443,17 @@ const SkillsTab: React.FC = () => {
 
   const handleSaveContent = () => {
     if (!selectedSkillId || !selectedFile) return;
-    updateFileContent(selectedSkillId, selectedFile.id, editedContent).then(() => {
-      setFileContent(editedContent);
-      setIsEditing(false);
-      message.success('保存成功');
-    }).catch(err => {
-      if(err.status !== 400){
-        message.error('保存失败: ' + (err.message || '未知错误'));
+    updateFileContent(selectedSkillId, selectedFile.id, editedContent).then((res: any) => {
+      if (res && res.status === 'error') {
+        message.error(res.message || '保存失败');
+      } else {
+        setFileContent(editedContent);
+        setIsEditing(false);
+        message.success('保存成功');
+      }
+    }).catch((err: any) => {
+      if (err?.status !== 400 && err?.response?.status !== 400) {
+        console.error('保存失败:', err);
       }
     });
   };
@@ -464,7 +469,11 @@ const SkillsTab: React.FC = () => {
       setIsRenameModalOpen(false);
       return;
     }
-    renameNode(renameTarget.skillId, renameTarget.item.id, newName).then(() => {
+    renameNode(renameTarget.skillId, renameTarget.item.id, newName).then((res: any) => {
+      if (res && res.status === 'error') {
+        message.error(res.message || '重命名失败');
+        return;
+      }
       refreshSkillTree(renameTarget.skillId);
       
       // 同步更新预览面板的文件名
@@ -477,8 +486,10 @@ const SkillsTab: React.FC = () => {
       }
       setIsRenameModalOpen(false);
       message.success('重命名成功');
-    }).catch(err => {
-      message.error('重命名失败: ' + (err.message || '未知错误'));
+    }).catch((err: any) => {
+      if (err?.status !== 400 && err?.response?.status !== 400) {
+        console.error('重命名失败:', err);
+      }
     });
   };
 
@@ -491,7 +502,11 @@ const SkillsTab: React.FC = () => {
       cancelText: '取消',
       centered: true,
       onOk: () => {
-        deleteNode(skillId, tree_id).then(() => {
+        deleteNode(skillId, tree_id).then((res: any) => {
+          if (res && res.status === 'error') {
+            message.error(res.message || '删除失败');
+            return;
+          }
           if (isRoot) {
             fetchSkills(1, true);
           } else {
@@ -505,8 +520,10 @@ const SkillsTab: React.FC = () => {
           }
           
           message.success('删除成功');
-        }).catch(err => {
-          message.error('删除失败: ' + (err.message || '未知错误'));
+        }).catch((err: any) => {
+          if (err?.status !== 400 && err?.response?.status !== 400) {
+            console.error('删除失败:', err);
+          }
         });
       }
     });
@@ -532,38 +549,56 @@ const SkillsTab: React.FC = () => {
       }
     }
 
-    createNewNode(skillId, parentId, isDir, newNodeName).then(() => {
+    createNewNode(skillId, parentId, isDir, newNodeName).then((res: any) => {
+      if (res && res.status === 'error') {
+        message.error(res.message || `新建${isDir ? '文件夹' : '文件'}失败`);
+        return;
+      }
       refreshSkillTree(skillId);
       message.success(`新建${isDir ? '文件夹' : '文件'}成功`);
       setIsCreateNodeModalOpen(false);
-    }).catch(err => {
-      message.error(`新建${isDir ? '文件夹' : '文件'}失败: ` + (err.message || '未知错误'));
+    }).catch((err: any) => {
+      if (err?.status !== 400 && err?.response?.status !== 400) {
+        console.error(`新建${isDir ? '文件夹' : '文件'}失败:`, err);
+      }
     });
   };
 
   const handleCreateSkill = () => {
     if (!newSkillName) return;
-    addSkill(newSkillName, false).then(() => {
+    addSkill(newSkillName, false).then((res: any) => {
+      if (res && res.status === 'error') {
+        message.error(res.message || '创建 Skill 失败');
+        return;
+      }
       setIsCreateModalOpen(false);
       setNewSkillName('');
       fetchSkills(1, true);
       message.success('创建 Skill 成功');
-    }).catch(err => {
-      message.error('创建 Skill 失败: ' + (err.message || '未知错误'));
+    }).catch((err: any) => {
+      if (err?.status !== 400 && err?.response?.status !== 400) {
+        console.error('创建 Skill 失败:', err);
+      }
     });
   };
 
   const handleImportSkill = (file: File) => {
     const hide = message.loading('正在导入 Skill...', 0);
-    uploadZip(file).then(() => {
+    uploadZip(file).then((res: any) => {
       hide();
-      setIsImportModalOpen(false);
-      setPendingImportFile(null);
-      fetchSkills(1, true);
-      message.success('导入 Skill 成功');
-    }).catch(err => {
+      if (res && res.status === 'error') {
+        message.error(res.message || '导入 Skill 失败');
+      } else {
+        setIsImportModalOpen(false);
+        setPendingImportFile(null);
+        fetchSkills(1, true);
+        message.success('导入 Skill 成功');
+      }
+    }).catch((err: any) => {
       hide();
-      message.error('导入 Skill 失败: ' + (err.message || '未知错误'));
+      if (err?.status !== 400 && err?.response?.status !== 400) {
+        console.error('导入 Skill 失败:', err);
+      }
     });
   };
 
