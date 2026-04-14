@@ -56,13 +56,9 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
 
   useEffect(() => {
     if (formData.schedule_type === 'interval') {
-      const totalSeconds = 
-        (interval.weeks || 0) * 604800 +
-        (interval.days || 0) * 86400 +
-        (interval.hours || 0) * 3600 +
-        (interval.minutes || 0) * 60 +
-        (interval.seconds || 0);
-      setFormData(prev => ({ ...prev, schedule_expression: totalSeconds.toString() }));
+      // 转换为JSON字符串格式
+      const intervalJson = JSON.stringify(interval);
+      setFormData(prev => ({ ...prev, schedule_expression: intervalJson }));
     }
   }, [interval, formData.schedule_type]);
 

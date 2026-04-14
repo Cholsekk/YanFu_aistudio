@@ -7,7 +7,7 @@ import {
   Settings,
   MessageSquare, 
   Send, 
-  StopCircle,
+  Square,
   Copy,
   RotateCcw, 
   Mic,
@@ -67,7 +67,8 @@ import {
   Drawer,
   InputNumber,
   Tabs,
-  Collapse
+  Collapse,
+  Image
 } from 'antd';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
@@ -186,6 +187,55 @@ const features = [
   { id: 'annotation', name: '标注回复', desc: '启用后，将标注用户的回复，以便在用户重复提问时快速响应。', icon: MessageSquare, color: 'bg-blue-500' },
   { id: 'attachment', name: '上传附件', desc: '支持上传图片、文档等附件。', icon: Plus, color: 'bg-amber-500' },
 ];
+
+const getFileIcon = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  if (['doc', 'docx'].includes(ext || '')) return <LucideIcons.FileText className="w-6 h-6 text-blue-500" />;
+  if (['xls', 'xlsx', 'csv'].includes(ext || '')) return <LucideIcons.FileSpreadsheet className="w-6 h-6 text-green-500" />;
+  if (['ppt', 'pptx'].includes(ext || '')) return <LucideIcons.File className="w-6 h-6 text-orange-500" />;
+  if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext || '')) return <LucideIcons.FileArchive className="w-6 h-6 text-red-500" />;
+  if (['pdf'].includes(ext || '')) return <LucideIcons.FileText className="w-6 h-6 text-red-500" />;
+  if (['mp3', 'wav', 'ogg'].includes(ext || '')) return <LucideIcons.FileAudio className="w-6 h-6 text-purple-500" />;
+  if (['mp4', 'avi', 'mov', 'mkv'].includes(ext || '')) return <LucideIcons.FileVideo className="w-6 h-6 text-pink-500" />;
+  if (['js', 'ts', 'jsx', 'tsx', 'json', 'html', 'css', 'py', 'java', 'c', 'cpp'].includes(ext || '')) return <LucideIcons.FileCode className="w-6 h-6 text-gray-500" />;
+  return <LucideIcons.File className="w-6 h-6 text-gray-400" />;
+};
+
+const formatFileSize = (bytes?: number) => {
+  if (bytes === undefined) return '未知大小';
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const renderMarkdown = (content: string) => (
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
+      code({ node, inline, className, children, ...props }: any) {
+        const match = /language-(\w+)/.exec(className || '');
+        return !inline && match ? (
+          <SyntaxHighlighter
+            {...props}
+            style={vscDarkPlus}
+            language={match[1]}
+            PreTag="div"
+          >
+            {String(children).replace(/\n$/, '')}
+          </SyntaxHighlighter>
+        ) : (
+          <code {...props} className={className}>
+            {children}
+          </code>
+        );
+      }
+    }}
+  >
+    {content}
+  </ReactMarkdown>
+);
 
 const AppConfig: React.FC = () => {
   const app = useAppDevHub();
@@ -550,7 +600,7 @@ const AppConfig: React.FC = () => {
     setVariableValues(prev => ({ ...prev, [id]: value }));
   };
   const [models, setModels] = useState<LocalModelConfig[]>([DEFAULT_MODEL]);
-  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[]; time_taken?: number; total_tokens?: number; agent_thoughts?: any[] }[]>>({
+  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[]; time_taken?: number; total_tokens?: number; agent_thoughts?: any[]; attachments?: any[] }[]>>({
     [DEFAULT_MODEL.id]: []
   });
   const [isStreaming, setIsStreaming] = useState<Record<string, boolean>>({});
@@ -568,15 +618,19 @@ const AppConfig: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setUploading(true);
     try {
       const res = await apiService.uploadFile(file);
-      setAttachments(prev => [...prev, { id: res.id, name: file.name, type: file.type }]);
+      const isImage = file.type.startsWith('image/');
+      const url = isImage ? URL.createObjectURL(file) : undefined;
+      setAttachments([{ id: res.id, name: file.name, type: file.type, url, size: file.size }]);
     } catch (e) {
       console.error(e);
       message.error('上传失败');
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -1155,13 +1209,14 @@ const AppConfig: React.FC = () => {
     if (userMsgIndex === -1) return;
 
     const userMsg = modelMsgs[userMsgIndex].content;
+    const userAttachments = modelMsgs[userMsgIndex].attachments || [];
     
     // Remove the user message and everything after it
     const newMsgs = modelMsgs.slice(0, userMsgIndex);
     setMessages(prev => ({ ...prev, [modelId]: newMsgs }));
     
     // Send the message again
-    sendMessage(userMsg);
+    sendMessage(userMsg, userAttachments);
   };
 
   const handleViewLogs = (modelId: string, msgIndex: number) => {
@@ -1181,7 +1236,7 @@ const AppConfig: React.FC = () => {
     setLogModalVisible(true);
   };
 
-  const sendMessage = async (query: string) => {
+  const sendMessage = async (query: string, currentAttachments: any[] = attachments) => {
     if (!query.trim() || Object.values(isStreaming).some(s => s)) return;
 
     // Validate required variables
@@ -1203,7 +1258,7 @@ const AppConfig: React.FC = () => {
       const next = { ...prev };
       models.forEach(model => {
         if (model.name) {
-          next[model.id] = [...(next[model.id] || []), { role: 'user', content: query }];
+          next[model.id] = [...(next[model.id] || []), { role: 'user', content: query, attachments: currentAttachments }];
         }
       });
       return next;
@@ -1230,7 +1285,7 @@ const AppConfig: React.FC = () => {
         inputs: inputs,
         query: query,
         conversation_id: '',
-        files: attachments.map(a => ({ id: a.id, type: 'document' })),
+        files: currentAttachments.map(a => ({ id: a.id, type: 'document' })),
         model_config: {
           pre_prompt: prompt,
           prompt_type: 'simple',
@@ -2706,37 +2761,41 @@ const AppConfig: React.FC = () => {
                           animate={{ opacity: 1, y: 0 }}
                           className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group/message`}
                         >
-                          <div className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed relative ${
-                            msg.role === 'user' 
-                              ? 'bg-primary-600 text-white rounded-tr-none' 
-                              : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-sm'
-                          }`}>
-                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''} prose-p:leading-relaxed prose-p:first:mt-0 prose-p:last:mb-0 prose-pre:my-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 break-words`}>
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                  code({ node, inline, className, children, ...props }: any) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    return !inline && match ? (
-                                      <SyntaxHighlighter
-                                        {...props}
-                                        style={vscDarkPlus}
-                                        language={match[1]}
-                                        PreTag="div"
-                                      >
-                                        {String(children).replace(/\n$/, '')}
-                                      </SyntaxHighlighter>
+                          <div className={`flex flex-col gap-2 max-w-[90%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                            {msg.attachments && msg.attachments.length > 0 && (
+                              <div className={`flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                {msg.attachments.map((att, idx) => (
+                                  <div key={idx} className="relative group">
+                                    {att.url ? (
+                                      <Image
+                                        src={att.url}
+                                        alt={att.name}
+                                        className="rounded-2xl object-cover max-w-[300px] max-h-[300px]"
+                                      />
                                     ) : (
-                                      <code {...props} className={className}>
-                                        {children}
-                                      </code>
-                                    );
-                                  }
-                                }}
-                              >
-                                {msg.content}
-                              </ReactMarkdown>
-                            </div>
+                                      <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-2xl border border-gray-100 shadow-sm w-[280px]">
+                                        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-blue-50/50 rounded-lg">
+                                          {getFileIcon(att.name)}
+                                        </div>
+                                        <div className="flex flex-col overflow-hidden">
+                                          <span className="text-sm text-gray-800 truncate font-medium" title={att.name}>{att.name}</span>
+                                          <span className="text-xs text-gray-400 mt-0.5">{formatFileSize(att.size)}</span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {msg.content && (
+                              <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed relative ${
+                                msg.role === 'user' 
+                                  ? 'bg-[#eef5ff] text-gray-800 rounded-tr-none' 
+                                  : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-sm'
+                              }`}>
+                                <div className={`prose prose-sm max-w-none prose-p:leading-relaxed prose-p:first:mt-0 prose-p:last:mb-0 prose-pre:my-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 break-words`}>
+                                  {renderMarkdown(msg.content)}
+                                </div>
                             {msg.role === 'assistant' && isStreaming[model.id] && i === messages[model.id].length - 1 && (
                               <span className="inline-block w-1.5 h-4 ml-1 bg-primary-500 animate-pulse align-middle" />
                             )}
@@ -2806,6 +2865,8 @@ const AppConfig: React.FC = () => {
                                   )}
                                 </div>
                               </>
+                            )}
+                            </div>
                             )}
                           </div>
                         </motion.div>
@@ -2883,12 +2944,43 @@ const AppConfig: React.FC = () => {
         {/* Input Area */}
         <div className="p-6 border-t border-gray-100 bg-white">
           <div className="max-w-4xl mx-auto space-y-3">
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-3 mb-2">
               {attachments.map((att, i) => (
-                <Badge key={i} className="bg-gray-100 text-gray-600 rounded-full px-3 py-1">
-                  {att.name}
-                  <Trash2 className="w-3 h-3 ml-2 cursor-pointer" onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))} />
-                </Badge>
+                <div key={i} className="relative group flex items-center">
+                  {att.url ? (
+                    <div className="relative w-16 h-16 rounded-lg border border-gray-200 shadow-sm">
+                      <img src={att.url} alt={att.name} className="w-full h-full object-cover rounded-lg" />
+                      <div 
+                        className="absolute -top-2 -right-2 bg-white rounded-full shadow-sm border border-gray-100 cursor-pointer opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                        onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                      >
+                        <div className="bg-gray-500 hover:bg-red-500 text-white rounded-full p-1 transition-colors">
+                          <X className="w-3 h-3" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Tooltip title={att.name}>
+                      <div className="relative flex items-center gap-3 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm w-[240px]">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-50/50 rounded-lg">
+                          {getFileIcon(att.name)}
+                        </div>
+                        <div className="flex flex-col overflow-hidden w-full">
+                          <span className="text-sm text-gray-800 truncate font-medium">{att.name}</span>
+                          <span className="text-xs text-gray-400 mt-0.5">{formatFileSize(att.size)}</span>
+                        </div>
+                        <div 
+                          className="absolute -top-2 -right-2 bg-white rounded-full shadow-sm border border-gray-100 cursor-pointer opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                          onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                        >
+                          <div className="bg-gray-500 hover:bg-red-500 text-white rounded-full p-1 transition-colors">
+                            <X className="w-3 h-3" />
+                          </div>
+                        </div>
+                      </div>
+                    </Tooltip>
+                  )}
+                </div>
               ))}
             </div>
             <motion.div 
@@ -2920,8 +3012,8 @@ const AppConfig: React.FC = () => {
               />
               <Button 
                 type="primary" 
-                icon={Object.values(isStreaming).some(s => s) ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />} 
-                className={`rounded-full h-10 w-10 flex items-center justify-center p-0 shadow-lg border-none hover:scale-110 transition-transform ${Object.values(isStreaming).some(s => s) ? 'bg-red-500 shadow-red-500/20' : 'bg-blue-600 shadow-blue-500/20'}`}
+                icon={Object.values(isStreaming).some(s => s) ? <Square className="w-4 h-4 fill-current" /> : <Send className="w-4 h-4" />} 
+                className={`rounded-full h-10 w-10 flex items-center justify-center p-0 shadow-lg border-none hover:scale-110 transition-transform bg-blue-600 shadow-blue-500/20`}
                 onClick={Object.values(isStreaming).some(s => s) ? handleStopMessage : handleSendMessage}
               />
             </motion.div>

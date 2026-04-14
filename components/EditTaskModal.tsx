@@ -75,15 +75,28 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
       });
       if (task.schedule_type === 'interval') {
         try {
-          const totalSeconds = parseInt(task.schedule_expression) || 0;
-          const weeks = Math.floor(totalSeconds / 604800);
-          let remaining = totalSeconds % 604800;
-          const days = Math.floor(remaining / 86400);
-          remaining %= 86400;
-          const hours = Math.floor(remaining / 3600);
-          remaining %= 3600;
-          const minutes = Math.floor(remaining / 60);
-          const seconds = remaining % 60;
+          let weeks = 0, days = 0, hours = 0, minutes = 0, seconds = 0;
+          
+          // 尝试解析JSON字符串
+          try {
+            const intervalObj = JSON.parse(task.schedule_expression);
+            weeks = intervalObj.weeks || 0;
+            days = intervalObj.days || 0;
+            hours = intervalObj.hours || 0;
+            minutes = intervalObj.minutes || 0;
+            seconds = intervalObj.seconds || 0;
+          } catch (jsonError) {
+            // 如果JSON解析失败，尝试解析为总秒数
+            const totalSeconds = parseInt(task.schedule_expression) || 0;
+            weeks = Math.floor(totalSeconds / 604800);
+            let remaining = totalSeconds % 604800;
+            days = Math.floor(remaining / 86400);
+            remaining %= 86400;
+            hours = Math.floor(remaining / 3600);
+            remaining %= 3600;
+            minutes = Math.floor(remaining / 60);
+            seconds = remaining % 60;
+          }
           
           setInterval({ weeks, days, hours, minutes, seconds });
         } catch (e) {
@@ -95,13 +108,9 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
 
   useEffect(() => {
     if (formData.schedule_type === 'interval') {
-      const totalSeconds = 
-        (interval.weeks || 0) * 604800 +
-        (interval.days || 0) * 86400 +
-        (interval.hours || 0) * 3600 +
-        (interval.minutes || 0) * 60 +
-        (interval.seconds || 0);
-      setFormData(prev => ({ ...prev, schedule_expression: totalSeconds.toString() }));
+      // 转换为JSON字符串格式
+      const intervalJson = JSON.stringify(interval);
+      setFormData(prev => ({ ...prev, schedule_expression: intervalJson }));
     }
   }, [interval, formData.schedule_type]);
 

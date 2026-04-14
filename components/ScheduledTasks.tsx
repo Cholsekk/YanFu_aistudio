@@ -310,15 +310,28 @@ const ScheduledTasks: React.FC = () => {
                       {(() => {
                         if (task.schedule_type === 'interval') {
                           try {
-                            const totalSeconds = parseInt(task.schedule_expression) || 0;
-                            const weeks = Math.floor(totalSeconds / 604800);
-                            let remaining = totalSeconds % 604800;
-                            const days = Math.floor(remaining / 86400);
-                            remaining %= 86400;
-                            const hours = Math.floor(remaining / 3600);
-                            remaining %= 3600;
-                            const minutes = Math.floor(remaining / 60);
-                            const seconds = remaining % 60;
+                            let weeks = 0, days = 0, hours = 0, minutes = 0, seconds = 0;
+                            
+                            // 尝试解析JSON字符串
+                            try {
+                              const intervalObj = JSON.parse(task.schedule_expression);
+                              weeks = intervalObj.weeks || 0;
+                              days = intervalObj.days || 0;
+                              hours = intervalObj.hours || 0;
+                              minutes = intervalObj.minutes || 0;
+                              seconds = intervalObj.seconds || 0;
+                            } catch (jsonError) {
+                              // 如果JSON解析失败，尝试解析为总秒数
+                              const totalSeconds = parseInt(task.schedule_expression) || 0;
+                              weeks = Math.floor(totalSeconds / 604800);
+                              let remaining = totalSeconds % 604800;
+                              days = Math.floor(remaining / 86400);
+                              remaining %= 86400;
+                              hours = Math.floor(remaining / 3600);
+                              remaining %= 3600;
+                              minutes = Math.floor(remaining / 60);
+                              seconds = remaining % 60;
+                            }
                             
                             const parts = [];
                             if (weeks) parts.push(`${weeks}周`);
@@ -327,7 +340,7 @@ const ScheduledTasks: React.FC = () => {
                             if (minutes) parts.push(`${minutes}分钟`);
                             if (seconds) parts.push(`${seconds}秒`);
                             
-                            return parts.length > 0 ? `每 ${parts.join(' ')}` : `${totalSeconds}秒`;
+                            return parts.length > 0 ? `每 ${parts.join(' ')}` : `${seconds}秒`;
                           } catch (e) {
                             return task.schedule_expression;
                           }

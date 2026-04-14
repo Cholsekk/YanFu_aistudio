@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Trash2, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen, FileArchive, Cpu, ChevronRight, ChevronDown, Filter } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Trash2, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen, FileArchive, Cpu, ChevronRight, ChevronDown, Filter, AlertTriangle } from 'lucide-react';
 import { Tooltip, Dropdown, Input, Modal as AntModal, message, type MenuProps, Switch } from 'antd';
 import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem, useSkill, getAvailableSkills } from '../lib/api/skills';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -302,6 +302,7 @@ const SkillsTab: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isBinaryFile, setIsBinaryFile] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [skills, setSkills] = useState<SkillListItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -312,12 +313,15 @@ const SkillsTab: React.FC = () => {
   const [viewMode, setViewMode] = useState<'all' | 'available'>('all');
   const [onlyMe, setOnlyMe] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [skillCache, setSkillCache] = useState<Record<number, SkillListItem[]>>({});
   const [skillTrees, setSkillTrees] = useState<Record<string, FileNode>>({});
   const [expandedSkills, setExpandedSkills] = useState<Record<string, boolean>>({});
   const [loadingTrees, setLoadingTrees] = useState<Record<string, boolean>>({});
+  const prevViewMode = useRef<'all' | 'available'>('all');
+  const prevOnlyMe = useRef(false);
 
   // Rename Modal State
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -357,7 +361,17 @@ const SkillsTab: React.FC = () => {
         setSkills(prev => reset ? newList : [...prev, ...newList]);
         
         // For getAvailableSkills, we might not have pagination info, assume no more if it's an array
-        setHasMore(Array.isArray(res.data) ? false : newList.length === 10);
+        // For getSkillList, check if current page is less than total pages
+        const isArrayFormat = Array.isArray(res.data);
+        const hasPagination = !isArrayFormat && (res.data as any).pages !== undefined;
+        const totalPagesValue = hasPagination ? (res.data as any).pages : 1;
+        setTotalPages(totalPagesValue);
+        setHasMore(isArrayFormat ? false : (page < totalPagesValue));
+        
+        // 确保即使当前页数据不足10条，只要还有更多页，就保持hasMore为true
+        if (!isArrayFormat && page < totalPagesValue) {
+          setHasMore(true);
+        }
         
         // Pre-fetch all trees to get file counts for the root nodes
         newList.forEach((skill: SkillListItem) => {
@@ -375,12 +389,23 @@ const SkillsTab: React.FC = () => {
     }
   };
 
+  // 首次加载时获取技能列表
   useEffect(() => {
-    setSkills([]);
-    setSkillCache({});
-    setCurrentPage(1);
-    setHasMore(true);
     fetchSkills(1, true);
+  }, []);
+
+  useEffect(() => {
+    // 只有当viewMode或onlyMe真正发生变化时才调用fetchSkills
+    if (prevViewMode.current !== viewMode || prevOnlyMe.current !== onlyMe) {
+      setSkills([]);
+      setSkillCache({});
+      setCurrentPage(1);
+      setTotalPages(1);
+      setHasMore(true);
+      fetchSkills(1, true);
+      prevViewMode.current = viewMode;
+      prevOnlyMe.current = onlyMe;
+    }
   }, [viewMode, onlyMe]);
 
   const handleToggleSkill = (skillId: string) => {
@@ -434,9 +459,20 @@ const SkillsTab: React.FC = () => {
 
   useEffect(() => {
     if (selectedFile && selectedSkillId) {
-      getFileContent(selectedSkillId, selectedFile.id).then(res => {
-        setFileContent(res.text);
-        setEditedContent(res.text);
+      setIsBinaryFile(false);
+      getFileContent(selectedSkillId, selectedFile.id).then((res: any) => {
+        // Handle 204 No Content or empty responses from different request wrappers
+        // (could be undefined, null, "", or an empty object without 'text' property)
+        if (!res || res === '' || (typeof res === 'object' && !('text' in res))) {
+          setIsBinaryFile(true);
+          setFileContent('');
+          setEditedContent('');
+        } else {
+          setFileContent(res.text || '');
+          setEditedContent(res.text || '');
+        }
+      }).catch(err => {
+        console.error('Failed to fetch file content:', err);
       });
     }
   }, [selectedFile, selectedSkillId]);
@@ -710,7 +746,7 @@ const SkillsTab: React.FC = () => {
           className={`flex-grow overflow-y-auto px-2 pb-4 space-y-0.5 custom-scrollbar ${isSidebarCollapsed ? 'items-center' : ''}`}
           onScroll={(e) => {
             const target = e.target as HTMLDivElement;
-            if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50 && hasMore && !isLoadingMore) {
+            if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50 && hasMore && !isLoadingMore && currentPage < totalPages) {
               const nextPage = currentPage + 1;
               setCurrentPage(nextPage);
               fetchSkills(nextPage);
@@ -776,14 +812,14 @@ const SkillsTab: React.FC = () => {
                       保存
                     </button>
                   </div>
-                ) : (
+                ) : !isBinaryFile ? (
                   <button 
                     onClick={() => setIsEditing(true)} 
                     className="flex items-center gap-2 px-4 py-2 border border-primary-100 text-primary-600 hover:bg-primary-50 rounded-xl text-xs font-bold transition-all"
                   >
                     <Pencil className="w-3.5 h-3.5" /> 编辑内容
                   </button>
-                )}
+                ) : null}
                 <button 
                   onClick={() => { setSelectedFile(null); setIsEditing(false); }} 
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
@@ -794,7 +830,14 @@ const SkillsTab: React.FC = () => {
             </div>
             
             <div className="flex-grow overflow-hidden relative bg-gray-50/30">
-              {isEditing ? (
+              {isBinaryFile ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <AlertTriangle className="w-16 h-16 text-yellow-500 mb-4" />
+                  <p className="text-sm max-w-md text-center">
+                    此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。
+                  </p>
+                </div>
+              ) : isEditing ? (
                 <textarea
                   className="w-full h-full p-8 font-mono text-sm bg-white text-gray-800 focus:outline-none resize-none leading-relaxed border-none"
                   value={editedContent}
@@ -810,9 +853,11 @@ const SkillsTab: React.FC = () => {
                   {fileContent || `// 文件内容为空`}
                 </SyntaxHighlighter>
               )}
-              <div className="absolute bottom-2 right-4 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
-                行: {fileContent.split('\n').length} | 字数: {fileContent.length}
-              </div>
+              {!isBinaryFile && (
+                <div className="absolute bottom-2 right-4 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
+                  行: {fileContent.split('\n').length} | 字数: {fileContent.length}
+                </div>
+              )}
             </div>
           </div>
         ) : (
