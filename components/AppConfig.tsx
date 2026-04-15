@@ -828,10 +828,11 @@ const AppConfig: React.FC = () => {
     if (!appId) return;
     const fetchAppDetail = async () => {
       try {
+        console.log('Fetching appDetail for appId:', appId);
         const detail = await apiService.fetchAppDetail(appId);
         setAppDetail(detail);
-        if (detail && detail.model_config) {
-          const config = detail.model_config;
+        const config = detail.model_config || detail;
+        if (config) {
           if (config.pre_prompt) setPrompt(config.pre_prompt);
           if (config.user_input_form) setVariables(config.user_input_form);
           
