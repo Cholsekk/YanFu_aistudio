@@ -710,9 +710,8 @@ const ToolExtensions: React.FC = () => {
 
       // Handle labels
       const labels = labelsResponse;
-      // If labels are objects, extract name/label. If strings, use directly.
-      const processedLabels = labels.map((l: any) => typeof l === 'string' ? l : (l.name || l.label || l));
-      setAllLabels(processedLabels.sort());
+      // Store full label objects to access zh_Hans
+      setAllLabels(labels);
     } catch (err: any) {
       console.error('Failed to fetch tool providers or labels:', err);
       setError(err.message || '获取工具列表失败');
@@ -977,11 +976,11 @@ const ToolExtensions: React.FC = () => {
 
   const filteredLabels = useMemo(() => {
     if (!labelSearchQuery) return allLabels;
-    return allLabels.filter(label => {
-      const labelName = label.toLowerCase();
-      const labelText = (LABEL_MAPPING[label] || label).toLowerCase();
+    return allLabels.filter(labelObj => {
+      const labelName = typeof labelObj === 'string' ? labelObj : labelObj.name;
+      const labelDisplay = typeof labelObj === 'string' ? labelObj : (labelObj.label?.zh_Hans || labelObj.name);
       const query = labelSearchQuery.toLowerCase();
-      return labelName.includes(query) || labelText.includes(query);
+      return labelName.toLowerCase().includes(query) || labelDisplay.toLowerCase().includes(query);
     });
   }, [allLabels, labelSearchQuery]);
 
@@ -1089,7 +1088,11 @@ const ToolExtensions: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4" />
-                  <span>{selectedLabel === '全部' ? '全部' : (LABEL_MAPPING[selectedLabel] || selectedLabel)}</span>
+                  <span>{(() => {
+                    if (selectedLabel === '全部') return '全部';
+                    const labelObj = allLabels.find((l: any) => (typeof l === 'string' ? l : l.name) === selectedLabel);
+                    return typeof labelObj === 'string' ? labelObj : (labelObj?.label?.zh_Hans || selectedLabel);
+                  })()}</span>
                 </div>
                 <ChevronDown className={`w-3 h-3 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -1130,15 +1133,19 @@ const ToolExtensions: React.FC = () => {
                         全部
                       </button>
                       {filteredLabels.length > 0 ? (
-                        filteredLabels.map(label => (
-                          <button
-                            key={label}
-                            onClick={() => { setSelectedLabel(label); setIsFilterOpen(false); setLabelSearchQuery(''); }}
-                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${selectedLabel === label ? 'text-primary-600 font-medium bg-primary-50/50' : 'text-gray-600'}`}
-                          >
-                            {LABEL_MAPPING[label] || label}
-                          </button>
-                        ))
+                        filteredLabels.map(labelObj => {
+                          const labelName = typeof labelObj === 'string' ? labelObj : labelObj.name;
+                          const labelDisplay = typeof labelObj === 'string' ? labelObj : (labelObj.label?.zh_Hans || labelObj.name);
+                          return (
+                            <button
+                              key={labelName}
+                              onClick={() => { setSelectedLabel(labelName); setIsFilterOpen(false); setLabelSearchQuery(''); }}
+                              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${selectedLabel === labelName ? 'text-primary-600 font-medium bg-primary-50/50' : 'text-gray-600'}`}
+                            >
+                              {labelDisplay}
+                            </button>
+                          );
+                        })
                       ) : (
                         <div className="px-4 py-3 text-xs text-gray-400 text-center">
                           未找到相关标签
