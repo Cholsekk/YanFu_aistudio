@@ -599,10 +599,8 @@ const AppConfig: React.FC = () => {
   const handleVariableChange = (id: string, value: any) => {
     setVariableValues(prev => ({ ...prev, [id]: value }));
   };
-  const [models, setModels] = useState<LocalModelConfig[]>([DEFAULT_MODEL]);
-  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[]; time_taken?: number; total_tokens?: number; agent_thoughts?: any[]; attachments?: any[] }[]>>({
-    [DEFAULT_MODEL.id]: []
-  });
+  const [models, setModels] = useState<LocalModelConfig[]>([]);
+  const [messages, setMessages] = useState<Record<string, { role: 'user' | 'assistant'; content: string; citations?: any[]; time_taken?: number; total_tokens?: number; agent_thoughts?: any[]; attachments?: any[] }[]>>({});
   const [isStreaming, setIsStreaming] = useState<Record<string, boolean>>({});
   const [taskIds, setTaskIds] = useState<Record<string, string>>({});
   const [inputValue, setInputValue] = useState('');
@@ -902,8 +900,12 @@ const AppConfig: React.FC = () => {
             };
             setModels([model]);
             setMessages({ [model.id]: [] });
+            setIsMultiModel(false);
+          } else {
+            setModels([DEFAULT_MODEL]);
+            setMessages({ [DEFAULT_MODEL.id]: [] });
+            setIsMultiModel(false);
           }
-          
           if (config.opening_statement) setOpeningStatement(config.opening_statement);
           if (config.suggested_questions) setSuggestedQuestions(config.suggested_questions);
           if (config.agent_mode?.tools) {
