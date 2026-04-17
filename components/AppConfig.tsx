@@ -3251,7 +3251,7 @@ const AppConfig: React.FC = () => {
                             ) : rule.type === 'string' && rule.options?.length > 0 ? (
                               <Select 
                                 size="small" 
-                                value={(model as any)[configKey]} 
+                                value={(model as any)[configKey] || (rule.options.length > 0 ? rule.options[0] : undefined)} 
                                 className="w-full"
                                 onChange={v => updateModelParam(model.id, configKey, v)}
                                 options={rule.options.map((opt: any) => ({ value: opt, label: opt }))}
