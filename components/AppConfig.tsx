@@ -935,7 +935,7 @@ const AppConfig: React.FC = () => {
               presencePenalty: config.model.completion_params?.presence_penalty || 0,
               frequencyPenalty: config.model.completion_params?.frequency_penalty || 0,
               maxTokens: config.model.completion_params?.max_tokens || 512,
-              responseFormat: 'text',
+              responseFormat: config.model.completion_params?.response_format || 'text',
             };
             setModels([model]);
             setMessages({ [model.id]: [] });
