@@ -578,24 +578,6 @@ const MOCK_TOOLS: ToolItem[] = [
     }
 ];
 
-const LABEL_MAPPING: Record<string, string> = {
-  search: '搜索',
-  image: '图片',
-  video: '视频',
-  weather: '天气',
-  finance: '金融',
-  design: '设计',
-  travel: '旅行',
-  social: '社交',
-  news: '新闻',
-  medical: '医疗',
-  productivity: '生产力',
-  education: '教育',
-  business: '商业',
-  entertainment: '娱乐',
-  utilities: '工具',
-  other: '其他'
-};
 
 const TAG_COLORS = [
   { bg: 'bg-primary-50', text: 'text-primary-700', border: 'border-primary-200' },
@@ -621,7 +603,16 @@ const getTagStyle = (label: string) => {
 
 const ToolExtensions: React.FC = () => {
   const [tools, setTools] = useState<Collection[]>([]);
-  const [allLabels, setAllLabels] = useState<string[]>([]);
+  const [allLabels, setAllLabels] = useState<any[]>([]);
+  const labelMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    allLabels.forEach((label: any) => {
+      const name = typeof label === 'string' ? label : label.name;
+      const zh = typeof label === 'string' ? label : (label.label?.zh_Hans || label.name);
+      map[name] = zh;
+    });
+    return map;
+  }, [allLabels]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'builtin' | 'workflow' | 'mcp' | 'skills'>(() => {
@@ -1280,7 +1271,7 @@ const ToolExtensions: React.FC = () => {
                             key={label} 
                             className={`px-2 py-0.5 rounded text-[10px] font-medium border ${style.bg} ${style.text} ${style.border}`}
                           >
-                            {LABEL_MAPPING[label] || label}
+                            {labelMap[label] || label}
                           </span>
                         );
                       })

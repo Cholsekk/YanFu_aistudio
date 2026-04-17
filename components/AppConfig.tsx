@@ -82,6 +82,7 @@ import VariableEditModal, { Variable } from './VariableEditModal';
 import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, WeightedScoreEnum, LogicalOperator, ComparisonOperator, IOnDataMoreInfo } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
+// import { useAppContext } from '@/context/app-context';//集成时使用
 
 import { PartialTeamMembersSelector } from './PartialTeamMembersSelector';
 import EmbedModal from './EmbedModal';
@@ -239,6 +240,7 @@ const renderMarkdown = (content: string) => (
 
 const AppConfig: React.FC = () => {
   const app = useAppDevHub();
+  // const { currentWorkspace } = useAppContext();//集成时使用
   const appId = app?.id;
   const [prompt, setPrompt] = useState('');
   const [variables, setVariables] = useState<Variable[]>([]);
@@ -397,6 +399,34 @@ const AppConfig: React.FC = () => {
       sensitive_word_avoidance: {
         enabled: !!enabledFeatures.content_check
       },
+      file_upload: {
+        image: {
+          detail: 'high',
+          enabled: !!enabledFeatures.attachment,
+          number_limits: 3,
+          transfer_methods: [
+            'remote_url',
+            'local_file'
+          ]
+        },
+        enabled: !!enabledFeatures.attachment,
+        allowed_file_types: [
+          'image'
+        ],
+        allowed_file_extensions: [
+          '.JPG',
+          '.JPEG',
+          '.PNG',
+          '.GIF',
+          '.WEBP',
+          '.SVG'
+        ],
+        allowed_file_upload_methods: [
+          'remote_url',
+          'local_file'
+        ],
+        number_limits: 3
+      },
       agent_mode: {
         enabled: tools.length > 0,
         tools: tools.map(t => {
@@ -506,7 +536,8 @@ const AppConfig: React.FC = () => {
         category: selectedCategory,
         position: null,
         is_listed: true,
-        tenant_id: appDetail.tenant_id || localStorage.getItem('console_tenant_id') || '6cd1c55c-441a-4b28-8da5-071c896ab5d2' // 优先使用 appDetail.tenant_id，其次从 localStorage 获取，最后使用固定值
+        // tenant_id: currentWorkspace?.id || appDetail.tenant_id || localStorage.getItem('console_tenant_id') || '6cd1c55c-441a-4b28-8da5-071c896ab5d2' // 集成时优先使用 currentWorkspace.id，其次使用 appDetail.tenant_id，再次从 localStorage 获取，最后使用固定值
+        tenant_id: appDetail.tenant_id || localStorage.getItem('console_tenant_id') || '6cd1c55c-441a-4b28-8da5-071c896ab5d2' // 优先使用 currentWorkspace.id，其次使用 appDetail.tenant_id，再次从 localStorage 获取，最后使用固定值
       };
 
       if (existingApp) {
@@ -622,7 +653,14 @@ const AppConfig: React.FC = () => {
       const res = await apiService.uploadFile(file);
       const isImage = file.type.startsWith('image/');
       const url = isImage ? URL.createObjectURL(file) : undefined;
-      setAttachments([{ id: res.id, name: file.name, type: file.type, url, size: file.size }]);
+      const isDocument = file.type.includes('document') || file.type.includes('pdf') || file.name.match(/\.(doc|docx|pdf|txt|md)$/i);
+      const isAudio = file.type.startsWith('audio/');
+      const isVideo = file.type.startsWith('video/');
+      let supportFileType = 'document';
+      if (isImage) supportFileType = 'image';
+      else if (isAudio) supportFileType = 'audio';
+      else if (isVideo) supportFileType = 'video';
+      setAttachments([{ id: res.id, name: file.name, type: file.type, url, size: file.size, supportFileType, transferMethod: 'local_file', uploadedId: res.id }]);
     } catch (e) {
       console.error(e);
       message.error('上传失败');
@@ -967,7 +1005,9 @@ const AppConfig: React.FC = () => {
   }, [appId]);
 
   useEffect(() => {
-    if (app?.config) {
+    // 只有当appId不存在时，才使用app.config中的配置
+    // 当appId存在时，优先使用通过appId获取的应用详情中的配置
+    if (app?.config && !appId) {
       const config = app.config;
       if (config.prompt) setPrompt(config.prompt);
       if (config.variables) setVariables(config.variables);
@@ -980,6 +1020,53 @@ const AppConfig: React.FC = () => {
           initialMessages[m.id] = [];
         });
         setMessages(initialMessages);
+      } else {
+        // 如果app.config中没有模型配置，加载默认模型
+        const fetchDefaultModel = async () => {
+          try {
+            const res = await apiService.fetchDefaultModal(ModelTypeEnum.textGeneration);
+            if (res && res.model && res.provider) {
+              let rules: ModelParameterRule[] = [];
+              try {
+                const rulesRes = await apiService.fetchModelParameterRules(res.provider.provider, res.model);
+                rules = rulesRes.data || [];
+              } catch (e) {
+                console.error('Failed to fetch model parameter rules:', e);
+              }
+              
+              const newModel: LocalModelConfig = {
+                ...DEFAULT_MODEL,
+                id: res.model,
+                name: res.model,
+                provider: res.provider.provider,
+                rules,
+                ...(rules ? (rules as any[]).reduce((acc: any, rule: any) => {
+                  if (rule.default !== undefined) {
+                    const keyMap: Record<string, keyof LocalModelConfig> = {
+                      'temperature': 'temperature',
+                      'top_p': 'topP',
+                      'presence_penalty': 'presencePenalty',
+                      'frequency_penalty': 'frequencyPenalty',
+                      'max_tokens': 'maxTokens'
+                    };
+                    const configKey = keyMap[rule.name];
+                    if (configKey) {
+                      acc[configKey] = rule.default as any;
+                    }
+                  }
+                  return acc;
+                }, {} as any) : {})
+              };
+              
+              setModels([newModel]);
+              setMessages({ [newModel.id]: [] });
+              setIsLoaded(true);
+            }
+          } catch (e) {
+            console.error('Failed to fetch default model:', e);
+          }
+        };
+        fetchDefaultModel();
       }
       if (config.enabledFeatures) {
         if (Array.isArray(config.enabledFeatures)) {
@@ -1004,52 +1091,56 @@ const AppConfig: React.FC = () => {
       return;
     }
 
-    const fetchDefaultModel = async () => {
-      try {
-        const res = await apiService.fetchDefaultModal(ModelTypeEnum.textGeneration);
-        if (res && res.model && res.provider) {
-          let rules: ModelParameterRule[] = [];
-          try {
-            const rulesRes = await apiService.fetchModelParameterRules(res.provider.provider, res.model);
-            rules = rulesRes.data || [];
-          } catch (e) {
-            console.error('Failed to fetch model parameter rules:', e);
-          }
-          
-          const newModel: LocalModelConfig = {
-            ...DEFAULT_MODEL,
-            id: res.model,
-            name: res.model,
-            provider: res.provider.provider,
-            rules,
-            ...(rules ? (rules as any[]).reduce((acc: any, rule: any) => {
-              if (rule.default !== undefined) {
-                const keyMap: Record<string, keyof LocalModelConfig> = {
-                  'temperature': 'temperature',
-                  'top_p': 'topP',
-                  'presence_penalty': 'presencePenalty',
-                  'frequency_penalty': 'frequencyPenalty',
-                  'max_tokens': 'maxTokens'
-                };
-                const configKey = keyMap[rule.name];
-                if (configKey) {
-                  acc[configKey] = rule.default as any;
+    // 当appId存在时，不在这里加载模型配置，而是在appId的useEffect中加载
+    // 当appId不存在且app.config也不存在时，加载默认模型
+    if (!appId && !app?.config) {
+      const fetchDefaultModel = async () => {
+        try {
+          const res = await apiService.fetchDefaultModal(ModelTypeEnum.textGeneration);
+          if (res && res.model && res.provider) {
+            let rules: ModelParameterRule[] = [];
+            try {
+              const rulesRes = await apiService.fetchModelParameterRules(res.provider.provider, res.model);
+              rules = rulesRes.data || [];
+            } catch (e) {
+              console.error('Failed to fetch model parameter rules:', e);
+            }
+            
+            const newModel: LocalModelConfig = {
+              ...DEFAULT_MODEL,
+              id: res.model,
+              name: res.model,
+              provider: res.provider.provider,
+              rules,
+              ...(rules ? (rules as any[]).reduce((acc: any, rule: any) => {
+                if (rule.default !== undefined) {
+                  const keyMap: Record<string, keyof LocalModelConfig> = {
+                    'temperature': 'temperature',
+                    'top_p': 'topP',
+                    'presence_penalty': 'presencePenalty',
+                    'frequency_penalty': 'frequencyPenalty',
+                    'max_tokens': 'maxTokens'
+                  };
+                  const configKey = keyMap[rule.name];
+                  if (configKey) {
+                    acc[configKey] = rule.default as any;
+                  }
                 }
-              }
-              return acc;
-            }, {} as any) : {})
-          };
-          
-          setModels([newModel]);
-          setMessages({ [newModel.id]: [] });
-          setIsLoaded(true);
+                return acc;
+              }, {} as any) : {})
+            };
+            
+            setModels([newModel]);
+            setMessages({ [newModel.id]: [] });
+            setIsLoaded(true);
+          }
+        } catch (e) {
+          console.error('Failed to fetch default model:', e);
         }
-      } catch (e) {
-        console.error('Failed to fetch default model:', e);
-      }
-    };
-    fetchDefaultModel();
-  }, [app]);
+      };
+      fetchDefaultModel();
+    }
+  }, [app, appId]);
 
   const updateMetadataModelParam = (param: keyof LocalModelConfig | 'model_info', value: any, extra?: { provider?: string; rules?: ModelParameterRule[] }) => {
     setMetadataModelConfig((prev: any) => {
@@ -1086,7 +1177,7 @@ const AppConfig: React.FC = () => {
 
   const onPublish = async () => {
     if (!appId) return;
-    const hide = message.loading('正在发布配置...', 0);
+    const hide = message.loading('正在更新配置...', 0);
     try {
       const modelConfig = getCurrentModelConfig();
       await apiService.updateAppModelConfig(appId, modelConfig);
@@ -1101,12 +1192,12 @@ const AppConfig: React.FC = () => {
       //   config: getCurrentConfig()
       // } as any);
       
-      message.success('配置发布成功！');
+      message.success('配置更新成功！');
       setDraftUpdatedAt(Date.now());
       lastSavedConfigRef.current = getConfigString();
     } catch (error) {
-      console.error('Failed to publish:', error);
-      message.error('发布失败');
+      console.error('Failed to update:', error);
+      message.error('更新失败');
     } finally {
       hide();
     }
@@ -1288,7 +1379,12 @@ const AppConfig: React.FC = () => {
         inputs: inputs,
         query: query,
         conversation_id: '',
-        files: currentAttachments.map(a => ({ id: a.id, type: 'document' })),
+        files: currentAttachments.map(a => ({
+          type: a.supportFileType,
+          transfer_method: a.transferMethod,
+          url: a.url || '',
+          upload_file_id: a.uploadedId || ''
+        })),
         model_config: {
           pre_prompt: prompt,
           prompt_type: 'simple',
@@ -2465,7 +2561,7 @@ const AppConfig: React.FC = () => {
                     onPublish();
                   }}
                 >
-                  发布
+                  更新配置
                 </Button>
                 <div className="space-y-1 mt-2">
                   <div 
