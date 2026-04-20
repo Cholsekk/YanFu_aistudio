@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Plus, Upload, X, Folder, FileText, Search, MoreHorizontal, Pencil, Trash2, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen, FileArchive, Cpu, ChevronRight, ChevronDown, Filter, AlertTriangle } from 'lucide-react';
 import { Tooltip, Dropdown, Input, Modal as AntModal, message, type MenuProps, Switch } from 'antd';
-import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, createNewNode, getSkillList, SkillListItem, useSkill, getAvailableSkills } from '../lib/api/skills';
+import { Skill, FileNode, getFileTree, getFileContent, updateFileContent, addSkill, renameNode, deleteNode, uploadZip, uploadSkillFile, createNewNode, getSkillList, SkillListItem, useSkill, getAvailableSkills } from '../lib/api/skills';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -59,7 +59,8 @@ const FileTreeItem: React.FC<{
   onRename: (skillId: string, item: FileNode) => void;
   onDelete: (skillId: string, tree_id: string) => void;
   onCreate: (skillId: string, parent_id: string, is_dir: boolean, parentNode: FileNode) => void;
-}> = ({ item, skillId, depth = 0, onSelectFile, selectedFileId, onRename, onDelete, onCreate }) => {
+  onRefresh: (skillId: string) => void;
+}> = ({ item, skillId, depth = 0, onSelectFile, selectedFileId, onRename, onDelete, onCreate, onRefresh }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isSelected = selectedFileId === item.id;
 
@@ -67,6 +68,27 @@ const FileTreeItem: React.FC<{
     ...(item.is_dir ? [
       { key: 'new_file', label: '新建文件', icon: <FilePlus className="w-3.5 h-3.5" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); onCreate(skillId, item.id, false, item); } },
       { key: 'new_folder', label: '新建文件夹', icon: <FolderPlus className="w-3.5 h-3.5" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); onCreate(skillId, item.id, true, item); } },
+      { key: 'upload_file', label: '导入文件', icon: <Upload className="w-3.5 h-3.5" />, onClick: ({ domEvent }) => { 
+        domEvent.stopPropagation();
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = async (e: any) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const hide = message.loading('正在上传...', 0);
+            try {
+              await uploadSkillFile(file, skillId, item.id);
+              message.success('上传成功');
+              onRefresh(skillId);
+            } catch (err) {
+              message.error('上传失败');
+            } finally {
+              hide();
+            }
+          }
+        };
+        input.click();
+      }},
       { type: 'divider' as const }
     ] : []),
     { key: 'rename', label: '重命名', icon: <Pencil className="w-3.5 h-3.5" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); onRename(skillId, item); } },
@@ -142,13 +164,14 @@ const SkillNode: React.FC<{
   onRename: (skillId: string, item: FileNode | { id: string; name: string; is_dir: boolean }) => void;
   onDelete: (skillId: string, tree_id: string, isRoot?: boolean) => void;
   onCreate: (skillId: string, parent_id: string, is_dir: boolean, parentNode: FileNode) => void;
+  onRefresh: (skillId: string) => void;
   isExpanded: boolean;
   onToggle: (skillId: string) => void;
   tree: FileNode | null;
   loading: boolean;
   isSidebarCollapsed?: boolean;
   onToggleAvailable: (skillId: string, used: boolean) => void;
-}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed, onToggleAvailable }) => {
+}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, onRefresh, isExpanded, onToggle, tree, loading, isSidebarCollapsed, onToggleAvailable }) => {
   const tooltipContent = (
     <div>
       <div className="font-bold">{skill.name}</div>
@@ -284,6 +307,7 @@ const SkillNode: React.FC<{
               onRename={onRename}
               onDelete={onDelete}
               onCreate={onCreate}
+              onRefresh={onRefresh}
             />
           ))}
           {(!tree.children || tree.children.length === 0) && (

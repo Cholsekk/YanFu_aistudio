@@ -88,6 +88,14 @@ export const uploadZip = async (file: File): Promise<{ status: string }> => {
   return apiService.post('/skills/upload/zip', formData);
 };
 
+export const uploadSkillFile = async (file: File, skill_id?: string, tree_id?: string): Promise<{ status: string }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (skill_id) formData.append('skill_id', skill_id);
+  if (tree_id) formData.append('tree_id', tree_id);
+  return apiService.post('/skills/upload/file', formData);
+};
+
 export const createNewNode = async (skill_id: string, parent_id: string, is_dir: boolean, name: string): Promise<{ status: string }> => {
   return apiService.post('/skills/tree/new', { skill_id, parent_id, is_dir, name });
 };
