@@ -79,7 +79,7 @@ const FileTreeItem: React.FC<{
             try {
               await uploadSkillFile(file, skillId, item.id);
               message.success('上传成功');
-              onRefresh(skillId);
+              refreshSkillTree(skillId); // 确保操作后刷新该技能的树
             } catch (err) {
               message.error('上传失败');
             } finally {
@@ -140,6 +140,7 @@ const FileTreeItem: React.FC<{
           onRename={onRename} 
           onDelete={onDelete} 
           onCreate={onCreate} 
+          onRefresh={refreshSkillTree}
         />
       ))}
     </div>
@@ -164,14 +165,13 @@ const SkillNode: React.FC<{
   onRename: (skillId: string, item: FileNode | { id: string; name: string; is_dir: boolean }) => void;
   onDelete: (skillId: string, tree_id: string, isRoot?: boolean) => void;
   onCreate: (skillId: string, parent_id: string, is_dir: boolean, parentNode: FileNode) => void;
-  onRefresh: (skillId: string) => void;
   isExpanded: boolean;
   onToggle: (skillId: string) => void;
   tree: FileNode | null;
   loading: boolean;
   isSidebarCollapsed?: boolean;
   onToggleAvailable: (skillId: string, used: boolean) => void;
-}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, onRefresh, isExpanded, onToggle, tree, loading, isSidebarCollapsed, onToggleAvailable }) => {
+}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed, onToggleAvailable }) => {
   const tooltipContent = (
     <div>
       <div className="font-bold">{skill.name}</div>
@@ -307,7 +307,7 @@ const SkillNode: React.FC<{
               onRename={onRename}
               onDelete={onDelete}
               onCreate={onCreate}
-              onRefresh={onRefresh}
+              onRefresh={refreshSkillTree}
             />
           ))}
           {(!tree.children || tree.children.length === 0) && (
