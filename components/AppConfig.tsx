@@ -104,7 +104,7 @@ interface LocalModelConfig {
   presencePenalty: number;
   frequencyPenalty: number;
   maxTokens: number;
-  responseFormat: string;
+  responseFormat?: string;
   samplingStrategy?: boolean;
   googleSearch?: boolean;
   reasoningMode?: boolean;
@@ -123,7 +123,7 @@ const DEFAULT_MODEL: LocalModelConfig = {
   presencePenalty: 0,
   frequencyPenalty: 0,
   maxTokens: 512,
-  responseFormat: 'text',
+  responseFormat: undefined,
   samplingStrategy: true,
   googleSearch: false,
   reasoningMode: false,
@@ -926,16 +926,51 @@ const AppConfig: React.FC = () => {
             setMetadataModelConfig(config.dataset_configs.metadata_model_config);
           }
           if (config.model) {
+            let fetchedRules: any[] | undefined = undefined;
+            if (config.model.provider && config.model.name) {
+              try {
+                const rulesRes = await apiService.fetchModelParameterRules(config.model.provider, config.model.name);
+                fetchedRules = rulesRes.data || [];
+              } catch (e) {
+                console.error('Failed to fetch rules for loaded model:', e);
+              }
+            }
+
+            const deduplicatedRules = fetchedRules ? Array.from(new Map(fetchedRules.map((r: any) => [typeof r.name === 'string' ? r.name.trim() : r.name, r] as readonly [string, any])).values()) : undefined;
+
+            let defaultResponseFormat = undefined;
+            let rfRuleOptions: string[] | undefined = undefined;
+            if (deduplicatedRules) {
+                const rfRule = deduplicatedRules.find((r: any) => typeof r.name === 'string' && r.name.trim() === 'response_format');
+                if (rfRule) {
+                    rfRuleOptions = rfRule.options;
+                    if (rfRule.default !== undefined && rfRule.default !== null) {
+                        defaultResponseFormat = rfRule.default;
+                    } else if (rfRule.options && rfRule.options.length > 0) {
+                        defaultResponseFormat = rfRule.options[0];
+                    }
+                }
+            }
+            
+            let loadedResponseFormat = config.model.completion_params?.response_format ?? defaultResponseFormat;
+            // Also reject it if the backend returned text, but text isn't a valid option
+            if (rfRuleOptions && rfRuleOptions.length > 0 && loadedResponseFormat) {
+                if (!rfRuleOptions.includes(loadedResponseFormat)) {
+                    loadedResponseFormat = defaultResponseFormat;
+                }
+            }
+
             const model = {
               id: config.model.name,
               name: config.model.name,
               provider: config.model.provider,
-              temperature: config.model.completion_params?.temperature || 0.7,
-              topP: config.model.completion_params?.top_p || 1,
-              presencePenalty: config.model.completion_params?.presence_penalty || 0,
-              frequencyPenalty: config.model.completion_params?.frequency_penalty || 0,
-              maxTokens: config.model.completion_params?.max_tokens || 512,
-              responseFormat: config.model.completion_params?.response_format || 'text',
+              rules: deduplicatedRules,
+              temperature: config.model.completion_params?.temperature ?? 0.7,
+              topP: config.model.completion_params?.top_p ?? 1,
+              presencePenalty: config.model.completion_params?.presence_penalty ?? 0,
+              frequencyPenalty: config.model.completion_params?.frequency_penalty ?? 0,
+              maxTokens: config.model.completion_params?.max_tokens ?? 512,
+              responseFormat: loadedResponseFormat,
             };
             setModels([model]);
             setMessages({ [model.id]: [] });
@@ -1034,24 +1069,32 @@ const AppConfig: React.FC = () => {
                 console.error('Failed to fetch model parameter rules:', e);
               }
               
+              const deduplicatedRules = rules ? Array.from(new Map(rules.map((r: any) => [typeof r.name === 'string' ? r.name.trim() : r.name, r] as readonly [string, any])).values()) : [];
+
               const newModel: LocalModelConfig = {
                 ...DEFAULT_MODEL,
                 id: res.model,
                 name: res.model,
                 provider: res.provider.provider,
-                rules,
-                ...(rules ? (rules as any[]).reduce((acc: any, rule: any) => {
-                  if (rule.default !== undefined) {
-                    const keyMap: Record<string, keyof LocalModelConfig> = {
-                      'temperature': 'temperature',
-                      'top_p': 'topP',
-                      'presence_penalty': 'presencePenalty',
-                      'frequency_penalty': 'frequencyPenalty',
-                      'max_tokens': 'maxTokens'
-                    };
-                    const configKey = keyMap[rule.name];
-                    if (configKey) {
+                rules: deduplicatedRules,
+                ...(deduplicatedRules ? deduplicatedRules.reduce((acc: any, rule: any) => {
+                  const keyMap: Record<string, keyof LocalModelConfig> = {
+                    'temperature': 'temperature',
+                    'top_p': 'topP',
+                    'presence_penalty': 'presencePenalty',
+                    'frequency_penalty': 'frequencyPenalty',
+                    'max_tokens': 'maxTokens',
+                    'sampling_strategy': 'samplingStrategy',
+                    'google_search': 'googleSearch',
+                    'reasoning_mode': 'reasoningMode',
+                    'response_format': 'responseFormat'
+                  };
+                  const configKey = keyMap[rule.name];
+                  if (configKey) {
+                    if (rule.default !== undefined && rule.default !== null) {
                       acc[configKey] = rule.default as any;
+                    } else if (rule.options && rule.options.length > 0) {
+                      acc[configKey] = rule.options[0] as any;
                     }
                   }
                   return acc;
@@ -1727,7 +1770,8 @@ const AppConfig: React.FC = () => {
               'max_tokens': 'maxTokens',
               'sampling_strategy': 'samplingStrategy',
               'google_search': 'googleSearch',
-              'reasoning_mode': 'reasoningMode'
+              'reasoning_mode': 'reasoningMode',
+              'response_format': 'responseFormat'
             };
             const configKey = keyMap[rule.name];
             if (configKey) {
@@ -1736,30 +1780,38 @@ const AppConfig: React.FC = () => {
             return acc;
           }, {} as Record<string, boolean>) : m.requiredParams;
 
-          return { 
-            ...m, 
-            name: value, 
-            provider: provider || m.provider,
-            rules: rules || m.rules,
-            requiredParams: requiredParams || m.requiredParams,
-            // Reset params to defaults if rules are provided
-            ...(rules ? rules.reduce((acc, rule) => {
-              if (rule.default !== undefined) {
+            const deduplicatedRules = rules ? Array.from(new Map(rules.map((r: any) => [typeof r.name === 'string' ? r.name.trim() : r.name, r] as readonly [string, any])).values()) : undefined;
+
+            return { 
+              ...m, 
+              name: value, 
+              provider: provider || m.provider,
+              rules: deduplicatedRules || m.rules,
+              requiredParams: requiredParams || m.requiredParams,
+              // Reset params to defaults if rules are provided
+              ...(deduplicatedRules ? deduplicatedRules.reduce((acc: any, rule: any) => {
                 const keyMap: Record<string, keyof LocalModelConfig> = {
                   'temperature': 'temperature',
                   'top_p': 'topP',
                   'presence_penalty': 'presencePenalty',
                   'frequency_penalty': 'frequencyPenalty',
-                  'max_tokens': 'maxTokens'
+                  'max_tokens': 'maxTokens',
+                  'sampling_strategy': 'samplingStrategy',
+                  'google_search': 'googleSearch',
+                  'reasoning_mode': 'reasoningMode',
+                  'response_format': 'responseFormat'
                 };
                 const configKey = keyMap[rule.name];
                 if (configKey) {
-                  acc[configKey] = rule.default as any;
+                  if (rule.default !== undefined && rule.default !== null) {
+                    acc[configKey] = rule.default as any;
+                  } else if (rule.options && rule.options.length > 0) {
+                    acc[configKey] = rule.options[0] as any;
+                  }
                 }
-              }
-              return acc;
-            }, {} as any) : {})
-          };
+                return acc;
+              }, {} as any) : {})
+            };
         }
         if (param === 'required_param') {
           const paramName = extra?.paramName;
@@ -1775,9 +1827,10 @@ const AppConfig: React.FC = () => {
               'max_tokens': 'maxTokens',
               'sampling_strategy': 'samplingStrategy',
               'google_search': 'googleSearch',
-              'reasoning_mode': 'reasoningMode'
+              'reasoning_mode': 'reasoningMode',
+              'response_format': 'responseFormat'
             };
-            if (keyMap[rule.name] === paramName) {
+            if (keyMap[typeof rule.name === 'string' ? rule.name.trim() : rule.name] === paramName) {
               return { ...rule, required: value };
             }
             return rule;
@@ -3167,14 +3220,15 @@ const AppConfig: React.FC = () => {
                       <Button type="text" size="small" icon={<Plus className="w-4 h-4 rotate-45" />} onClick={() => setShowParams(null)} />
                     </div>
                     <div className="p-6 space-y-8 overflow-y-auto flex-grow custom-scrollbar">
-                      {(model.rules || [
+                      {Array.from(new Map((model.rules || [
                         { label: { zh_Hans: '温度 (Temperature)', en_US: 'Temperature' }, name: 'temperature', min: 0, max: 2, type: 'slider', precision: 1 },
                         { label: { zh_Hans: 'Top P', en_US: 'Top P' }, name: 'top_p', min: 0, max: 1, type: 'slider', precision: 2 },
                         { label: { zh_Hans: '采样策略', en_US: 'Sampling Strategy' }, name: 'sampling_strategy', type: 'boolean' },
                         { label: { zh_Hans: '最大标记 (Max Tokens)', en_US: 'Max Tokens' }, name: 'max_tokens', min: 1, max: 4096, type: 'slider', precision: 0 },
                         { label: { zh_Hans: '联网搜索', en_US: 'Google Search' }, name: 'google_search', type: 'boolean' },
                         { label: { zh_Hans: '推理模式', en_US: 'Reasoning Mode' }, name: 'reasoning_mode', type: 'boolean' },
-                      ]).map((rule: any) => {
+                        { label: { zh_Hans: '回复格式', en_US: 'Response Format' }, name: 'response_format', type: 'string', options: ['JSON', 'XML'] },
+                      ]).map((r: any) => [typeof r.name === 'string' ? r.name.trim() : r.name, r] as readonly [string, any])).values()).map((rule: any) => {
                         const keyMap: Record<string, keyof LocalModelConfig> = {
                           'temperature': 'temperature',
                           'top_p': 'topP',
@@ -3197,7 +3251,7 @@ const AppConfig: React.FC = () => {
                         const isRequired = model.requiredParams?.[configKey] ?? rule.required ?? false;
 
                         return (
-                          <div key={rule.name} className="space-y-3">
+                          <div key={typeof rule.name === 'string' ? rule.name.trim() : rule.name} className="space-y-3">
                             <div className="flex justify-between items-center">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-semibold text-gray-500">{label}</span>
@@ -3251,7 +3305,7 @@ const AppConfig: React.FC = () => {
                             ) : rule.type === 'string' && rule.options?.length > 0 ? (
                               <Select 
                                 size="small" 
-                                value={(model as any)[configKey] || (rule.options.length > 0 ? rule.options[0] : undefined)} 
+                                value={((model as any)[configKey] !== undefined && (model as any)[configKey] !== null && (model as any)[configKey] !== '' && rule.options.includes((model as any)[configKey])) ? (model as any)[configKey] : undefined}
                                 className="w-full"
                                 onChange={v => updateModelParam(model.id, configKey, v)}
                                 options={rule.options.map((opt: any) => ({ value: opt, label: opt }))}

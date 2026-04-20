@@ -79,9 +79,10 @@ const FileTreeItem: React.FC<{
             try {
               await uploadSkillFile(file, skillId, item.id);
               message.success('上传成功');
-              refreshSkillTree(skillId); // 确保操作后刷新该技能的树
+              console.log('Refreshing tree for skill:', skillId);
+              onRefresh(skillId);
             } catch (err) {
-              message.error('上传失败');
+              // message.error('上传失败');
             } finally {
               hide();
             }
@@ -140,7 +141,7 @@ const FileTreeItem: React.FC<{
           onRename={onRename} 
           onDelete={onDelete} 
           onCreate={onCreate} 
-          onRefresh={refreshSkillTree}
+          onRefresh={onRefresh}
         />
       ))}
     </div>
@@ -165,13 +166,14 @@ const SkillNode: React.FC<{
   onRename: (skillId: string, item: FileNode | { id: string; name: string; is_dir: boolean }) => void;
   onDelete: (skillId: string, tree_id: string, isRoot?: boolean) => void;
   onCreate: (skillId: string, parent_id: string, is_dir: boolean, parentNode: FileNode) => void;
+  onRefresh: (skillId: string) => void;
   isExpanded: boolean;
   onToggle: (skillId: string) => void;
   tree: FileNode | null;
   loading: boolean;
   isSidebarCollapsed?: boolean;
   onToggleAvailable: (skillId: string, used: boolean) => void;
-}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, isExpanded, onToggle, tree, loading, isSidebarCollapsed, onToggleAvailable }) => {
+}> = ({ skill, onSelectFile, selectedFileId, onRename, onDelete, onCreate, onRefresh, isExpanded, onToggle, tree, loading, isSidebarCollapsed, onToggleAvailable }) => {
   const tooltipContent = (
     <div>
       <div className="font-bold">{skill.name}</div>
@@ -273,9 +275,9 @@ const SkillNode: React.FC<{
                               try {
                                 await uploadSkillFile(file, skill.id, tree.id);
                                 message.success('上传成功');
-                                refreshSkillTree(skill.id);
+                                onRefresh(skill.id);
                               } catch (err) {
-                                message.error('上传失败');
+                                // message.error('上传失败');
                               } finally {
                                 hide();
                               }
@@ -335,7 +337,7 @@ const SkillNode: React.FC<{
               onRename={onRename}
               onDelete={onDelete}
               onCreate={onCreate}
-              onRefresh={refreshSkillTree}
+              onRefresh={onRefresh}
             />
           ))}
           {(!tree.children || tree.children.length === 0) && (
@@ -815,6 +817,7 @@ const SkillsTab: React.FC = () => {
               onRename={handleRenameClick}
               onDelete={handleDelete}
               onCreate={handleCreate}
+              onRefresh={refreshSkillTree}
               isExpanded={isSidebarCollapsed ? false : !!expandedSkills[skill.id]}
               onToggle={handleToggleSkill}
               onToggleAvailable={handleToggleAvailable}
