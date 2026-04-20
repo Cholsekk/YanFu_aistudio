@@ -258,6 +258,34 @@ const SkillNode: React.FC<{
                       onClick: (e) => { e.domEvent.stopPropagation(); handleCreateClick(e.domEvent, true); }
                     },
                     {
+                      key: 'upload-file',
+                      label: '导入文件',
+                      icon: <Upload className="w-4 h-4" />,
+                      onClick: (e) => { 
+                        e.domEvent.stopPropagation(); 
+                        if (tree) {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.onchange = async (ev: any) => {
+                            const file = ev.target.files?.[0];
+                            if (file) {
+                              const hide = message.loading('正在上传...', 0);
+                              try {
+                                await uploadSkillFile(file, skill.id, tree.id);
+                                message.success('上传成功');
+                                refreshSkillTree(skill.id);
+                              } catch (err) {
+                                message.error('上传失败');
+                              } finally {
+                                hide();
+                              }
+                            }
+                          };
+                          input.click();
+                        }
+                      }
+                    },
+                    {
                       key: 'delete',
                       label: '删除 Skill',
                       icon: <Trash2 className="w-4 h-4" />,
