@@ -568,6 +568,7 @@ const SkillsTab: React.FC = () => {
             return;
           }
           if (isRoot) {
+            // 删除Skill后强制刷新列表
             fetchSkills(1, true);
           } else {
             refreshSkillTree(skillId);
