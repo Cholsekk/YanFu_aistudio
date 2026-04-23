@@ -59,7 +59,7 @@ const AppCard: React.FC<AppCardProps> = ({
     if (app.type === '定制应用' || app.mode === 'custom') {
       // 在跳转前将应用信息存入 localStorage，供目标页面使用
       const customAppInfo = {
-        id: app.id,
+        id: app.itemId || app.id,
         is_token_verified: app.needToken,
         app: {
           url: app.appUrl,
