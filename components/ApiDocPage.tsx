@@ -5,9 +5,9 @@ import { monitoringService } from '../services/monitoringService'
 import ApiDoc from './ApiDoc'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 
-const ApiDocPage = () => {
+const ApiDocPage = ({ appId: appIdFromProps }: { appId?: string }) => {
   const params = useParams()
-  const appId = params?.appId as string
+  const appId = appIdFromProps || (params?.appId as string)
   const router = useRouter()
   const [appDetail, setAppDetail] = useState<any>(null)
   const [loading, setLoading] = useState(true)

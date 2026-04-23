@@ -1045,9 +1045,10 @@ const App: React.FC = () => {
   if (pathname === '/mcp-auth-callback') {
     return <McpAuthCallback />;
   }
-
+  
   if (pathname?.startsWith('/api-doc/')) {
-    return <ApiDocPage />;
+    const appId = pathname.split('/').filter(Boolean).pop();
+    return <ApiDocPage appId={appId} />;
   }
 
   return (

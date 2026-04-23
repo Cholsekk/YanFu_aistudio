@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Activity, 
   Copy, 
@@ -27,6 +28,7 @@ import EmbedModal from './EmbedModal';
 import SettingsModal from './SettingsModal';
 import ApiKeyModal from './ApiKeyModal';
 import TimeRangeSelector from './TimeRangeSelector';
+import { TracingPerformanceModal } from './TracingPerformanceModal';
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
 
@@ -93,9 +95,11 @@ const MetricCard = ({ title, value, unit, chartData, colorClass, tooltip }: { ti
 
 const MonitoringPage = () => {
   const app = useAppDevHub();
+  const router = useRouter();
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [isTracingModalOpen, setIsTracingModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [apiCopied, setApiCopied] = useState(false);
   const [appDetail, setAppDetail] = useState<any>(null);
@@ -218,9 +222,15 @@ const MonitoringPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">监测</h1>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50">
-          <LayoutGrid className="w-4 h-4" />
+        <button 
+          onClick={() => setIsTracingModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm"
+        >
+          <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center">
+            <Activity className="w-3.5 h-3.5 text-white" />
+          </div>
           追踪应用性能
+          <LayoutGrid className="w-4 h-4 ml-1" />
         </button>
       </div>
 
@@ -332,7 +342,7 @@ const MonitoringPage = () => {
           </div>
           <div className="flex gap-3 mt-4">
             <button onClick={() => setIsApiKeyModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><Key className="w-4 h-4" /> API 密钥</button>
-            <button onClick={() => window.location.href = `/api-doc/${app.id}`} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><FileText className="w-4 h-4" /> 查阅 API 文档</button>
+            <button onClick={() => router.push(`/api-doc/${app.id}`)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><FileText className="w-4 h-4" /> 查阅 API 文档</button>
           </div>
         </div>
       </div>
@@ -354,6 +364,11 @@ const MonitoringPage = () => {
         <MetricCard title="费用消耗" value={metrics.tokenCosts} unit="Tokens" chartData={data} colorClass="border-indigo-500" tooltip="反映每日该应用请求语言模型的 Tokens 花费，用于成本控制。" />
         <MetricCard title="全部消息数" value={metrics.dailyMessages} chartData={data} colorClass="border-pink-500" tooltip="反映 AI 每天的互动总次数，每回答用户一个问题算一条 Message。" />
       </div>
+
+      <TracingPerformanceModal
+        isOpen={isTracingModalOpen}
+        onClose={() => setIsTracingModalOpen(false)}
+      />
     </div>
   );
 };

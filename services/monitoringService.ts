@@ -1,3 +1,4 @@
+// import { request } from '@/service/base';//集成时使用
 import { 
   AppDailyMessagesResponse, 
   AppDailyConversationsResponse, 
@@ -473,6 +474,17 @@ export const monitoringService = {
     const formData = new FormData();
     formData.append('file', file);
     return apiService.post<AnnotationJobResponse>(`/apps/${appId}/annotations/batch-import`, formData);
+    // 集成时使用👇 request 返回，注释掉👆单独运行的post返回
+    // return request(`/apps/${appId}/annotations/batch-import`, 
+    //   { 
+    //     method: 'POST', 
+    //     body: formData 
+    //   },
+    //  { 
+    //       bodyStringify: false, 
+    //       deleteContentType: true 
+    //     }
+    // );
   },
 
   getBatchImportStatus: (appId: string, jobId: string) =>
