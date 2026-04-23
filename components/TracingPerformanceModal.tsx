@@ -1,19 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   ExternalLink,
   Lock,
   Trash2,
   Settings,
-  HelpCircle,
   Activity,
-  Zap,
-  CheckCircle2,
-  Layers,
-  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { message } from 'antd';
 import { TracingProvider, LangSmithConfig, LangFuseConfig, TracingConfig } from '@/types';
+import { addTracingConfig, updateTracingConfig, updateTracingStatus, removeTracingConfig } from '@/services/apiService';
 
 export const DOC_URLS = {
   [TracingProvider.langSmith]: 'https://docs.smith.langchain.com',
@@ -41,33 +38,54 @@ export const TRACING_PROVIDERS = [
 interface TracingPerformanceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialConfig?: TracingConfig;
+  appId: string;
+  initialConfig?: TracingConfig | null;
   initialEnabled?: boolean;
 }
 
 export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = ({ 
   isOpen, 
   onClose,
+  appId,
   initialConfig,
   initialEnabled = false
 }) => {
   const [config, setConfig] = useState<TracingConfig | null>(initialConfig || null);
   const [enabled, setEnabled] = useState<boolean>(initialEnabled);
   const [activeProvider, setActiveProvider] = useState<TracingProvider | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Settings edit state
   const [isEditing, setIsEditing] = useState(false);
   const [settingsForm, setSettingsForm] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (isOpen) {
+      setConfig(initialConfig || null);
+      setEnabled(initialEnabled);
+      setIsEditing(false);
+      setActiveProvider(null);
+    }
+  }, [isOpen, initialConfig, initialEnabled]);
+
   const handleConfigure = (providerId: string) => {
     setActiveProvider(providerId as TracingProvider);
     setIsEditing(true);
-    setSettingsForm({}); // Reset form for new config
+    
+    // Fill with existing config if editing active provider
+    if (config?.tracing_provider === providerId && config.tracing_config) {
+      const currentConfig = config.tracing_config as Record<string, string>;
+      setSettingsForm(currentConfig);
+    } else {
+      setSettingsForm({});
+    }
   }
 
-  const handleSaveAndEnable = () => {
+  const handleSaveAndEnable = async () => {
     // Save settings and enable
     if (activeProvider) {
+      if (!appId) return;
+      const isUpdating = config?.tracing_provider === activeProvider;
       // Cast the generic map to the actual expected type
       const tracing_config = activeProvider === TracingProvider.langSmith 
         ? {
@@ -81,21 +99,63 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
             host: settingsForm['host'] || ''
           } as LangFuseConfig;
 
-      setConfig({
+      const newConfig: TracingConfig = {
         tracing_provider: activeProvider,
         tracing_config
-      });
-      setEnabled(true);
-      setIsEditing(false);
-      setActiveProvider(null);
+      };
+
+      setIsSaving(true);
+      try {
+        if (isUpdating) {
+          await updateTracingConfig({ appId, body: newConfig });
+        } else {
+          await addTracingConfig({ appId, body: newConfig });
+        }
+        
+        await updateTracingStatus({ appId, body: { enabled: true } });
+        
+        setConfig(newConfig);
+        setEnabled(true);
+        setIsEditing(false);
+        setActiveProvider(null);
+        message.success('配置已保存并开启追踪');
+      } catch (err: any) {
+        message.error(err.message || '配置保存失败');
+      } finally {
+        setIsSaving(false);
+      }
     }
   }
 
-  const handleToggle = () => {
-    if (config?.tracing_provider) {
-      setEnabled(!enabled);
+  const handleToggle = async () => {
+    if (config?.tracing_provider && appId) {
+      const newEnabledState = !enabled;
+      try {
+        await updateTracingStatus({ appId, body: { enabled: newEnabledState } });
+        setEnabled(newEnabledState);
+        message.success(newEnabledState ? '已开启应用性能追踪' : '已关闭应用性能追踪');
+      } catch (err: any) {
+        message.error(err.message || '更新状态失败');
+      }
     }
   }
+
+  const handleRemoveProvider = async () => {
+    if (activeProvider && appId) {
+      try {
+        await removeTracingConfig({ appId, provider: activeProvider });
+        if (config?.tracing_provider === activeProvider) {
+          setConfig(null);
+          setEnabled(false);
+        }
+        message.success('已移除配置');
+        setIsEditing(false);
+        setActiveProvider(null);
+      } catch (err: any) {
+        message.error(err.message || '移除配置失败');
+      }
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -218,10 +278,15 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
 
                 <div className="flex flex-col gap-4 pt-8">
                   <div className="flex justify-end gap-2 shrink-0">
-                    {/* Fake Delete Button for showcase */}
-                    <button className="px-3 py-2 bg-gray-50 text-gray-400 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors shrink-0">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {/* Delete Button */}
+                    {config?.tracing_provider === activeProvider && (
+                      <button 
+                        onClick={handleRemoveProvider}
+                        className="px-3 py-2 bg-gray-50 text-gray-400 rounded-lg border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                     <button 
                       onClick={() => setIsEditing(false)}
                       className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors shrink-0 whitespace-nowrap"
@@ -230,9 +295,10 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                     </button>
                     <button 
                       onClick={handleSaveAndEnable}
-                      className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors shadow-sm shrink-0 whitespace-nowrap"
+                      disabled={isSaving}
+                      className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors shadow-sm shrink-0 whitespace-nowrap disabled:opacity-50"
                     >
-                      保存并启用
+                      {isSaving ? '保存中...' : '保存并启用'}
                     </button>
                   </div>
                   <div className="flex justify-start">

@@ -31,6 +31,8 @@ import TimeRangeSelector from './TimeRangeSelector';
 import { TracingPerformanceModal } from './TracingPerformanceModal';
 import { useAppDevHub } from '../context/AppContext';
 import { monitoringService } from '../services/monitoringService';
+import { fetchTracingStatus, fetchTracingConfig } from '../services/apiService';
+import { TracingStatus, TracingConfig, TracingProvider } from '../types';
 
 const data = [
   { name: '00:00', value: 0 },
@@ -100,6 +102,8 @@ const MonitoringPage = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [isTracingModalOpen, setIsTracingModalOpen] = useState(false);
+  const [tracingStatus, setTracingStatus] = useState<TracingStatus | null>(null);
+  const [tracingConfig, setTracingConfig] = useState<TracingConfig | null>(null);
   const [copied, setCopied] = useState(false);
   const [apiCopied, setApiCopied] = useState(false);
   const [appDetail, setAppDetail] = useState<any>(null);
@@ -114,6 +118,31 @@ const MonitoringPage = () => {
     tps: 0,
     satisfactionRate: 0,
   });
+
+  useEffect(() => {
+    if (!app?.id) return;
+    
+    const initTracing = async () => {
+      try {
+        const statusResponse = await fetchTracingStatus({ appId: app.id });
+        setTracingStatus(statusResponse);
+
+        if (statusResponse?.tracing_provider) {
+          const configResponse = await fetchTracingConfig({ 
+            appId: app.id, 
+            provider: statusResponse.tracing_provider 
+          });
+          if (!(configResponse as any).has_not_configured) {
+            setTracingConfig(configResponse);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch tracing status/config:', err);
+      }
+    };
+
+    initTracing();
+  }, [app?.id]);
 
   useEffect(() => {
     const fetchAppDetail = async () => {
@@ -368,6 +397,9 @@ const MonitoringPage = () => {
       <TracingPerformanceModal
         isOpen={isTracingModalOpen}
         onClose={() => setIsTracingModalOpen(false)}
+        appId={app?.id || ''}
+        initialConfig={tracingConfig}
+        initialEnabled={tracingStatus?.enabled || false}
       />
     </div>
   );

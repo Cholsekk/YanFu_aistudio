@@ -1,4 +1,4 @@
-import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType, ModelConfig, UpdateAppModelConfigResponse } from '../types';
+import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType, ModelConfig, UpdateAppModelConfigResponse, TracingProvider, TracingStatus, TracingConfig } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 // import { request, ssePost } from '@/service/base';
 
@@ -1350,4 +1350,31 @@ export const updateAppModelConfig: Fetcher<UpdateAppModelConfigResponse, { url: 
 }) => {
   const appId = url.split('/')[2];
   return apiService.updateAppModelConfig(appId, body);
+}
+
+// Tracing
+export const fetchTracingStatus: Fetcher<TracingStatus, { appId: string }> = ({ appId }) => {
+  return apiService.get(`/apps/${appId}/trace`)
+}
+
+export const updateTracingStatus: Fetcher<CommonResponse, { appId: string; body: Record<string, any> }> = ({ appId, body }) => {
+  return apiService.post(`/apps/${appId}/trace`, body)
+}
+
+export const fetchTracingConfig: Fetcher<TracingConfig & { has_not_configured?: boolean }, { appId: string; provider: TracingProvider }> = ({ appId, provider }) => {
+  return apiService.get(`/apps/${appId}/trace-config`, {
+    tracing_provider: provider,
+  })
+}
+
+export const addTracingConfig: Fetcher<CommonResponse, { appId: string; body: TracingConfig }> = ({ appId, body }) => {
+  return apiService.post(`/apps/${appId}/trace-config`, body)
+}
+
+export const updateTracingConfig: Fetcher<CommonResponse, { appId: string; body: TracingConfig }> = ({ appId, body }) => {
+  return apiService.patch(`/apps/${appId}/trace-config`, body)
+}
+
+export const removeTracingConfig: Fetcher<CommonResponse, { appId: string; provider: TracingProvider }> = ({ appId, provider }) => {
+  return apiService.del(`/apps/${appId}/trace-config?tracing_provider=${provider}`)
 }
