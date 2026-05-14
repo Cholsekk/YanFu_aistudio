@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Search, Globe, Info, ExternalLink, X, ShieldCheck, MoreHorizontal, Zap, Edit2, Trash2 } from 'lucide-react';
 import { Tooltip, message } from 'antd';
 import dayjs from 'dayjs';
@@ -458,6 +459,13 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
     ] as ToolCredential[];
   }, [selectedService?.name]);
 
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (isEmbedded) {
+      setPortalTarget(document.getElementById('embedded-toolbar-portal'));
+    }
+  }, [isEmbedded]);
+
   return (
     <div className={isEmbedded ? "flex flex-col gap-6" : "flex flex-col gap-8 p-8 min-h-screen font-sans text-gray-900 bg-[#F9FAFB]"}>
       {/* Subtle Background Pattern */}
@@ -465,7 +473,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
         <div className="fixed inset-0 z-[-1] pointer-events-none opacity-[0.4]" style={{ backgroundImage: 'radial-gradient(#E5E7EB 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
       )}
       
-      <div className={`relative flex flex-col md:flex-row md:items-end justify-between ${isEmbedded ? '' : 'border-b border-gray-200/80 pb-6'} gap-4`}>
+      <div className={`relative flex flex-col md:flex-row md:items-end justify-between ${isEmbedded ? 'hidden' : 'border-b border-gray-200/80 pb-6'} gap-4`}>
         {!isEmbedded && (
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-gray-900">MCP 服务</h2>
@@ -496,6 +504,37 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
         </div>
       </div>
 
+      {isEmbedded && portalTarget && createPortal(
+        <div className="flex items-center gap-3 w-full justify-end">
+          <div className="relative flex-grow md:w-64 max-w-[256px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="搜索服务名称或标识符..." 
+              className="w-full pl-10 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center justify-center p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 bg-white transition-all shadow-sm w-[34px] h-[34px]"
+            title="刷新数据"
+          >
+            <Zap className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-all shadow-sm shadow-primary-200 text-sm h-[34px] border border-primary-600 font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            添加服务
+          </button>
+        </div>,
+        portalTarget
+      )}
+
       {/* Transparent overlay for closing menu */}
       {menuOpenId && (
         <div className="fixed inset-0 z-40" onClick={() => setMenuOpenId(null)} />
@@ -505,6 +544,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
         {/* Add Service Card (Always First) */}
         {!searchQuery && (
           <div 
+            id="tour-add-mcp-service"
             className="group relative bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[180px]"
             onClick={() => setIsModalOpen(true)}
           >

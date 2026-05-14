@@ -25,7 +25,8 @@ import {
   Filter,
   ExternalLink,
   ShieldCheck,
-  Info
+  Info,
+  BookOpen
 } from 'lucide-react';
 
 const MOCK_TOOL_DETAIL: ToolDetail[] = [
@@ -1010,55 +1011,63 @@ const ToolExtensions: React.FC = () => {
       </div>
 
       {/* Toolbar Section */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-2 rounded-xl border border-gray-100 shadow-sm z-20 relative">
+      <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between z-20 relative">
         {/* Tabs */}
-        <div className="flex p-1 bg-gray-100/80 rounded-lg w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-fit">
           <button
+            id="tour-tab-builtin"
             onClick={() => setActiveTab('builtin')}
-            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'builtin'
-                ? 'bg-white text-primary-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-blue-600 text-white border-blue-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
             }`}
           >
             内置工具
           </button>
           <button
+            id="tour-tab-workflow"
             onClick={() => setActiveTab('workflow')}
-            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'workflow'
-                ? 'bg-white text-primary-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-blue-600 text-white border-blue-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
             }`}
           >
             工作流
           </button>
           <button
+            id="tour-tab-mcp"
             onClick={() => setActiveTab('mcp')}
-            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'mcp'
-                ? 'bg-white text-primary-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-blue-600 text-white border-blue-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
             }`}
           >
             MCP工具
           </button>
           <button
+            id="tour-tab-skills"
             onClick={() => setActiveTab('skills')}
-            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'skills'
-                ? 'bg-white text-primary-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-blue-600 text-white border-blue-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
             }`}
           >
             SKILLS
           </button>
         </div>
 
-        {/* Search & Filter */}
-        {activeTab !== 'mcp' && activeTab !== 'skills' && (
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-grow md:flex-grow-0">
+        {/* Portal Target for Embedded Components */}
+        <div id="embedded-toolbar-portal" className="flex-grow flex justify-end"></div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {/* Search & Filter */}
+          {activeTab !== 'mcp' && activeTab !== 'skills' && (
+            <>
+              <div className="relative flex-grow md:flex-grow-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
@@ -1067,14 +1076,15 @@ const ToolExtensions: React.FC = () => {
                 placeholder="搜索工具名称或描述..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                className="pl-10 pr-4 py-1.5 bg-white border border-gray-200 rounded-lg text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
               />
             </div>
             
             <div className="relative">
               <button 
+                id="tour-tool-filter-btn"
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-all bg-white min-w-[100px] justify-between
+                className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm transition-all shadow-sm bg-white min-w-[100px] justify-between
                   ${selectedLabel !== '全部' ? 'border-primary-500 text-primary-600 bg-primary-50/10' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
               >
                 <div className="flex items-center gap-2">
@@ -1147,8 +1157,18 @@ const ToolExtensions: React.FC = () => {
                 </>
               )}
             </div>
-          </div>
-        )}
+            </>
+          )}
+
+          <button 
+            id="tour-guide-button"
+            onClick={() => window.dispatchEvent(new Event('open-guide'))}
+            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm h-[34px] ml-auto md:ml-0"
+          >
+            <BookOpen className="w-4 h-4" />
+            新手指引
+          </button>
+        </div>
       </div>
 
       {/* Grid Section */}

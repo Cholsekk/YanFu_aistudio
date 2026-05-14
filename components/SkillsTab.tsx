@@ -713,6 +713,7 @@ const SkillsTab: React.FC = () => {
           <div className={`flex ${isSidebarCollapsed ? 'flex-col' : 'gap-2'}`}>
             <Tooltip title="创建 Skill" arrow={false} placement={isSidebarCollapsed ? 'right' : 'top'}>
               <button 
+                id="tour-create-skill"
                 onClick={() => setIsCreateModalOpen(true)} 
                 className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-all border border-transparent hover:border-primary-100"
               >

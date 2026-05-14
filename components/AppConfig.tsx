@@ -238,6 +238,53 @@ const renderMarkdown = (content: string) => (
   </ReactMarkdown>
 );
 
+  const parseDifyVariables = (formItems: any[]): Variable[] => {
+    return (formItems || []).map((item, index) => {
+      if (item.name && item.type && !item['text-input'] && !item['select'] && !item['paragraph']) {
+        return item as Variable;
+      }
+      const typeKey = Object.keys(item).find(k => ['text-input', 'select', 'paragraph'].includes(k));
+      if (!typeKey) return item;
+      const data = item[typeKey] || {};
+      return {
+        id: `var-${Date.now()}-${index}`,
+        name: data.variable || '',
+        displayName: data.label || '',
+        type: typeKey,
+        required: data.required !== false,
+        maxLength: data.max_length || 48,
+        options: data.options || [],
+        default: data.default || ''
+      };
+    }).filter(v => v.name);
+  };
+
+  const formatDifyVariables = (vars: Variable[]) => {
+    return vars.map(v => {
+      const baseConfig: any = {
+        label: v.displayName || v.name,
+        variable: v.name,
+        required: v.required !== false,
+        default: v.default || ''
+      };
+      
+      let typeKey = 'text-input';
+      if (v.type === 'select') {
+        typeKey = 'select';
+        baseConfig.options = v.options || [];
+      } else if (v.type === 'paragraph') {
+        typeKey = 'paragraph';
+      } else {
+        typeKey = 'text-input';
+        baseConfig.max_length = v.maxLength || 48;
+      }
+      
+      return {
+        [typeKey]: baseConfig
+      };
+    });
+  };
+
 const AppConfig: React.FC = () => {
   const app = useAppDevHub();
   // const { currentWorkspace } = useAppContext();//集成时使用
@@ -247,6 +294,7 @@ const AppConfig: React.FC = () => {
   const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
+  const [datasetQueryVariable, setDatasetQueryVariable] = useState<string>('');
   const [isKBModalOpen, setIsKBModalOpen] = useState(false);
   const [isKBSettingsOpen, setIsKBSettingsOpen] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -321,6 +369,7 @@ const AppConfig: React.FC = () => {
       metadataFilter,
       metadataModelConfig,
       manualFilters,
+      dataset_query_variable: appDetail?.mode === 'completion' && knowledgeBases.length > 0 ? (datasetQueryVariable || (variables.length > 0 ? variables[0]?.name : 'query')) : '',
       dataset_configs: {
         retrieval_model: RETRIEVE_TYPE.multiWay,
         top_k: 4,
@@ -377,8 +426,8 @@ const AppConfig: React.FC = () => {
       prompt_type: PromptMode.simple,
       chat_prompt_config: {},
       completion_prompt_config: {},
-      user_input_form: variables as any,
-      dataset_query_variable: '',
+      user_input_form: formatDifyVariables(variables) as any,
+      dataset_query_variable: appDetail?.mode === 'completion' && knowledgeBases.length > 0 ? (datasetQueryVariable || (variables.length > 0 ? variables[0]?.name : 'query')) : '',
       more_like_this: {
         enabled: false
       },
@@ -872,7 +921,8 @@ const AppConfig: React.FC = () => {
         const config = detail.model_config || detail;
         if (config) {
           if (config.pre_prompt) setPrompt(config.pre_prompt);
-          if (config.user_input_form) setVariables(config.user_input_form);
+          if (config.user_input_form) setVariables(parseDifyVariables(config.user_input_form));
+          if (config.dataset_query_variable) setDatasetQueryVariable(config.dataset_query_variable);
           
           if (config.dataset_configs && config.dataset_configs.datasets && config.dataset_configs.datasets.datasets) {
             const kbIds = config.dataset_configs.datasets.datasets.map((d: any) => d.dataset ? d.dataset.id : d.id);
@@ -1121,6 +1171,7 @@ const AppConfig: React.FC = () => {
       }
       if (config.metadataFilter) setMetadataFilter(config.metadataFilter);
       if (config.metadataModelConfig) setMetadataModelConfig(config.metadataModelConfig);
+      if (config.dataset_query_variable) setDatasetQueryVariable(config.dataset_query_variable);
       if (config.manualFilters) {
         setManualFilters(config.manualFilters.map((f: any) => ({
           ...f,
@@ -1219,6 +1270,7 @@ const AppConfig: React.FC = () => {
     if (!appId) return;
     const hide = message.loading('正在更新配置...', 0);
     try {
+       console.log('Updating app model config with:', getCurrentModelConfig());
       const modelConfig = getCurrentModelConfig();
       await apiService.updateAppModelConfig(appId, modelConfig);
       
@@ -1453,7 +1505,7 @@ const AppConfig: React.FC = () => {
               [typeKey]: baseConfig
             };
           }),
-          dataset_query_variable: '',
+          dataset_query_variable: appDetail?.mode === 'completion' && knowledgeBases.length > 0 ? (datasetQueryVariable || (variables.length > 0 ? variables[0]?.name : 'query')) : '',
           opening_statement: '',
           more_like_this: {
             enabled: false
@@ -2260,6 +2312,25 @@ const AppConfig: React.FC = () => {
               </div>
             )}
             
+            {knowledgeBases.length > 0 && appDetail?.mode === 'completion' && (
+              <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-2 block">
+                  <span className="text-xs font-bold text-gray-700">查询变量</span>
+                  <Tooltip title="在文本生成应用中，当配置了知识库时，必须指定一个用户输入变量作为检索查询的词。">
+                    <Info className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                  </Tooltip>
+                </div>
+                <Select
+                  value={datasetQueryVariable || (variables.length > 0 ? variables[0].name : '')}
+                  onChange={setDatasetQueryVariable}
+                  size="small"
+                  className="w-32"
+                  placeholder="选择变量"
+                  options={variables.map(v => ({ label: v.displayName || v.name, value: v.name }))}
+                />
+              </div>
+            )}
+
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -2472,6 +2543,7 @@ const AppConfig: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">{tools.length}/{tools.length} 启用</span>
+                  {/* 集成时使用type="vertical" */}
                   <Divider orientation="vertical" />
                   <ToolSelectorPopover
                     onSelectTool={(provider, tool) => {

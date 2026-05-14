@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ScheduledTask } from '../types';
-import { Plus, ChevronLeft, ChevronRight, ChevronDown, Settings, AlertTriangle } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, ChevronDown, Settings, AlertTriangle, BookOpen } from 'lucide-react';
 import EditTaskModal from './EditTaskModal';
 import NewTaskModal from './NewTaskModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
@@ -172,7 +172,7 @@ const ScheduledTasks: React.FC = () => {
       {/* Search and Action Bar */}
       <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto flex-1">
-          <div className="flex items-center gap-3 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all">
+          <div id="tour-search-task" className="flex items-center gap-3 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-primary-500/20 focus-within:border-primary-500 transition-all">
             <span className="text-sm text-gray-500 whitespace-nowrap font-medium">任务名称</span>
             <div className="w-px h-4 bg-gray-300"></div>
             <input 
@@ -202,6 +202,15 @@ const ScheduledTasks: React.FC = () => {
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-end pl-4 md:border-l md:border-gray-100">
           <button 
+            id="tour-guide-button"
+            onClick={() => window.dispatchEvent(new Event('open-guide'))}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm"
+          >
+            <BookOpen className="w-4 h-4" />
+            新手指引
+          </button>
+          <button 
+            id="tour-create-task"
             onClick={() => setIsNewModalOpen(true)}
             className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >

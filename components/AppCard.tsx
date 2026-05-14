@@ -277,7 +277,7 @@ const AppCard: React.FC<AppCardProps> = ({
   if (viewMode === 'list') {
     return (
       <div 
-        className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all duration-200 group flex items-center gap-4 cursor-pointer relative ${isMenuOpen ? 'z-50' : 'z-10'}`}
+        className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all duration-200 group flex items-center gap-4 cursor-pointer relative tour-app-card ${isMenuOpen ? 'z-50' : 'z-10'}`}
         onClick={onClick}
       >
         <div className="flex-shrink-0">
@@ -325,7 +325,7 @@ const AppCard: React.FC<AppCardProps> = ({
 
   return (
     <div 
-      className={`bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative flex flex-col h-full cursor-pointer ${isMenuOpen || isAddingTag ? 'z-50' : 'z-10'}`}
+      className={`bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative flex flex-col h-full cursor-pointer tour-app-card ${isMenuOpen || isAddingTag ? 'z-50' : 'z-10'}`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-4 relative">
@@ -362,7 +362,9 @@ const AppCard: React.FC<AppCardProps> = ({
         </p>
       </Tooltip>
 
-      <div className="flex items-center justify-between mt-auto">
+      <div className="h-px bg-gray-100 mb-4 mt-auto -mx-6"></div>
+
+      <div className="flex items-center justify-between tour-app-tags pt-1">
         <div className="flex flex-wrap gap-1.5 max-w-[70%]">
           {(app.type === '定制应用' || app.mode === 'custom') ? null : (
             <>

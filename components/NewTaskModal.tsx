@@ -188,7 +188,10 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
   if (!isOpen) return null;
 
   return (
-    <ConfigProvider locale={zhCN}>
+    <ConfigProvider 
+      locale={zhCN}
+      getPopupContainer={() => document.getElementById('root') as HTMLElement || document.body}
+    >
       <>
         {/* Backdrop */}
       <div 

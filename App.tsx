@@ -33,7 +33,8 @@ import {
   SortDesc,
   RotateCcw,
   ListOrdered,
-  ArrowUp
+  ArrowUp,
+  BookOpen
 } from 'lucide-react';
 
 import { message } from 'antd';
@@ -41,7 +42,7 @@ import { ConfirmDialog } from './components/ConfirmDialog';
 // import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';
 
 const App: React.FC = () => {
-  // const { currentWorkspace } = useAppContext();//集成时使用，独立运行时 AppContext 未提供
+  // const {userProfile, currentWorkspace } = useAppContext();//集成时使用，独立运行时 AppContext 未提供
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -534,6 +535,7 @@ const App: React.FC = () => {
           is_menu: appData.customMenu,
           menus: appData.customMenu ? JSON.stringify({ menus: appData.menuItems }) : null,
           created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // Mock or from user context
+          // created_by: userProfile?.id || 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // 集成时使用userProfile.id
         };
 
         if (appData.id) {
@@ -735,45 +737,45 @@ const App: React.FC = () => {
   const CreateAppContent = () => {
     if (viewMode === 'grid') {
       return (
-        <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4 h-full">
+        <div id="tour-create-app" className="bg-white rounded-xl border border-dashed border-gray-300 p-5 shadow-sm flex flex-col gap-4 h-full">
           <div>
             <h3 className="font-semibold text-gray-900 text-base mb-0.5">创建应用</h3>
             <p className="text-[11px] text-gray-500">从头开始或导入现有配置</p>
           </div>
-          <div className="space-y-2 mt-auto">
+          <div className="space-y-4 mt-auto">
             <button 
               onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 transition-all group"
+              className="w-full flex items-center gap-3 group text-left"
             >
-              <div className="p-1.5 bg-primary-50 text-primary-600 rounded-lg group-hover:bg-primary-100 transition-colors">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
                 <Plus className="w-4 h-4" />
               </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold leading-tight">新建应用</p>
+              <div>
+                <p className="text-sm font-semibold text-blue-600 leading-tight">新建应用</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">创建全新的对话或工作流应用</p>
               </div>
             </button>
             <button 
               onClick={() => { setEditingApp(null); setIsCustomAppModalOpen(true); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all group"
+              className="w-full flex items-center gap-3 group text-left"
             >
-              <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-100 transition-colors">
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold leading-tight">创建定制化应用</p>
+              <div>
+                <p className="text-sm font-semibold text-blue-600 leading-tight">创建定制化应用</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">基于模板快速构建</p>
               </div>
             </button>
             <button 
               onClick={() => setIsImportAppModalOpen(true)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 text-gray-600 hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all group"
+              className="w-full flex items-center gap-3 group text-left"
             >
-              <div className="p-1.5 bg-green-50 text-green-600 rounded-lg group-hover:bg-green-100 transition-colors">
-                <Upload className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                <BookOpen className="w-4 h-4" />
               </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold leading-tight">导入应用</p>
+              <div>
+                <p className="text-sm font-semibold text-blue-600 leading-tight">导入应用</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">从外部文件或链接导入</p>
               </div>
             </button>
@@ -783,7 +785,7 @@ const App: React.FC = () => {
     }
 
     return (
-      <div className="bg-white rounded-xl border border-dashed border-gray-200 p-4 shadow-sm flex items-center gap-6 mb-2">
+      <div id="tour-create-app" className="bg-white rounded-xl border border-dashed border-gray-200 p-4 shadow-sm flex items-center gap-6 mb-2">
         <div className="flex-shrink-0 flex items-center gap-3">
           <div className="w-10 h-10 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center">
             <LayoutGrid className="w-5 h-5" />
@@ -796,21 +798,21 @@ const App: React.FC = () => {
         <div className="flex-grow flex gap-3">
           <button 
             onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-primary-500 hover:bg-primary-50 transition-all text-sm text-gray-600 hover:text-primary-600 font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-primary-500 hover:bg-primary-50 transition-all text-sm text-gray-800 hover:text-primary-600 font-medium"
           >
             <Plus className="w-4 h-4" />
             新建应用
           </button>
           <button 
             onClick={() => { setEditingApp(null); setIsCustomAppModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-purple-500 hover:bg-purple-50 transition-all text-sm text-gray-600 hover:text-purple-600 font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-purple-500 hover:bg-purple-50 transition-all text-sm text-gray-800 hover:text-purple-600 font-medium"
           >
             <Sparkles className="w-4 h-4" />
             创建定制化
           </button>
           <button 
             onClick={() => setIsImportAppModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-green-500 hover:bg-green-50 transition-all text-sm text-gray-600 hover:text-green-600 font-medium"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-green-500 hover:bg-green-50 transition-all text-sm text-gray-800 hover:text-green-600 font-medium"
           >
             <Upload className="w-4 h-4" />
             导入
@@ -853,8 +855,8 @@ const App: React.FC = () => {
 
     return (
       <>
-        <div className="sticky top-0 z-30 backdrop-blur-sm py-4 -mt-4 mb-6 border-b border-gray-100 transition-all flex flex-col md:flex-row gap-6 md:items-center justify-between">
-          <div className="flex flex-wrap items-center gap-1 p-1 bg-gray-100/80 rounded-lg w-fit">
+        <div id="tour-filter-search" className="sticky top-0 z-30 backdrop-blur-sm py-4 -mt-4 mb-6 transition-all flex flex-col md:flex-row gap-6 md:items-center justify-between">
+          <div className="flex flex-wrap items-center gap-2 w-fit">
             {APP_TYPES.map(type => (
               <button
                 key={type}
@@ -864,10 +866,10 @@ const App: React.FC = () => {
                   setHasMore(false);
                   setActiveFilterTab(type);
                 }}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
                   activeFilterTab === type 
-                    ? 'bg-white text-primary-600 shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-900'
+                    ? 'bg-blue-600 text-white border-blue-600 font-medium' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
                 }`}
               >
                 {type}
@@ -883,14 +885,14 @@ const App: React.FC = () => {
                 placeholder="搜索应用"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+                className="pl-10 pr-4 py-1.5 bg-white border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
               />
             </div>
             
             <div className="relative">
               <button 
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm transition-all shadow-sm
+                className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm transition-all shadow-sm
                   ${isFilterOpen || isFiltered 
                     ? 'border-primary-500 text-primary-600 bg-primary-50/30' 
                     : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}
@@ -987,6 +989,15 @@ const App: React.FC = () => {
                 <List className="w-4 h-4" />
               </button>
             </div>
+            
+            <button 
+              id="tour-guide-button"
+              onClick={() => window.dispatchEvent(new Event('open-guide'))}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm h-[34px]"
+            >
+              <BookOpen className="w-4 h-4" />
+              新手指引
+            </button>
           </div>
         </div>
 

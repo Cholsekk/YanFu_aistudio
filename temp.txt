@@ -1,0 +1,38 @@
+81:import VariableEditModal, { Variable } from './VariableEditModal';
+246:  const [variables, setVariables] = useState<Variable[]>([]);
+247:  const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
+248:  const [editingVariable, setEditingVariable] = useState<Variable | null>(null);
+250:  const [datasetQueryVariable, setDatasetQueryVariable] = useState<string>('');
+325:      dataset_query_variable: appDetail?.mode === 'completion' && knowledgeBases.length > 0 ? (datasetQueryVariable || (variables.length > 0 ? variables[0].variable || variables[0].name : 'query')) : '',
+383:      dataset_query_variable: appDetail?.mode === 'completion' && knowledgeBases.length > 0 ? (datasetQueryVariable || (variables.length > 0 ? variables[0].variable || variables[0].name : 'query')) : '',
+630:  const [variableValues, setVariableValues] = useState<Record<string, any>>({});
+632:  const handleVariableChange = (id: string, value: any) => {
+633:    setVariableValues(prev => ({ ...prev, [id]: value }));
+877:          if (config.user_input_form) setVariables(config.user_input_form);
+878:          if (config.dataset_query_variable) setDatasetQueryVariable(config.dataset_query_variable);
+1048:      if (config.variables) setVariables(config.variables);
+1127:      if (config.dataset_query_variable) setDatasetQueryVariable(config.dataset_query_variable);
+1461:          dataset_query_variable: appDetail?.mode === 'completion' && knowledgeBases.length > 0 ? (datasetQueryVariable || (variables.length > 0 ? variables[0].variable || variables[0].name : 'query')) : '',
+2084:          {/* Variables Section Card */}
+2104:                  setEditingVariable({
+2112:                  setIsVariableModalOpen(true);
+2157:                            setVariables(newVars);
+2165:                            setEditingVariable(v);
+2166:                            setIsVariableModalOpen(true);
+2172:                            setVariables(variables.filter((_, idx) => idx !== i));
+2277:                  value={datasetQueryVariable || (variables.length > 0 ? variables[0].name : '')}
+2278:                  onChange={setDatasetQueryVariable}
+2831:          {/* Variables Area */}
+2846:                        onChange={(e) => handleVariableChange(v.id, e.target.value)}
+2854:                        onChange={(e) => handleVariableChange(v.id, e.target.value)}
+2863:                        onChange={(val) => handleVariableChange(v.id, val)}
+3390:            const newVars: Variable[] = [...variables];
+3403:            setVariables(newVars);
+4070:      <VariableEditModal 
+4071:        isOpen={isVariableModalOpen} 
+4072:        onClose={() => setIsVariableModalOpen(false)} 
+4073:        variable={editingVariable}
+4079:            setVariables(newVars);
+4082:            setVariables([...variables, updatedVar]);
+4086:              setVariableValues(prev => ({ ...prev, [updatedVar.id]: updatedVar.default }));
+4089:          setIsVariableModalOpen(false);
