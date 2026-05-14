@@ -14,7 +14,12 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <ConfigProvider 
-      getPopupContainer={() => document.getElementById('root') as HTMLElement || document.body}
+      getPopupContainer={(node) => {
+        if (node && node.parentElement) {
+          return node.parentElement;
+        }
+        return document.getElementById('root') || document.body;
+      }}
     >
       <App />
     </ConfigProvider>

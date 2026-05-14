@@ -75,14 +75,24 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
         if (isMcp) {
           return [
             {
-              title: 'MCP服务配置',
-              description: '此处可以统一管理和接入外部标准协议服务（MCP）。',
+              title: 'MCP服务配置概要',
+              description: '此处统一管理和接入外部 MCP 服务，拓展 AI 大模型的能力边界。',
               target: () => document.getElementById('tour-tab-mcp') as HTMLElement,
             },
             {
-              title: '添加 MCP 服务',
-              description: '点击添加按钮，填入端点地址和认证信息即可秒连外部服务，拓展大语言模型的抓手。',
+              title: '快速搜索服务',
+              description: '在此搜索栏输入服务名称或标识符，快速定位已连接的 MCP 服务。',
+              target: () => document.querySelector('input[placeholder*="搜索服务名称"]') as HTMLElement,
+            },
+            {
+              title: '添加/新建服务',
+              description: '点击此处开启引导，配置新的 MCP 服务器端点，实现即插即用的能力扩容。',
               target: () => document.getElementById('tour-add-mcp-service') as HTMLElement,
+            },
+            {
+              title: '服务管理与详情',
+              description: '点击服务卡片上的菜单按钮，可对现有服务配置进行修改、授权更新或移除，查看其同步的工具详情。',
+              target: () => document.querySelector('.tour-mcp-menu-btn') as HTMLElement,
             }
           ];
         }
@@ -90,19 +100,24 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
         if (isSkills) {
           return [
             {
-              title: 'Skills 管理',
-              description: '此处可以自定义代码片段和功能代码，作为独立的 Skill 插入和重用。',
+              title: 'Skills 代码能力管理',
+              description: 'Skills 组件用于管理外部代码片段和功能逻辑，作为独立的原子功能插入重用。',
               target: () => document.getElementById('tour-tab-skills') as HTMLElement,
             },
             {
-              title: '搜索 Skills',
-              description: '在左侧侧边栏中快速搜索特定的 Skill。',
-              target: () => document.querySelector('input[placeholder="搜索 Skill 或文件..."]') as HTMLElement,
+              title: '新建与管理技能',
+              description: '通过顶部工具栏，您可以直接创建空白 Skill 代码，或批量导入现有的 .zip 格式代码库。',
+              target: () => document.getElementById('tour-create-skill') as HTMLElement,
             },
             {
-              title: '创建新 Skill',
-              description: '点击这里可以快速创建新的代码片段，丰富您的组件库。',
-              target: () => document.getElementById('tour-create-skill') as HTMLElement,
+              title: '资源树导航',
+              description: '在左侧资源管理器中，点击 Skill 文件夹不仅可以展开查看内部代码文件，还能进行文件的增删改查。',
+              target: () => document.querySelector('.flex-grow.overflow-y-auto') as HTMLElement,
+            },
+            {
+              title: '实时代码编辑与预览',
+              description: '选中 Skill 中的具体文件，即可在此处查看源码内容，或者点击「编辑内容」进行快速的逻辑调整。',
+              target: () => document.querySelector('.flex-grow.flex.flex-col.bg-white') as HTMLElement,
             }
           ];
         }
@@ -194,14 +209,12 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
   return (
     <ConfigProvider 
       locale={zhCN}
-      getPopupContainer={() => document.getElementById('root') as HTMLElement || document.body}
     >
       <Tour 
         open={isOpen} 
         onClose={onClose} 
         steps={steps}
         type="default"
-        getPopupContainer={() => document.getElementById('root') as HTMLElement || document.body}
       />
     </ConfigProvider>
   );

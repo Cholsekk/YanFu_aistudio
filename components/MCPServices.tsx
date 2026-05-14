@@ -604,7 +604,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                
                <div className="relative">
                 <div 
-                  className={`p-2 rounded-lg transition-all cursor-pointer ${menuOpenId === service.id ? 'bg-gray-100 text-gray-900' : 'text-gray-300 hover:bg-gray-50 hover:text-gray-600'}`}
+                  className={`tour-mcp-menu-btn p-2 rounded-lg transition-all cursor-pointer ${menuOpenId === service.id ? 'bg-gray-100 text-gray-900' : 'text-gray-300 hover:bg-gray-50 hover:text-gray-600'}`}
                   onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === service.id ? null : service.id); }}
                 >
                   <MoreHorizontal className="w-4 h-4" />

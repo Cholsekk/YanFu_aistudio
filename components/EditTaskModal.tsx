@@ -208,7 +208,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
   return (
     <ConfigProvider 
       locale={zhCN}
-      getPopupContainer={() => document.getElementById('root') as HTMLElement || document.body}
     >
       <>
         {/* Backdrop */}
