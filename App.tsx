@@ -37,7 +37,7 @@ import {
   BookOpen
 } from 'lucide-react';
 
-import { message } from 'antd';
+import { message, ConfigProvider } from 'antd';
 import { ConfirmDialog } from './components/ConfirmDialog';
 // import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';//集成时使用，独立运行时可删除或替换为其他组件
 
@@ -1064,73 +1064,82 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
-      <div ref={topRef} />
-      <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
+    <ConfigProvider 
+      getPopupContainer={(node) => {
+        if (node && node.parentElement) {
+          return node.parentElement;
+        }
+        return document.getElementById('root') || document.body;
+      }}
+    >
+      <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+        <div ref={topRef} />
+        <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
 
-      <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-6 py-8'}`}>
-        {renderContent()}
-      </main>
+        <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-6 py-8'}`}>
+          {renderContent()}
+        </main>
 
-      <NewAppModal 
-        isOpen={isNewAppModalOpen} 
-        onClose={() => { setIsNewAppModalOpen(false); setEditingApp(null); }} 
-        onCreate={handleCreateOrUpdateApp}
-        initialData={editingApp}
-      />
-      <CustomAppModal 
-        isOpen={isCustomAppModalOpen} 
-        onClose={() => { setIsCustomAppModalOpen(false); setEditingApp(null); }} 
-        onCreate={() => { fetchApps(); setEditingApp(null); }}
-        initialData={editingApp}
-      />
-      <ImportAppModal 
-        isOpen={isImportAppModalOpen} 
-        onClose={() => setIsImportAppModalOpen(false)} 
-        onImport={() => fetchApps()}
-      />
-      <ManageTagsModal 
-        isOpen={isManageTagsModalOpen}
-        onClose={() => setIsManageTagsModalOpen(false)}
-        tags={tags}
-        onRenameTag={handleRenameTag}
-        onDeleteTag={handleDeleteTag}
-        onCreateTag={handleCreateTag}
-      />
-      <TokenConfigModal 
-        isOpen={isTokenModalOpen}
-        onClose={() => setIsTokenModalOpen(false)}
-      />
-      <ConvertToWorkflowModal
-        isOpen={isConvertToWorkflowModalOpen}
-        onClose={() => setIsConvertToWorkflowModalOpen(false)}
-        onConfirm={executeConvertToWorkflow}
-        app={appToConvert}
-      />
+        <NewAppModal 
+          isOpen={isNewAppModalOpen} 
+          onClose={() => { setIsNewAppModalOpen(false); setEditingApp(null); }} 
+          onCreate={handleCreateOrUpdateApp}
+          initialData={editingApp}
+        />
+        <CustomAppModal 
+          isOpen={isCustomAppModalOpen} 
+          onClose={() => { setIsCustomAppModalOpen(false); setEditingApp(null); }} 
+          onCreate={() => { fetchApps(); setEditingApp(null); }}
+          initialData={editingApp}
+        />
+        <ImportAppModal 
+          isOpen={isImportAppModalOpen} 
+          onClose={() => setIsImportAppModalOpen(false)} 
+          onImport={() => fetchApps()}
+        />
+        <ManageTagsModal 
+          isOpen={isManageTagsModalOpen}
+          onClose={() => setIsManageTagsModalOpen(false)}
+          tags={tags}
+          onRenameTag={handleRenameTag}
+          onDeleteTag={handleDeleteTag}
+          onCreateTag={handleCreateTag}
+        />
+        <TokenConfigModal 
+          isOpen={isTokenModalOpen}
+          onClose={() => setIsTokenModalOpen(false)}
+        />
+        <ConvertToWorkflowModal
+          isOpen={isConvertToWorkflowModalOpen}
+          onClose={() => setIsConvertToWorkflowModalOpen(false)}
+          onConfirm={executeConvertToWorkflow}
+          app={appToConvert}
+        />
 
-      {/* Back to Top Button */}
-      {showBackToTop && (
-        <button
-          onClick={() => topRef.current?.scrollIntoView({ behavior: 'smooth' })}
-          className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-primary-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
-          aria-label="Back to top"
-        >
-          <ArrowUp className="w-5 h-5" />
-        </button>
-      )}
+        {/* Back to Top Button */}
+        {showBackToTop && (
+          <button
+            onClick={() => topRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="fixed bottom-10 right-10 p-3 bg-white border border-gray-200 text-gray-600 rounded-full shadow-lg hover:bg-gray-50 hover:text-primary-600 transition-all z-50 animate-in fade-in zoom-in duration-300"
+            aria-label="Back to top"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </button>
+        )}
 
-      <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        type={confirmDialog.type}
-        onConfirm={() => {
-          confirmDialog.onConfirm();
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-        }}
-        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-      />
-    </div>
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          type={confirmDialog.type}
+          onConfirm={() => {
+            confirmDialog.onConfirm();
+            setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          }}
+          onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        />
+      </div>
+    </ConfigProvider>
   );
 };
 
