@@ -4,6 +4,7 @@ import Modal from './Modal';
 import { apiService } from '../services/apiService';
 import { getTenantId, setTenantId as saveTenantId, getToken, setToken as saveToken } from '../utils/auth';
 // import { useAppContext } from '@/context/app-context';//集成时使用，独立运行时 AppContext 未提供
+// import { getRequestURL } from '@/utils';//集成时使用，独立运行时可删除或替换为固定值
 
 interface TokenConfigModalProps {
   isOpen: boolean;
@@ -99,6 +100,8 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
               type="text"
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
+              //集成时使用 getRequestURL() 获取默认值，独立运行时可替换为固定值或删除 placeholder
+              // placeholder={getRequestURL()}
               placeholder="http://192.168.1.201:5005"
               className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-mono"
             />

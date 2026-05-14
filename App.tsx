@@ -39,7 +39,7 @@ import {
 
 import { message } from 'antd';
 import { ConfirmDialog } from './components/ConfirmDialog';
-// import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';
+// import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';//集成时使用，独立运行时可删除或替换为其他组件
 
 const App: React.FC = () => {
   // const {userProfile, currentWorkspace } = useAppContext();//集成时使用，独立运行时 AppContext 未提供
@@ -840,6 +840,7 @@ const App: React.FC = () => {
       return <ToolExtensions />;
     }
 
+    //集成时使用👇
     // if (activeNavTab === 'model') {
     //   return <ModelProviderPage />;
     // }
