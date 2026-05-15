@@ -10,9 +10,7 @@ interface UserGuideModalProps {
 }
 
 const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, activeTab, subTab }) => {
-  console.log('UserGuideModal rendered', { isOpen, activeTab });
   const getSteps = (): TourProps['steps'] => {
-    console.log('getSteps called', { activeTab, subTab });
     switch (activeTab) {
       case 'app-dev':
         return [
@@ -71,8 +69,6 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
         ];
       case 'tools':
         const currentSubTab = subTab || 'builtin';
-        console.log('Guide debug tabs:', { currentSubTab });
-        
         if (currentSubTab === 'mcp') {
           return [
             {
@@ -96,9 +92,7 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
               target: () => document.querySelector('.tour-mcp-menu-btn') as HTMLElement || null,
             }
           ];
-        }
-
-        if (currentSubTab === 'skills') {
+        } else if (currentSubTab === 'skills') {
           return [
             {
               title: 'Skills 代码能力管理',
@@ -121,9 +115,7 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
               target: () => document.querySelector('.flex-grow.flex.flex-col.bg-white') as HTMLElement || null,
             }
           ];
-        }
-
-        if (currentSubTab === 'workflow') {
+        } else if (currentSubTab === 'workflow') {
           return [
             {
               title: '工作流集成',
@@ -141,28 +133,26 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
               target: () => document.getElementById('tour-tool-filter-btn') || null,
             }
           ];
+        } else {
+          return [
+            {
+              title: '内置工具',
+              description: '这是系统自带的强大工具，覆盖了联网搜索、数学推导、图像生成等多种常用能力。',
+              target: () => document.getElementById('tour-tab-builtin') || null,
+            },
+            {
+              title: '工具搜索筛选',
+              description: '可以通过输入工具名称搜索，或点击筛选分类来快速查找您需要的工具。',
+              target: () => document.querySelector('input[name="tool-search"]')?.parentElement as HTMLElement || null,
+            },
+            {
+              title: '工具分类筛选',
+              description: '在右侧下拉菜单中，可以根据工具分类标签进一步缩小查找范围。',
+              target: () => document.getElementById('tour-tool-filter-btn') || null,
+            }
+          ];
         }
-
-        // Default or builtin
-        return [
-          {
-            title: '内置工具',
-            description: '这是系统自带的强大工具，覆盖了联网搜索、数学推导、图像生成等多种常用能力。',
-            target: () => document.getElementById('tour-tab-builtin') || null,
-          },
-          {
-            title: '工具搜索筛选',
-            description: '可以通过输入工具名称搜索，或点击筛选分类来快速查找您需要的工具。',
-            target: () => document.querySelector('input[name="tool-search"]')?.parentElement as HTMLElement || null,
-          },
-          {
-            title: '工具分类筛选',
-            description: '在右侧下拉菜单中，可以根据工具分类标签进一步缩小查找范围。',
-            target: () => document.getElementById('tour-tool-filter-btn') || null,
-          }
-        ];
       case 'model':
-        // ... (rest of the cases)
         return [
           {
             title: '全局默认模型',
@@ -205,14 +195,12 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
 
   const steps = getSteps();
 
-  // If steps have no targets found in the dom (maybe null target function returns null),
-  // Tour still displays them in the middle of screen which is fine.
-
   return (
     <ConfigProvider 
       locale={zhCN}
     >
       <Tour 
+        key={isOpen ? 'open' : 'closed'}
         open={isOpen} 
         onClose={onClose} 
         steps={steps}
