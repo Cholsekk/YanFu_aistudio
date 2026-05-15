@@ -1162,7 +1162,7 @@ const ToolExtensions: React.FC = () => {
 
           <button 
             id="tour-guide-button"
-            onClick={() => window.dispatchEvent(new Event('open-guide'))}
+            onClick={() => window.dispatchEvent(new CustomEvent('open-guide', { detail: { subTab: activeTab }, bubbles: true, composed: true }))}
             className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm h-[34px] ml-auto md:ml-0"
           >
             <BookOpen className="w-4 h-4" />

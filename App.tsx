@@ -13,6 +13,7 @@ import TokenConfigModal from './components/TokenConfigModal';
 import ConvertToWorkflowModal from './components/ConvertToWorkflowModal';
 import McpAuthCallback from './components/McpAuthCallback';
 import ApiDocPage from './components/ApiDocPage';
+import UserGuideModal from './components/UserGuideModal';
 import { APP_TYPES } from './constants';
 import { AppItem, AppMode, Tag, MenuItem } from './types';
 import { apiService } from './services/apiService';
@@ -102,6 +103,19 @@ const App: React.FC = () => {
   const [appToConvert, setAppToConvert] = useState<AppItem | null>(null);
   const [tenantId, setTenantId] = useState(() => localStorage.getItem('console_tenant_id'));
   const [selectedApp, setSelectedApp] = useState<AppItem | null>(null);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const [guideSubTab, setGuideSubTab] = useState<string | undefined>();
+
+  // Listen for open-guide events
+  useEffect(() => {
+    const handleOpenGuide = (e: any) => {
+      console.log('open-guide event received', e.detail);
+      setGuideSubTab(e.detail?.subTab);
+      setIsGuideModalOpen(true);
+    };
+    window.addEventListener('open-guide', handleOpenGuide);
+    return () => window.removeEventListener('open-guide', handleOpenGuide);
+  }, []);
 
   // Listen for tenant changes from other windows/iframes
   useEffect(() => {
@@ -1155,6 +1169,12 @@ const App: React.FC = () => {
         <TokenConfigModal 
           isOpen={isTokenModalOpen}
           onClose={() => setIsTokenModalOpen(false)}
+        />
+        <UserGuideModal
+          isOpen={isGuideModalOpen}
+          onClose={() => { setIsGuideModalOpen(false); setGuideSubTab(undefined); }}
+          activeTab={activeNavTab}
+          subTab={guideSubTab}
         />
         <ConvertToWorkflowModal
           isOpen={isConvertToWorkflowModalOpen}
