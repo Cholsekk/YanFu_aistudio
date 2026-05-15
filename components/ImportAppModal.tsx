@@ -109,13 +109,14 @@ const ImportAppModal: React.FC<ImportAppModalProps> = ({ isOpen, onClose, onImpo
             文件
             {activeTab === 'file' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
           </button>
-          <button 
+          {/* 暂无 URL 导入功能 */}
+          {/* <button 
             onClick={() => setActiveTab('url')}
             className={`px-4 py-2 text-sm font-medium transition-all relative ${activeTab === 'url' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
           >
             URL
             {activeTab === 'url' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />}
-          </button>
+          </button> */}
         </div>
 
         {activeTab === 'file' ? (

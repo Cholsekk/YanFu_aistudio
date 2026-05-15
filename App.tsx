@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import Header from './components/Header';
 import AppCard from './components/AppCard';
 import NewAppModal from './components/NewAppModal';
 import CustomAppModal from './components/CustomAppModal';
@@ -34,12 +33,20 @@ import {
   RotateCcw,
   ListOrdered,
   ArrowUp,
-  BookOpen
+  BookOpen,
+  Settings
 } from 'lucide-react';
 
 import { message, ConfigProvider } from 'antd';
 import { ConfirmDialog } from './components/ConfirmDialog';
 // import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';//集成时使用，独立运行时可删除或替换为其他组件
+
+const NAV_TABS = [
+  { id: 'app-dev', label: '应用开发' },
+  { id: 'tools', label: '工具拓展' },
+  { id: 'model', label: '模型服务' },
+  { id: 'tasks', label: '定时任务' },
+];
 
 const App: React.FC = () => {
   // const {userProfile, currentWorkspace } = useAppContext();//集成时使用，独立运行时 AppContext 未提供
@@ -1065,6 +1072,11 @@ const App: React.FC = () => {
 
   return (
     <ConfigProvider 
+      theme={{
+        token: {
+          borderRadius: 14,
+        },
+      }}
       getPopupContainer={(node) => {
         if (node && node.parentElement) {
           return node.parentElement;
@@ -1072,11 +1084,44 @@ const App: React.FC = () => {
         return document.getElementById('root') || document.body;
       }}
     >
-      <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+      <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gray-50/50`}>
         <div ref={topRef} />
-        <Header activeTab={activeNavTab} setActiveTab={(tab) => { setActiveNavTab(tab); setSelectedApp(null); }} />
+        <header className="bg-white sticky top-0 z-[60] border-b border-gray-100">
+          <div className="max-w-[1600px] mx-auto px-7 h-16 flex items-center justify-between">
+            <h1 className="text-sm font-bold text-gray-900">
+              应用开发
+            </h1>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsTokenModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-[14px] text-sm font-medium hover:bg-gray-50 transition-all shadow-sm"
+              >
+                <Settings className="w-4 h-4" />
+                配置 Token
+              </button>
+            </div>
+          </div>
+          <div className="max-w-[1600px] mx-auto px-7 border-t border-gray-100">
+            <nav id="tour-header-tabs" className="flex h-12">
+              {NAV_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  id={`tour-tab-${tab.id}`}
+                  onClick={() => setActiveNavTab(tab.id)}
+                  className={`px-4 h-full relative flex items-center text-sm font-medium transition-colors
+                    ${activeNavTab === tab.id ? 'text-primary-600' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                  {tab.label}
+                  {activeNavTab === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </header>
 
-        <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-6 py-8'}`}>
+        <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-7 py-8'}`}>
           {renderContent()}
         </main>
 

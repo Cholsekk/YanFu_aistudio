@@ -202,20 +202,20 @@ const ScheduledTasks: React.FC = () => {
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-end pl-4 md:border-l md:border-gray-100">
           <button 
-            id="tour-guide-button"
-            onClick={() => window.dispatchEvent(new Event('open-guide'))}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm"
-          >
-            <BookOpen className="w-4 h-4" />
-            新手指引
-          </button>
-          <button 
             id="tour-create-task"
             onClick={() => setIsNewModalOpen(true)}
             className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <Plus className="w-4 h-4" />
             新建任务
+          </button>
+          <button 
+            id="tour-guide-button"
+            onClick={() => window.dispatchEvent(new Event('open-guide'))}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm"
+          >
+            <BookOpen className="w-4 h-4" />
+            新手指引
           </button>
         </div>
       </div>
