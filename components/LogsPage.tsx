@@ -874,9 +874,9 @@ const LogsPage: React.FC = () => {
       title: '创建时间',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (timestamp: number) => (
+      render: (date: string) => (
         <span className="text-gray-400 text-xs">
-          {dayjs(timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}
+          {dayjs(date).format('YYYY-MM-DD HH:mm:ss')}
         </span>
       ),
     },
@@ -995,26 +995,22 @@ const LogsPage: React.FC = () => {
   const menuItems: MenuProps['items'] = [
     {
       key: 'import',
-      label: '批量导入',
+      label: '批量导入标注',
       icon: <Upload className="w-4 h-4" />,
       onClick: () => setIsBatchImportOpen(true)
     },
+    { type: 'divider' },
     {
-      key: 'export',
-      label: '批量导出',
+      key: 'export-csv',
+      label: '导出标注 (CSV)',
       icon: <Download className="w-4 h-4" />,
-      children: [
-        { 
-          key: 'export-csv', 
-          label: 'CSV',
-          onClick: () => handleExport('csv')
-        },
-        { 
-          key: 'export-jsonl', 
-          label: 'JSONL',
-          onClick: () => handleExport('jsonl')
-        },
-      ]
+      onClick: () => handleExport('csv')
+    },
+    {
+      key: 'export-jsonl',
+      label: '导出标注 (JSONL)',
+      icon: <Download className="w-4 h-4" />,
+      onClick: () => handleExport('jsonl')
     },
   ];
 
