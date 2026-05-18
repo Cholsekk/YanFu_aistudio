@@ -995,22 +995,26 @@ const LogsPage: React.FC = () => {
   const menuItems: MenuProps['items'] = [
     {
       key: 'import',
-      label: '批量导入标注',
+      label: '批量导入',
       icon: <Upload className="w-4 h-4" />,
       onClick: () => setIsBatchImportOpen(true)
     },
-    { type: 'divider' },
     {
-      key: 'export-csv',
-      label: '导出标注 (CSV)',
+      key: 'export',
+      label: '批量导出',
       icon: <Download className="w-4 h-4" />,
-      onClick: () => handleExport('csv')
-    },
-    {
-      key: 'export-jsonl',
-      label: '导出标注 (JSONL)',
-      icon: <Download className="w-4 h-4" />,
-      onClick: () => handleExport('jsonl')
+      children: [
+        { 
+          key: 'export-csv', 
+          label: 'CSV',
+          onClick: () => handleExport('csv')
+        },
+        { 
+          key: 'export-jsonl', 
+          label: 'JSONL',
+          onClick: () => handleExport('jsonl')
+        },
+      ]
     },
   ];
 
@@ -1170,7 +1174,7 @@ const LogsPage: React.FC = () => {
               >
                 添加标注
               </Button>
-              <Dropdown menu={{ items: menuItems }} placement="bottomRight" trigger={['click']}>
+              <Dropdown menu={{ items: menuItems }} placement="bottomRight" trigger={['click']} getPopupContainer={(triggerNode) => document.body}>
                 <Button 
                   icon={<MoreHorizontal className="w-4 h-4" />} 
                   className="h-9 w-9 flex items-center justify-center rounded-xl border-gray-200 hover:text-primary-600 hover:border-primary-500" 
