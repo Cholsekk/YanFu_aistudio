@@ -999,19 +999,21 @@ const LogsPage: React.FC = () => {
       icon: <Upload className="w-4 h-4" />,
       onClick: () => setIsBatchImportOpen(true)
     },
+    { type: 'divider' },
     {
-      key: 'export',
+      type: 'group',
       label: '批量导出',
-      icon: <Download className="w-4 h-4" />,
       children: [
         { 
           key: 'export-csv', 
-          label: 'CSV',
+          label: '导出为 CSV',
+          icon: <Download className="w-4 h-4" />,
           onClick: () => handleExport('csv')
         },
         { 
           key: 'export-jsonl', 
-          label: 'JSONL',
+          label: '导出为 JSONL',
+          icon: <Download className="w-4 h-4" />,
           onClick: () => handleExport('jsonl')
         },
       ]
