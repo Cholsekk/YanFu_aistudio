@@ -1082,7 +1082,7 @@ class ApiService {
   }
 
   async fetchWorkflowToolDetail(toolID: string): Promise<WorkflowToolProviderResponse> {
-    return this.post(`/workspaces/current/tool-provider/workflow/get?workflow_tool_id=${toolID}`);
+    return this.get(`/workspaces/current/tool-provider/workflow/get?workflow_tool_id=${toolID}`);
   }
 
   async deleteWorkflowTool(toolID: string): Promise<void> {

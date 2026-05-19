@@ -1102,7 +1102,7 @@ const App: React.FC = () => {
         <div ref={topRef} />
         <header className="bg-white sticky top-0 z-[60] border-b border-gray-100">
           <div className="max-w-[1600px] mx-auto px-7 h-16 flex items-center justify-between">
-            <h1 className="text-sm font-bold text-gray-900">
+            <h1 className="text-lg font-bold text-gray-900">
               应用开发
             </h1>
             <div className="flex items-center gap-3">
