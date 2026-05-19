@@ -639,6 +639,7 @@ const ToolExtensions: React.FC = () => {
   const [authSchema, setAuthSchema] = useState<ToolCredential[]>([]);
   const [authValues, setAuthValues] = useState<CredentialData>({});
   const [credentialType, setCredentialType] = useState<string>('api-key');
+  const [supportedCredentialTypes, setSupportedCredentialTypes] = useState<string[]>(['api-key', 'oauth2', 'unauthorized']);
 
   // Edit Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -793,14 +794,19 @@ const ToolExtensions: React.FC = () => {
         client_secret: selectedTool.authentication?.client_secret || ''
       });
       setCredentialType('api-key'); // Not used for MCP but reset
+      setSupportedCredentialTypes(['api-key']);
       setIsAuthSettingsOpen(true);
       return;
     }
 
     try {
-      // First try the default type 'api-key'
-      const initialType = 'api-key';
+      const supportedTypes = ['api-key'];
+      
+      setSupportedCredentialTypes(supportedTypes);
+      
+      const initialType = supportedTypes[0];
       setCredentialType(initialType);
+      
       const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(selectedTool.name, initialType);
       const credentialsResponse = await apiService.fetchBuiltInToolCredential(selectedTool.name);
       
@@ -1353,12 +1359,13 @@ const ToolExtensions: React.FC = () => {
         initialValues={authValues}
         onSave={handleSaveAuth}
         credentialType={credentialType}
+        supportedCredentialTypes={supportedCredentialTypes}
         onCredentialTypeChange={(type) => {
           if (selectedTool && selectedTool.type !== 'mcp') {
              fetchSchemaForCredentialType(type, selectedTool);
           }
         }}
-        showCredentialTypeSelector={selectedTool?.type !== 'mcp'}
+        showCredentialTypeSelector={selectedTool?.type !== 'mcp' && supportedCredentialTypes.length > 1}
       />
 
       <EditCustomToolModal

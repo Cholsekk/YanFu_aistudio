@@ -10,6 +10,7 @@ interface ToolAuthSettingsDrawerProps {
   onSave: (values: CredentialData) => void;
   isLoading?: boolean;
   credentialType?: string;
+  supportedCredentialTypes?: string[];
   onCredentialTypeChange?: (type: string) => void;
   showCredentialTypeSelector?: boolean;
 }
@@ -22,6 +23,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
   onSave,
   isLoading = false,
   credentialType = 'api-key',
+  supportedCredentialTypes = ['api-key', 'oauth2', 'unauthorized'],
   onCredentialTypeChange,
   showCredentialTypeSelector = false,
 }) => {
@@ -86,23 +88,26 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
             <div className="space-y-3">
               <label className="block text-sm font-bold text-gray-900">鉴权类型</label>
               <div className="flex p-1 bg-gray-100/80 rounded-xl">
-                {[
-                  { value: 'api-key', label: 'API Key' },
-                  { value: 'oauth2', label: 'OAuth2' },
-                  { value: 'unauthorized', label: '无需鉴权' }
-                ].map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => onCredentialTypeChange(type.value)}
-                    className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      credentialType === type.value
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
-                    }`}
-                  >
-                    {type.label}
-                  </button>
-                ))}
+                {supportedCredentialTypes.map((type) => {
+                  const typeLabels: Record<string, string> = {
+                    'api-key': 'API Key',
+                    'oauth2': 'OAuth2',
+                    'unauthorized': '无需鉴权'
+                  };
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => onCredentialTypeChange(type)}
+                      className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        credentialType === type
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                      }`}
+                    >
+                      {typeLabels[type] || type}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -166,7 +171,7 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
             ))
             ) : (
               <div className="text-gray-500 text-sm mt-8 text-center py-8 border border-dashed border-gray-200 rounded-xl bg-gray-50/50">
-                该鉴权类型无需额外配置参数
+                当前鉴权类型无需额外配置参数
               </div>
             )}
           </div>
