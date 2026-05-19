@@ -9,6 +9,9 @@ interface ToolAuthSettingsDrawerProps {
   initialValues: CredentialData;
   onSave: (values: CredentialData) => void;
   isLoading?: boolean;
+  credentialType?: string;
+  onCredentialTypeChange?: (type: string) => void;
+  showCredentialTypeSelector?: boolean;
 }
 
 const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
@@ -18,6 +21,9 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
   initialValues,
   onSave,
   isLoading = false,
+  credentialType = 'api-key',
+  onCredentialTypeChange,
+  showCredentialTypeSelector = false,
 }) => {
   const [values, setValues] = useState<CredentialData>(initialValues);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
@@ -75,6 +81,31 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
           <div className="text-sm text-gray-500 leading-relaxed">
             配置凭据后，工作区中的所有成员都可以在编排应用程序时使用此工具。
           </div>
+
+          {showCredentialTypeSelector && onCredentialTypeChange && (
+            <div className="space-y-3">
+              <label className="block text-sm font-bold text-gray-900">鉴权类型</label>
+              <div className="flex p-1 bg-gray-100/80 rounded-xl">
+                {[
+                  { value: 'api-key', label: 'API Key' },
+                  { value: 'oauth2', label: 'OAuth2' },
+                  { value: 'unauthorized', label: '无需鉴权' }
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => onCredentialTypeChange(type.value)}
+                    className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      credentialType === type.value
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-8">
             {Array.isArray(schema) && schema.map((field) => (

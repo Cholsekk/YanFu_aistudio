@@ -638,6 +638,7 @@ const ToolExtensions: React.FC = () => {
   const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
   const [authSchema, setAuthSchema] = useState<ToolCredential[]>([]);
   const [authValues, setAuthValues] = useState<CredentialData>({});
+  const [credentialType, setCredentialType] = useState<string>('api-key');
 
   // Edit Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -769,6 +770,19 @@ const ToolExtensions: React.FC = () => {
     }
   ];
 
+  const fetchSchemaForCredentialType = async (type: string, tool: Collection) => {
+    try {
+      const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(tool.name, type);
+      setAuthSchema(schemaResponse);
+      setCredentialType(type);
+      setAuthValues({}); // Clear values when switching type to prevent stale data
+      return schemaResponse;
+    } catch (error) {
+      console.error('Failed to fetch schema for type', type, error);
+      return [];
+    }
+  };
+
   const handleAuthorize = async () => {
     if (!selectedTool) return;
     
@@ -778,13 +792,16 @@ const ToolExtensions: React.FC = () => {
         client_id: selectedTool.authentication?.client_id || '',
         client_secret: selectedTool.authentication?.client_secret || ''
       });
+      setCredentialType('api-key'); // Not used for MCP but reset
       setIsAuthSettingsOpen(true);
       return;
     }
 
     try {
-      // Fetch schema and existing credentials
-      const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(selectedTool.name);
+      // First try the default type 'api-key'
+      const initialType = 'api-key';
+      setCredentialType(initialType);
+      const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(selectedTool.name, initialType);
       const credentialsResponse = await apiService.fetchBuiltInToolCredential(selectedTool.name);
       
       setAuthSchema(schemaResponse);
@@ -1335,6 +1352,13 @@ const ToolExtensions: React.FC = () => {
         schema={authSchema}
         initialValues={authValues}
         onSave={handleSaveAuth}
+        credentialType={credentialType}
+        onCredentialTypeChange={(type) => {
+          if (selectedTool && selectedTool.type !== 'mcp') {
+             fetchSchemaForCredentialType(type, selectedTool);
+          }
+        }}
+        showCredentialTypeSelector={selectedTool?.type !== 'mcp'}
       />
 
       <EditCustomToolModal

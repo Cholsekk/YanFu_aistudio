@@ -1003,8 +1003,8 @@ class ApiService {
   }
 
   // 2. 内置工具认证管理
-  async fetchBuiltInToolCredentialSchema(collectionName: string): Promise<ToolCredential[]> {
-    return this.get(`/workspaces/current/tool-provider/builtin/${collectionName}/credentials_schema`);
+  async fetchBuiltInToolCredentialSchema(collectionName: string, credentialType: string = 'api-key'): Promise<ToolCredential[]> {
+    return this.get(`/workspaces/current/tool-provider/builtin/${collectionName}/credential/schema/${credentialType}`);
   }
 
   async fetchBuiltInToolCredential(collectionName: string): Promise<ToolCredential[]> {
