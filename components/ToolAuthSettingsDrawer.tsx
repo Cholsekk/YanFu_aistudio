@@ -122,9 +122,9 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                   </label>
                   {field.required && <span className="text-red-500 font-bold">*</span>}
                   {field.help && (
-                    <div className="group relative cursor-help">
+                    <div className="group relative">
                       <HelpCircle className="w-4 h-4 text-gray-300 hover:text-gray-400 transition-colors" />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
+                      <div className="absolute bottom-full left-0 mb-2 w-max max-w-xs p-3 bg-gray-900 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
                         {field.help.zh_Hans}
                       </div>
                     </div>
