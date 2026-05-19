@@ -108,7 +108,8 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
           )}
 
           <div className="space-y-8">
-            {Array.isArray(schema) && schema.map((field) => (
+            {Array.isArray(schema) && schema.length > 0 ? (
+              schema.map((field) => (
               <div key={field.name} className="space-y-3">
                 <div className="flex items-center gap-1.5">
                   <label className="block text-sm font-bold text-gray-900">
@@ -162,7 +163,12 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                   )}
                 </div>
               </div>
-            ))}
+            ))
+            ) : (
+              <div className="text-gray-500 text-sm mt-8 text-center py-8 border border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                该鉴权类型无需额外配置参数
+              </div>
+            )}
           </div>
         </div>
 
