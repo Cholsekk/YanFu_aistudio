@@ -808,7 +808,7 @@ const LogsPage: React.FC = () => {
       key: 'created_at',
       render: (record: any) => (
         <span className="text-gray-500 text-sm">
-          {record.created_at ? dayjs(record.created_at * 1000).format('YYYY-MM-DD HH:mm:ss') : '-'}
+          {dayjs(record.created_at).format('YYYY-MM-DD HH:mm:ss')}
         </span>
       )
     },
