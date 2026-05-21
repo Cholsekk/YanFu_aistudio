@@ -7,6 +7,7 @@ import CustomAppModal from './components/CustomAppModal';
 import ImportAppModal from './components/ImportAppModal';
 import ManageTagsModal from './components/ManageTagsModal';
 import DraftPreviewModal from './components/DraftPreviewModal';
+import AIGeneratingModal from './components/AIGeneratingModal';
 import ScheduledTasks from './components/ScheduledTasks';
 import ToolExtensions from './components/ToolExtensions';
 import AppDetail from './components/AppDetail';
@@ -19,7 +20,7 @@ import { APP_TYPES } from './constants';
 import { AppItem, AppMode, Tag, MenuItem, ModelTypeEnum } from './types';
 import { apiService } from './services/apiService';
 import { setContextTenantId } from './utils/auth';
-// import { useAppContext } from '@/context/app-context';
+// import { useAppContext } from '@/context/app-context';//集成时使用，独立运行时 AppContext 未提供
 import { 
   Plus, 
   Search as SearchIcon, 
@@ -99,6 +100,7 @@ const App: React.FC = () => {
   const [isImportAppModalOpen, setIsImportAppModalOpen] = useState(false);
   const [isManageTagsModalOpen, setIsManageTagsModalOpen] = useState(false);
   const [isDraftPreviewModalOpen, setIsDraftPreviewModalOpen] = useState(false);
+  const [isAIGeneratingModalOpen, setIsAIGeneratingModalOpen] = useState(false);
   const [draftPreviewData, setDraftPreviewData] = useState<any>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -628,7 +630,8 @@ const App: React.FC = () => {
         const appId = createRes?.id;
         
         if (appData.typeLabel === '工作流应用' && appData.workflowCreateMethod === 'ai' && appId) {
-           message.loading({ content: '正在为工作流排兵布阵，请耐心等待...', key: 'ai-gen', duration: 0 });
+           setIsNewAppModalOpen(false);
+           setIsAIGeneratingModalOpen(true);
            try {
              let provider = appData.modelProvider;
              let name = appData.modelName;
@@ -646,14 +649,19 @@ const App: React.FC = () => {
              }
 
              const draftRes = await apiService.generateWorkflowDraft(appId, {
-               provider,
-               name
-             }, appData.instruction, { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } });
-             message.destroy('ai-gen');
-             
-             // Open preview modal instead of saving directly
-             setDraftPreviewData({ appId, graph: draftRes?.graph || draftRes || { nodes: [], edges: [] } });
-             setIsDraftPreviewModalOpen(true);
+              provider,
+              name
+            }, appData.instruction, { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } });
+            
+            setIsAIGeneratingModalOpen(false);
+            
+            const resultData = draftRes?.result || draftRes || {}
+            setDraftPreviewData({ appId, graph: {
+              nodes: resultData.nodes || resultData.result?.nodes || [],
+              edges: resultData.edges || resultData.result?.edges || [],
+              viewport: resultData.viewport || resultData.result?.viewport || { x: 0, y: 0, zoom: 1 },
+            }});
+            setIsDraftPreviewModalOpen(true);
              
              // Setup UI state, but wait for preview to close before reloading?
              // Actually, the app is created, we can refresh the list.
@@ -661,8 +669,9 @@ const App: React.FC = () => {
              setEditingApp(null);
              return; // Stop here, so it does not show "应用保存成功"
            } catch(generateErr) {
+             setIsAIGeneratingModalOpen(false);
              console.error('generate workflow error', generateErr);
-             message.error({ content: 'AI生成工作流失败，已创建为空工作流', key: 'ai-gen' });
+             message.error('AI生成工作流失败，已创建为空工作流');
            }
         }
       }
@@ -675,16 +684,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDraftPreviewSubmit = async (draft: any) => {
-    // 模拟将结果更新到工作流
-    // 大项目中将调用真实的 hooks 更新节点数据
-    console.log('Submitting draft for app:', draftPreviewData?.appId, draft);
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        message.success('已应用：将结果添加到工作流');
-        resolve();
-      }, 500);
-    });
+  const handleDraftPreviewClose = () => {
+    setIsDraftPreviewModalOpen(false);
   };
 
   const handleDeleteApp = async (id: string) => {
@@ -1161,7 +1162,7 @@ const App: React.FC = () => {
             <h1 className="text-lg font-bold text-gray-900">
               应用开发
             </h1>
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <button 
                 onClick={() => setIsTokenModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-[14px] text-sm font-medium hover:bg-gray-50 transition-all shadow-sm"
@@ -1169,7 +1170,7 @@ const App: React.FC = () => {
                 <Settings className="w-4 h-4" />
                 配置 Token
               </button>
-            </div>
+            </div> */}
           </div>
           <div className="max-w-[1600px] mx-auto px-7 border-t border-gray-100">
             {!selectedApp && (
@@ -1216,9 +1217,12 @@ const App: React.FC = () => {
         />
         <DraftPreviewModal
           isOpen={isDraftPreviewModalOpen}
-          onClose={() => setIsDraftPreviewModalOpen(false)}
+          onClose={handleDraftPreviewClose}
           draftData={draftPreviewData}
-          onSubmit={handleDraftPreviewSubmit}
+          appId={draftPreviewData?.appId}
+        />
+        <AIGeneratingModal
+          isOpen={isAIGeneratingModalOpen}
         />
         <ManageTagsModal 
           isOpen={isManageTagsModalOpen}
