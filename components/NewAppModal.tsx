@@ -33,6 +33,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     instruction: ''
   });
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -86,7 +87,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
 
   const subTypes = ['对话助手', '对话助手工作流'];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name.trim()) {
       message.error('应用名称不能为空');
       return;
@@ -107,24 +108,31 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       }
     }
 
-    onCreate({
-      ...(initialData ? { id: initialData.id } : {}),
-      name: formData.name,
-      description: formData.description,
-      typeLabel: formData.type,
-      type: formData.type.includes('助手') ? '对话应用' : formData.type,
-      mode: formData.type === '对话助手' ? (formData.subType === '对话助手工作流' ? 'advanced-chat' : 'chat') : undefined,
-      icon: finalIcon,
-      iconType: formData.iconType,
-      iconBgColor: formData.iconBgColor,
-      tags: initialData?.tags || [],
-      builtIn: formData.builtIn,
-      workflowCreateMethod: formData.type === '工作流应用' ? formData.workflowCreateMethod : undefined,
-      modelProvider: formData.modelProvider,
-      modelName: formData.modelName,
-      instruction: formData.instruction
-    });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onCreate({
+        ...(initialData ? { id: initialData.id } : {}),
+        name: formData.name,
+        description: formData.description,
+        typeLabel: formData.type,
+        type: formData.type.includes('助手') ? '对话应用' : formData.type,
+        mode: formData.type === '对话助手' ? (formData.subType === '对话助手工作流' ? 'advanced-chat' : 'chat') : undefined,
+        icon: finalIcon,
+        iconType: formData.iconType,
+        iconBgColor: formData.iconBgColor,
+        tags: initialData?.tags || [],
+        builtIn: formData.builtIn,
+        workflowCreateMethod: formData.type === '工作流应用' ? formData.workflowCreateMethod : undefined,
+        modelProvider: formData.modelProvider,
+        modelName: formData.modelName,
+        instruction: formData.instruction
+      });
+      onClose();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
@@ -142,9 +150,19 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
             <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm font-medium border border-gray-200">取消</button>
             <button 
               onClick={handleSubmit} 
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm shadow-primary-200"
+              disabled={isSubmitting}
+              className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2 ${
+                isSubmitting ? 'bg-primary-400 text-white cursor-not-allowed shadow-none' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200'
+              }`}
             >
-              {initialData ? '保存' : '创建'}
+              {isSubmitting ? (
+                <>
+                  <Sparkles className="w-4 h-4 animate-pulse" />
+                  {formData.workflowCreateMethod === 'ai' ? '生成中...' : '提交中...'}
+                </>
+              ) : (
+                initialData ? '保存' : '创建'
+              )}
             </button>
           </>
         }

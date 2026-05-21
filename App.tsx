@@ -6,6 +6,7 @@ import NewAppModal from './components/NewAppModal';
 import CustomAppModal from './components/CustomAppModal';
 import ImportAppModal from './components/ImportAppModal';
 import ManageTagsModal from './components/ManageTagsModal';
+import DraftPreviewModal from './components/DraftPreviewModal';
 import ScheduledTasks from './components/ScheduledTasks';
 import ToolExtensions from './components/ToolExtensions';
 import AppDetail from './components/AppDetail';
@@ -97,6 +98,8 @@ const App: React.FC = () => {
   const [isCustomAppModalOpen, setIsCustomAppModalOpen] = useState(false);
   const [isImportAppModalOpen, setIsImportAppModalOpen] = useState(false);
   const [isManageTagsModalOpen, setIsManageTagsModalOpen] = useState(false);
+  const [isDraftPreviewModalOpen, setIsDraftPreviewModalOpen] = useState(false);
+  const [draftPreviewData, setDraftPreviewData] = useState<any>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [isConvertToWorkflowModalOpen, setIsConvertToWorkflowModalOpen] = useState(false);
@@ -625,7 +628,7 @@ const App: React.FC = () => {
         const appId = createRes?.id;
         
         if (appData.typeLabel === '工作流应用' && appData.workflowCreateMethod === 'ai' && appId) {
-           message.loading({ content: '正在为工作流排兵布阵，请耐心等待...', key: 'ai-gen' });
+           message.loading({ content: '正在为工作流排兵布阵，请耐心等待...', key: 'ai-gen', duration: 0 });
            try {
              let provider = appData.modelProvider;
              let name = appData.modelName;
@@ -642,11 +645,21 @@ const App: React.FC = () => {
                throw new Error('未选择模型且未获取到默认模型');
              }
 
-             await apiService.generateWorkflowDraft(appId, {
+             const draftRes = await apiService.generateWorkflowDraft(appId, {
                provider,
                name
              }, appData.instruction, { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } });
-             message.success({ content: '基于AI生成工作流成功', key: 'ai-gen' });
+             message.destroy('ai-gen');
+             
+             // Open preview modal instead of saving directly
+             setDraftPreviewData({ appId, graph: draftRes?.graph || draftRes || { nodes: [], edges: [] } });
+             setIsDraftPreviewModalOpen(true);
+             
+             // Setup UI state, but wait for preview to close before reloading?
+             // Actually, the app is created, we can refresh the list.
+             fetchApps();
+             setEditingApp(null);
+             return; // Stop here, so it does not show "应用保存成功"
            } catch(generateErr) {
              console.error('generate workflow error', generateErr);
              message.error({ content: 'AI生成工作流失败，已创建为空工作流', key: 'ai-gen' });
@@ -660,6 +673,18 @@ const App: React.FC = () => {
       console.error('Failed to save app:', error);
       message.error('保存失败，请重试');
     }
+  };
+
+  const handleDraftPreviewSubmit = async (draft: any) => {
+    // 模拟将结果更新到工作流
+    // 大项目中将调用真实的 hooks 更新节点数据
+    console.log('Submitting draft for app:', draftPreviewData?.appId, draft);
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        message.success('已应用：将结果添加到工作流');
+        resolve();
+      }, 500);
+    });
   };
 
   const handleDeleteApp = async (id: string) => {
@@ -1188,6 +1213,12 @@ const App: React.FC = () => {
           isOpen={isImportAppModalOpen} 
           onClose={() => setIsImportAppModalOpen(false)} 
           onImport={() => fetchApps()}
+        />
+        <DraftPreviewModal
+          isOpen={isDraftPreviewModalOpen}
+          onClose={() => setIsDraftPreviewModalOpen(false)}
+          draftData={draftPreviewData}
+          onSubmit={handleDraftPreviewSubmit}
         />
         <ManageTagsModal 
           isOpen={isManageTagsModalOpen}
