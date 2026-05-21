@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Select, Tooltip, Spin, message } from 'antd';
-import { Cpu, Search, Check, RefreshCw, Bot, AlertCircle, Settings, Star } from 'lucide-react';
+import { Cpu, Search, Check, RefreshCw, Bot, AlertCircle, Settings, Star, Eye } from 'lucide-react';
 import { apiService } from '../services/apiService';
 import { Model, ModelTypeEnum, TypeWithI18N, ModelParameterRule } from '../types';
 
@@ -131,16 +131,31 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
         }
         
         if (selectedModelData) {
+          const mode = (selectedModelData.model as any).model_properties?.mode || 'chat';
+          const isVision = (selectedModelData.model as any).features?.includes('vision') || selectedModelData.model.model.toLowerCase().includes('4v');
+
           return (
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded overflow-hidden flex items-center justify-center bg-gray-50">
+              <div className="w-5 h-5 rounded overflow-hidden flex flex-shrink-0 items-center justify-center bg-gray-50">
                 {selectedModelData.provider.icon_small ? (
-                  <img src={getI18nText(selectedModelData.provider.icon_small)} alt="icon" className="w-full h-full object-cover" />
+                  <img src={getI18nText(selectedModelData.provider.icon_small)} alt="icon" className="w-full h-full object-contain" />
                 ) : (
                   <Bot className="w-3 h-3 text-gray-400" />
                 )}
               </div>
-              <span className="text-sm text-gray-900">{getI18nText(selectedModelData.model.label) || selectedModelData.model.model}</span>
+              <span className="text-sm text-gray-900 truncate">{getI18nText(selectedModelData.model.label) || selectedModelData.model.model}</span>
+              {mode && (
+                <span className="px-[6px] py-[1px] border rounded-full text-[10px] font-medium text-primary-600 border-primary-100 bg-white uppercase flex-shrink-0">
+                  {mode}
+                </span>
+              )}
+              {isVision && (
+                <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-[11px] h-[11px] text-gray-500" fill="currentColor">
+                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                  </svg>
+                </div>
+              )}
             </div>
           );
         }
@@ -175,28 +190,17 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
             ) : filteredModels.length > 0 ? (
               filteredModels.map((provider) => (
                 <div key={provider.provider} className="mb-3 last:mb-0">
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center justify-between">
+                  <div className="px-3 py-1.5 text-xs text-gray-500 flex items-center justify-between mt-2 first:mt-0">
                     <div className="flex items-center gap-2">
-                      {provider.icon_small && (
-                        <img src={getI18nText(provider.icon_small)} alt="" className="w-3 h-3 object-contain" />
-                      )}
                       {getI18nText(provider.label)}
                     </div>
-                    {/* 暂时隐藏获取支付链接入口
-                    <button 
-                      className="text-primary-500 hover:text-primary-600 font-medium normal-case"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleGetPayUrl(provider.provider);
-                      }}
-                    >
-                      获取支付链接
-                    </button>
-                    */}
                   </div>
                   <div className="space-y-0.5">
                     {provider.models.map((model) => {
                       const isSelected = value === model.model;
+                      const mode = (model as any).model_properties?.mode || 'chat';
+                      const isVision = (model as any).features?.includes('vision') || model.model.toLowerCase().includes('4v');
+
                       return (
                         <div 
                           key={model.model}
@@ -206,13 +210,33 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
                           onClick={() => handleSelect(model.model, provider.provider)}
                         >
                           <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="flex flex-col truncate">
-                              <span className={`text-sm font-medium truncate ${isSelected ? 'text-primary-700' : 'text-gray-900'}`}>
+                            {provider.icon_small ? (
+                              <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
+                                <img src={getI18nText(provider.icon_small)} alt="" className="w-full h-full object-contain" />
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 flex-shrink-0 rounded bg-gray-100 flex items-center justify-center">
+                                <Bot className="w-3 h-3 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 truncate">
+                              <span className={`text-sm tracking-wide truncate ${isSelected ? 'text-gray-900 font-medium' : 'text-gray-800'}`}>
                                 {getI18nText(model.label) || model.model}
                               </span>
-                              <span className="text-[10px] text-gray-400 truncate">
-                                {model.model}
-                              </span>
+                              
+                              {mode && (
+                                <span className="px-[6px] py-[1px] border rounded-full text-[10px] font-medium text-[#6366f1] border-primary-100 bg-white uppercase flex-shrink-0">
+                                  {mode}
+                                </span>
+                              )}
+                              
+                              {isVision && (
+                                <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 ml-0.5">
+                                  <svg viewBox="0 0 24 24" className="w-[11px] h-[11px] text-gray-500" fill="currentColor">
+                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                  </svg>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">

@@ -723,6 +723,39 @@ class ApiService {
       ];
     }
 
+    // Mock for models
+    if (endpoint.includes('/models/model-types/llm') || endpoint.includes('/models/model-types/text-generation')) {
+      return {
+        data: [
+          {
+            provider: 'ollama',
+            label: { zh_Hans: 'Ollama', en_US: 'Ollama' },
+            icon_small: { zh_Hans: 'https://raw.githubusercontent.com/ollama/ollama/main/docs/ollama.png', en_US: '' },
+            models: [
+              { model: 'gemma4:e4b', label: { zh_Hans: 'gemma4:e4b', en_US: 'gemma4:e4b' }, features: [], model_properties: { mode: 'chat' } },
+              { model: 'qwen3.5:9b', label: { zh_Hans: 'qwen3.5:9b', en_US: 'qwen3.5:9b' }, features: [], model_properties: { mode: 'chat' } },
+            ]
+          },
+          {
+            provider: 'zhipuai',
+            label: { zh_Hans: '智谱 AI', en_US: 'Zhipu AI' },
+            icon_small: { zh_Hans: 'https://zhipuai.cn/favicon.ico', en_US: '' },
+            models: [
+              { model: 'glm-4', label: { zh_Hans: 'glm-4', en_US: 'glm-4' }, features: [], model_properties: { mode: 'chat' } },
+              { model: 'glm-4-0520', label: { zh_Hans: 'glm-4-0520', en_US: 'glm-4-0520' }, features: [], model_properties: { mode: 'chat' } },
+              { model: 'glm-4-long', label: { zh_Hans: 'glm-4-long', en_US: 'glm-4-long' }, features: [], model_properties: { mode: 'chat' } },
+              { model: 'glm-4v-plus', label: { zh_Hans: 'glm-4v-plus', en_US: 'glm-4v-plus' }, features: ['vision'], model_properties: { mode: 'chat' } },
+              { model: 'glm-4-air', label: { zh_Hans: 'glm-4-air', en_US: 'glm-4-air' }, features: [], model_properties: { mode: 'chat' } },
+              { model: 'glm-4.7', label: { zh_Hans: 'glm-4.7', en_US: 'glm-4.7' }, features: [], model_properties: { mode: 'chat' } },
+              { model: 'glm-4v-flash', label: { zh_Hans: 'glm-4v-flash', en_US: 'glm-4v-flash' }, features: ['vision'], model_properties: { mode: 'chat' } },
+              { model: 'glm-4v', label: { zh_Hans: 'glm-4v', en_US: 'glm-4v' }, features: ['vision'], model_properties: { mode: 'chat' } },
+              { model: 'glm-4.5-flash', label: { zh_Hans: 'glm-4.5-flash', en_US: 'glm-4.5-flash' }, features: [], model_properties: { mode: 'chat' } },
+            ]
+          }
+        ]
+      };
+    }
+
     return {};
   }
 
