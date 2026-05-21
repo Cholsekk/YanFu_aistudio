@@ -6,7 +6,8 @@ import ModelSelect from './ModelSelect';
 import { MessageSquare, FileText, Bot, GitBranch, Sparkles } from 'lucide-react';
 import { AppItem, ModelTypeEnum } from '../types';
 import { getIcon } from '../constants';
-import { message } from 'antd';
+import { message, ConfigProvider } from 'antd';
+import { apiService } from '../services/apiService';
 
 interface NewAppModalProps {
   isOpen: boolean;
@@ -64,6 +65,17 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       });
     }
   }, [initialData, isOpen]);
+
+  useEffect(() => {
+    if (formData.type === '工作流应用' && formData.workflowCreateMethod === 'ai' && !formData.modelName) {
+      apiService.fetchDefaultModal(ModelTypeEnum.textGeneration).then(res => {
+        if (res && res.model && res.provider) {
+          const providerId = typeof res.provider === 'string' ? res.provider : res.provider.provider;
+          setFormData(prev => ({ ...prev, modelName: res.model, modelProvider: providerId }));
+        }
+      }).catch(console.error);
+    }
+  }, [formData.type, formData.workflowCreateMethod, formData.modelName]);
 
   const types = [
     { id: '对话助手', title: '对话助手', desc: '使用大型语言模型构建基于聊天的助手', icon: <MessageSquare className="w-5 h-5" /> },
@@ -239,8 +251,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                           {formData.workflowCreateMethod === 'manual' && <div className="w-2 h-2 rounded-full bg-primary-500" />}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 text-sm">手动创建</span>
-                          <GitBranch className="w-4 h-4 text-primary-500" />
+                          <span className="font-medium text-primary-600 text-sm">手动创建</span>
+                          <GitBranch className="w-4 h-4 text-primary-600" />
                         </div>
                       </div>
                       
@@ -254,8 +266,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                           {formData.workflowCreateMethod === 'ai' && <div className="w-2 h-2 rounded-full bg-amber-500" />}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 text-sm">AI 生成工作流</span>
-                          <Sparkles className="w-4 h-4 text-amber-500" />
+                          <span className="font-medium text-amber-600 text-sm">AI 生成工作流</span>
+                          <Sparkles className="w-4 h-4 text-amber-600" />
                         </div>
                       </div>
                     </div>
@@ -264,15 +276,23 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                   {formData.workflowCreateMethod === 'ai' && (
                     <div className="space-y-4 p-5 bg-amber-50/30 rounded-xl border border-amber-100/50 shadow-sm">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">选择模型 (可选)</label>
-                        <ModelSelect 
-                          modelType={ModelTypeEnum.textGeneration}
-                          value={formData.modelProvider && formData.modelName ? `${formData.modelProvider}/${formData.modelName}` : undefined}
-                          onChange={(model, provider) => {
-                            setFormData({...formData, modelName: model, modelProvider: provider});
-                          }}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">如果不选择，将使用默认的文本生成模型。</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">选择模型 <span className="text-amber-500 font-bold">*</span></label>
+                        <ConfigProvider theme={{
+                          token: {
+                            colorPrimary: '#f59e0b',
+                            colorPrimaryHover: '#d97706',
+                            colorBorder: '#fde68a', // amber-200
+                          }
+                        }}>
+                          <ModelSelect 
+                            modelType={ModelTypeEnum.textGeneration}
+                            value={formData.modelName || undefined}
+                            onChange={(model, provider) => {
+                              setFormData({...formData, modelName: model, modelProvider: provider});
+                            }}
+                            className="!w-fit min-w-[240px]"
+                          />
+                        </ConfigProvider>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -280,7 +300,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                         </label>
                         <textarea 
                           placeholder="描述您想生成的工作流功能，如: 建立一个处理客服咨询的流程，包含意图识别和自动回复"
-                          className="w-full px-4 py-3 border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all min-h-[80px] text-sm bg-white"
+                          className="w-full px-4 py-3 border-2 border-amber-200 rounded-xl focus:ring-4 focus:ring-amber-500/20 focus:border-amber-400 outline-none transition-all min-h-[120px] text-sm bg-white shadow-inner"
                           value={formData.instruction}
                           onChange={e => setFormData({...formData, instruction: e.target.value})}
                         />

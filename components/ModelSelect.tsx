@@ -116,7 +116,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
 
   return (
     <Select
-      className={`w-full custom-select ${className}`}
+      className={`custom-select ${className.includes('w-') ? '' : 'w-full'} ${className}`}
       value={value}
       open={isOpen}
       onOpenChange={setIsOpen}
