@@ -838,8 +838,15 @@ class ApiService {
     return this.post(`/explore/apps/${id}`);
   }
 
+  async generateWorkflowDraft(appId: string, modelConfig: { provider: string; name: string }, instruction: string, graph: any): Promise<any> {
+    return this.post(`/apps/${appId}/workflows/draft/generate`, {
+      model_config: modelConfig,
+      instruction,
+      graph
+    });
+  }
+
   async createApp(data: { 
-    name: string; 
     icon_type?: 'icon' | 'image' | 'sys-icon'; 
     icon?: string; 
     icon_background?: string; 

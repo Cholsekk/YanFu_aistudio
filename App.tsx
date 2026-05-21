@@ -15,7 +15,7 @@ import McpAuthCallback from './components/McpAuthCallback';
 import ApiDocPage from './components/ApiDocPage';
 import UserGuideModal from './components/UserGuideModal';
 import { APP_TYPES } from './constants';
-import { AppItem, AppMode, Tag, MenuItem } from './types';
+import { AppItem, AppMode, Tag, MenuItem, ModelTypeEnum } from './types';
 import { apiService } from './services/apiService';
 import { setContextTenantId } from './utils/auth';
 // import { useAppContext } from '@/context/app-context';
@@ -611,7 +611,7 @@ const App: React.FC = () => {
         });
       } else {
         // Create standard app
-        await apiService.createApp({
+        const createRes = await apiService.createApp({
           name: appData.name,
           icon_type: appData.iconType || 'icon',
           icon: appData.icon,
@@ -621,6 +621,37 @@ const App: React.FC = () => {
           built_in: appData.builtIn || false,
           config: config
         });
+        
+        const appId = createRes?.id;
+        
+        if (appData.typeLabel === '工作流应用' && appData.workflowCreateMethod === 'ai' && appId) {
+           message.loading({ content: '正在为工作流排兵布阵，请耐心等待...', key: 'ai-gen' });
+           try {
+             let provider = appData.modelProvider;
+             let name = appData.modelName;
+
+             if (!provider || !name) {
+               const defaultModelRes = await apiService.fetchDefaultModal(ModelTypeEnum.textGeneration);
+               if (defaultModelRes && defaultModelRes.model && defaultModelRes.provider) {
+                 name = defaultModelRes.model;
+                 provider = typeof defaultModelRes.provider === 'string' ? defaultModelRes.provider : defaultModelRes.provider.provider;
+               }
+             }
+
+             if (!provider || !name) {
+               throw new Error('未选择模型且未获取到默认模型');
+             }
+
+             await apiService.generateWorkflowDraft(appId, {
+               provider,
+               name
+             }, appData.instruction, { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } });
+             message.success({ content: '基于AI生成工作流成功', key: 'ai-gen' });
+           } catch(generateErr) {
+             console.error('generate workflow error', generateErr);
+             message.error({ content: 'AI生成工作流失败，已创建为空工作流', key: 'ai-gen' });
+           }
+        }
       }
       fetchApps();
       setEditingApp(null);

@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import IconPickerModal from './IconPickerModal';
-import { MessageSquare, FileText, Bot, GitBranch } from 'lucide-react';
-import { AppItem } from '../types';
+import ModelSelect from './ModelSelect';
+import { MessageSquare, FileText, Bot, GitBranch, Sparkles } from 'lucide-react';
+import { AppItem, ModelTypeEnum } from '../types';
 import { getIcon } from '../constants';
 import { message } from 'antd';
 
@@ -24,7 +25,11 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     iconType: 'sys-icon' as 'icon' | 'image' | 'sys-icon',
     iconBgColor: 'bg-primary-600',
     iconUrl: '',
-    builtIn: false
+    builtIn: false,
+    workflowCreateMethod: 'manual' as 'manual' | 'ai',
+    modelProvider: '',
+    modelName: '',
+    instruction: ''
   });
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
@@ -51,7 +56,11 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         iconType: 'sys-icon',
         iconBgColor: 'bg-primary-600',
         iconUrl: '',
-        builtIn: false
+        builtIn: false,
+        workflowCreateMethod: 'manual',
+        modelProvider: '',
+        modelName: '',
+        instruction: ''
       });
     }
   }, [initialData, isOpen]);
@@ -79,6 +88,13 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       }
     }
 
+    if (formData.type === '工作流应用' && formData.workflowCreateMethod === 'ai') {
+      if (!formData.instruction.trim()) {
+        message.warning('请输入生成工作流的提示词指令');
+        return;
+      }
+    }
+
     onCreate({
       ...(initialData ? { id: initialData.id } : {}),
       name: formData.name,
@@ -90,7 +106,11 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       iconType: formData.iconType,
       iconBgColor: formData.iconBgColor,
       tags: initialData?.tags || [],
-      builtIn: formData.builtIn
+      builtIn: formData.builtIn,
+      workflowCreateMethod: formData.type === '工作流应用' ? formData.workflowCreateMethod : undefined,
+      modelProvider: formData.modelProvider,
+      modelName: formData.modelName,
+      instruction: formData.instruction
     });
     onClose();
   };
@@ -157,31 +177,6 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">描述</label>
-            <textarea 
-              placeholder="描述该应用的应用场景及用途，如:XXX 小助手回答用户提出的 XXX 产品使用问题" 
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all min-h-[100px] text-sm"
-              value={formData.description}
-              onChange={e => setFormData({...formData, description: e.target.value})}
-            />
-          </div>
-
-          {initialData && (
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <div>
-                <div className="font-medium text-gray-900 text-sm">设置为内置应用</div>
-                <div className="text-xs text-gray-500 mt-1">内置应用将对所有工作区成员可见</div>
-              </div>
-              <button 
-                onClick={() => setFormData(prev => ({ ...prev, builtIn: !prev.builtIn }))}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.builtIn ? 'bg-primary-600' : 'bg-gray-200'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.builtIn ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-            </div>
-          )}
-
           {!initialData && (
             <>
               <div>
@@ -228,7 +223,98 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                   </div>
                 </div>
               )}
+
+              {formData.type === '工作流应用' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">创建方式</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div 
+                        onClick={() => setFormData({...formData, workflowCreateMethod: 'manual'})}
+                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
+                          formData.workflowCreateMethod === 'manual' ? 'border-primary-500 bg-primary-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.workflowCreateMethod === 'manual' ? 'border-primary-500' : 'border-gray-300'}`}>
+                          {formData.workflowCreateMethod === 'manual' && <div className="w-2 h-2 rounded-full bg-primary-500" />}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 text-sm">手动创建</span>
+                          <GitBranch className="w-4 h-4 text-primary-500" />
+                        </div>
+                      </div>
+                      
+                      <div 
+                        onClick={() => setFormData({...formData, workflowCreateMethod: 'ai'})}
+                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
+                          formData.workflowCreateMethod === 'ai' ? 'border-amber-500 bg-amber-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.workflowCreateMethod === 'ai' ? 'border-amber-500' : 'border-gray-300'}`}>
+                          {formData.workflowCreateMethod === 'ai' && <div className="w-2 h-2 rounded-full bg-amber-500" />}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 text-sm">AI 生成工作流</span>
+                          <Sparkles className="w-4 h-4 text-amber-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {formData.workflowCreateMethod === 'ai' && (
+                    <div className="space-y-4 p-5 bg-amber-50/30 rounded-xl border border-amber-100/50 shadow-sm">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">选择模型 (可选)</label>
+                        <ModelSelect 
+                          modelType={ModelTypeEnum.textGeneration}
+                          value={formData.modelProvider && formData.modelName ? `${formData.modelProvider}/${formData.modelName}` : undefined}
+                          onChange={(model, provider) => {
+                            setFormData({...formData, modelName: model, modelProvider: provider});
+                          }}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">如果不选择，将使用默认的文本生成模型。</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          生成指令 <span className="text-amber-500 font-bold">*</span>
+                        </label>
+                        <textarea 
+                          placeholder="描述您想生成的工作流功能，如: 建立一个处理客服咨询的流程，包含意图识别和自动回复"
+                          className="w-full px-4 py-3 border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all min-h-[80px] text-sm bg-white"
+                          value={formData.instruction}
+                          onChange={e => setFormData({...formData, instruction: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">描述</label>
+            <textarea 
+              placeholder="描述该应用的应用场景及用途，如:XXX 小助手回答用户提出的 XXX 产品使用问题" 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all min-h-[100px] text-sm"
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
+            />
+          </div>
+
+          {initialData && (
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div>
+                <div className="font-medium text-gray-900 text-sm">设置为内置应用</div>
+                <div className="text-xs text-gray-500 mt-1">内置应用将对所有工作区成员可见</div>
+              </div>
+              <button 
+                onClick={() => setFormData(prev => ({ ...prev, builtIn: !prev.builtIn }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.builtIn ? 'bg-primary-600' : 'bg-gray-200'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.builtIn ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
           )}
         </div>
       </Modal>
