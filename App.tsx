@@ -19,6 +19,7 @@ import UserGuideModal from './components/UserGuideModal';
 import { APP_TYPES } from './constants';
 import { AppItem, AppMode, Tag, MenuItem, ModelTypeEnum } from './types';
 import { apiService } from './services/apiService';
+import { monitoringService } from './services/monitoringService';
 import { setContextTenantId } from './utils/auth';
 // import { useAppContext } from '@/context/app-context';//集成时使用，独立运行时 AppContext 未提供
 import { 
@@ -602,7 +603,7 @@ const App: React.FC = () => {
 
       if (appData.id) {
         // Update standard app
-        await apiService.updateApp(appData.id, {
+        const res = await apiService.updateApp(appData.id, {
           name: appData.name,
           icon_type: appData.iconType || 'icon',
           icon: appData.icon,
@@ -614,6 +615,21 @@ const App: React.FC = () => {
           // @ts-ignore - apiService updateApp signature might need update or we cast
           config: config
         });
+        
+        try {
+          const site = {
+            ...(res?.site || {}),
+            title: res?.name || appData.name,
+            icon: res?.icon || appData.icon,
+            icon_type: res?.icon_type || appData.iconType || 'icon',
+            icon_background: res?.icon_background || appData.iconBgColor,
+            icon_url: res?.icon_url,
+            use_icon_as_answer_icon: true
+          };
+          await monitoringService.updateAppSiteConfig(appData.id, site);
+        } catch (e) {
+          console.error('Failed to update app site config', e);
+        }
       } else {
         // Create standard app
         const createRes = await apiService.createApp({

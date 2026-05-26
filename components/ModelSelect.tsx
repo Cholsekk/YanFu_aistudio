@@ -131,7 +131,6 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
         }
         
         if (selectedModelData) {
-          const mode = (selectedModelData.model as any).model_properties?.mode || 'chat';
           const isVision = (selectedModelData.model as any).features?.includes('vision') || selectedModelData.model.model.toLowerCase().includes('4v');
 
           return (
@@ -144,11 +143,6 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange, modelType, c
                 )}
               </div>
               <span className="text-sm text-gray-900 truncate">{getI18nText(selectedModelData.model.label) || selectedModelData.model.model}</span>
-              {mode && (
-                <span className="px-[6px] py-[1px] border rounded-full text-[10px] font-medium text-primary-600 border-primary-100 bg-white uppercase flex-shrink-0">
-                  {mode}
-                </span>
-              )}
               {isVision && (
                 <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
                   <svg viewBox="0 0 24 24" className="w-[11px] h-[11px] text-gray-500" fill="currentColor">
