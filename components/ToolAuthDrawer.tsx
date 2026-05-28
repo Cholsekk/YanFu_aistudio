@@ -35,9 +35,10 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
   }, [toolDetail]);
 
   const fetchCredentialInfo = async () => {
-    if (isOpen && tool && tool.type === 'builtin') {
+    const shouldFetch = isOpen && tool && tool.type === 'builtin' && tool.allow_delete === true && !!(tool.name || (tool as any).provider);
+    if (shouldFetch) {
       try {
-        const info = await apiService.fetchBuiltInToolCredentialInfo(tool.name);
+        const info = await apiService.fetchBuiltInToolCredentialInfo(tool.name || (tool as any).provider);
         setCredentialInfo(info);
       } catch (error) {
         console.error('Failed to fetch builtin tool credential info', error);

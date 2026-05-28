@@ -867,11 +867,18 @@ const ToolExtensions: React.FC = () => {
           return;
         }
       } else {
-        await apiService.updateBuiltInToolCredential(selectedTool.name, {
-          credentials: values,
-          credential_id: credentialId || undefined,
-          name: selectedTool.name
-        });
+        if (credentialId) {
+          await apiService.updateBuiltInToolCredential(selectedTool.name, {
+            credentials: values,
+            credential_id: credentialId,
+            name: selectedTool.name
+          });
+        } else {
+          await apiService.addBuiltInToolCredential(selectedTool.name, {
+            credentials: values,
+            name: selectedTool.name
+          });
+        }
       }
       
       // Refresh tool list to show updated auth status
