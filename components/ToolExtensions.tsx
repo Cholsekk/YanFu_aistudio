@@ -813,17 +813,36 @@ const ToolExtensions: React.FC = () => {
       
       setAuthSchema(schemaResponse);
       
-      // Map ToolCredential[] to CredentialData
+      // Map schema or credentials to CredentialData
       let initialValues: CredentialData = {};
       
-      if (Array.isArray(credentialsResponse)) {
-        credentialsResponse.forEach((cred: any) => {
-          initialValues[cred.name] = cred.default || '';
+      // Initialize with defaults from schema
+      if (Array.isArray(schemaResponse)) {
+        schemaResponse.forEach((field: any) => {
+          if (field.name) {
+            initialValues[field.name] = field.default || '';
+          }
         });
-        setCredentialId(null);
-      } else if (credentialsResponse && typeof credentialsResponse === 'object') {
-        initialValues = credentialsResponse.credentials || {};
-        setCredentialId(credentialsResponse.credential_id || null);
+      }
+      
+      // Override with saved credentials
+      if (Array.isArray(credentialsResponse) && credentialsResponse.length > 0) {
+        const savedCred = credentialsResponse[0];
+        if (savedCred && savedCred.credentials) {
+          initialValues = { ...initialValues, ...savedCred.credentials };
+          setCredentialId(savedCred.id || savedCred.credential_id || null);
+        } else {
+          // Fallback if the array contains raw values
+          credentialsResponse.forEach((cred: any) => {
+            if (cred.name && cred.default !== undefined) {
+              initialValues[cred.name] = cred.default || '';
+            }
+          });
+          setCredentialId(null);
+        }
+      } else if (credentialsResponse && typeof credentialsResponse === 'object' && !Array.isArray(credentialsResponse)) {
+        initialValues = { ...initialValues, ...(credentialsResponse.credentials || {}) };
+        setCredentialId(credentialsResponse.credential_id || credentialsResponse.id || null);
       }
       
       setAuthValues(initialValues);
