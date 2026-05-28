@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, HelpCircle, Eye, EyeOff } from 'lucide-react';
-import { Tooltip } from 'antd';
+import { Tooltip, Select } from 'antd';
 import { ToolCredential, CredentialData } from '../types';
 
 interface ToolAuthSettingsDrawerProps {
@@ -153,6 +153,17 @@ const ToolAuthSettingsDrawer: React.FC<ToolAuthSettingsDrawerProps> = ({
                         )}
                       </button>
                     </div>
+                  ) : field.type === 'select' ? (
+                    <Select
+                      value={values[field.name]}
+                      onChange={(val) => handleChange(field.name, val)}
+                      placeholder={field.placeholder?.zh_Hans}
+                      className="w-full h-12"
+                      options={field.options?.map(opt => ({
+                        value: opt.value,
+                        label: opt.label?.zh_Hans || opt.value
+                      }))}
+                    />
                   ) : (
                     <input
                       type="text"
