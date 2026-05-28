@@ -633,6 +633,7 @@ const ToolExtensions: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Collection | null>(null);
   const [toolDetail, setToolDetail] = useState<ToolExtension[] | WorkflowToolProviderResponse | McpProvider | null>(null);
+  const [authRefreshKey, setAuthRefreshKey] = useState(0);
 
   // Auth Settings Drawer state
   const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
@@ -785,7 +786,7 @@ const ToolExtensions: React.FC = () => {
     }
   };
 
-  const handleAuthorize = async () => {
+  const handleAuthorize = async (existingCred?: any) => {
     if (!selectedTool) return;
     
     if (selectedTool.type === 'mcp') {
@@ -809,7 +810,6 @@ const ToolExtensions: React.FC = () => {
       setCredentialType(initialType);
       
       const schemaResponse = await apiService.fetchBuiltInToolCredentialSchema(selectedTool.name, initialType);
-      const credentialsResponse = await apiService.fetchBuiltInToolCredential(selectedTool.name);
       
       setAuthSchema(schemaResponse);
       
@@ -825,24 +825,11 @@ const ToolExtensions: React.FC = () => {
         });
       }
       
-      // Override with saved credentials
-      if (Array.isArray(credentialsResponse) && credentialsResponse.length > 0) {
-        const savedCred = credentialsResponse[0];
-        if (savedCred && savedCred.credentials) {
-          initialValues = { ...initialValues, ...savedCred.credentials };
-          setCredentialId(savedCred.id || savedCred.credential_id || null);
-        } else {
-          // Fallback if the array contains raw values
-          credentialsResponse.forEach((cred: any) => {
-            if (cred.name && cred.default !== undefined) {
-              initialValues[cred.name] = cred.default || '';
-            }
-          });
-          setCredentialId(null);
-        }
-      } else if (credentialsResponse && typeof credentialsResponse === 'object' && !Array.isArray(credentialsResponse)) {
-        initialValues = { ...initialValues, ...(credentialsResponse.credentials || {}) };
-        setCredentialId(credentialsResponse.credential_id || credentialsResponse.id || null);
+      if (existingCred) {
+        initialValues = { ...initialValues, ...(existingCred.credentials || {}) };
+        setCredentialId(existingCred.id || existingCred.credential_id || null);
+      } else {
+        setCredentialId(null);
       }
       
       setAuthValues(initialValues);
@@ -892,6 +879,8 @@ const ToolExtensions: React.FC = () => {
       
       // Update selected tool state if it's still open
       setSelectedTool(prev => prev ? { ...prev, is_team_authorization: true } : null);
+      
+      setAuthRefreshKey(prev => prev + 1);
       
       setIsAuthSettingsOpen(false);
     } catch (error) {
@@ -1379,6 +1368,7 @@ const ToolExtensions: React.FC = () => {
         toolDetail={toolDetail}
         onAuthorize={handleAuthorize}
         onEdit={handleEditTool}
+        refreshKey={authRefreshKey}
       />
 
       <ToolAuthSettingsDrawer

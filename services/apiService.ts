@@ -1043,6 +1043,10 @@ class ApiService {
   }
 
   // 2. 内置工具认证管理
+  async fetchBuiltInToolCredentialInfo(collectionName: string): Promise<any> {
+    return this.get(`/workspaces/current/tool-provider/builtin/${collectionName}/credential/info`);
+  }
+
   async fetchBuiltInToolCredentialSchema(collectionName: string, credentialType: string = 'api-key'): Promise<ToolCredential[]> {
     return this.get(`/workspaces/current/tool-provider/builtin/${collectionName}/credential/schema/${credentialType}`);
   }
@@ -1055,8 +1059,9 @@ class ApiService {
     return this.post(`/workspaces/current/tool-provider/builtin/${collectionName}/update`, data as any,);
   }
 
-  async removeBuiltInToolCredential(collectionName: string): Promise<void> {
-    return this.post(`/workspaces/current/tool-provider/builtin/${collectionName}/delete`, {} as any,);
+  async removeBuiltInToolCredential(collectionName: string, credentialId?: string): Promise<void> {
+    const data = credentialId ? { credential_id: credentialId } : {};
+    return this.post(`/workspaces/current/tool-provider/builtin/${collectionName}/delete`, data as any);
   }
 
   // 3. 自定义工具管理

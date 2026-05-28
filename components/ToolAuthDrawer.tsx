@@ -12,15 +12,18 @@ interface ToolAuthDrawerProps {
   onClose: () => void;
   tool: Collection | null;
   toolDetail: ToolExtension[] | WorkflowToolProviderResponse | McpProvider | null;
-  onAuthorize: () => void;
+  onAuthorize: (cred?: any) => void;
   onEdit: () => void;
+  refreshKey?: number;
 }
 
-const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize, onEdit }) => {
+const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, toolDetail, onAuthorize, onEdit, refreshKey }) => {
   const [selectedSubTool, setSelectedSubTool] = useState<ToolExtension | null>(null);
   const [mcpTools, setMcpTools] = useState<McpTool[]>([]);
   const [isUpdatingMcpTools, setIsUpdatingMcpTools] = useState(false);
   const [isAuthenticatingMcp, setIsAuthenticatingMcp] = useState(false);
+  const [credentialInfo, setCredentialInfo] = useState<any>(null);
+  const [showCredentials, setShowCredentials] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,6 +33,32 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
       setMcpTools([]);
     }
   }, [toolDetail]);
+
+  const fetchCredentialInfo = async () => {
+    if (isOpen && tool && tool.type === 'builtin') {
+      try {
+        const info = await apiService.fetchBuiltInToolCredentialInfo(tool.name);
+        setCredentialInfo(info);
+      } catch (error) {
+        console.error('Failed to fetch builtin tool credential info', error);
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCredentialInfo();
+      setShowCredentials(false);
+    } else {
+      setCredentialInfo(null);
+    }
+  }, [isOpen, tool]);
+
+  useEffect(() => {
+    if (isOpen && refreshKey) {
+      fetchCredentialInfo();
+    }
+  }, [refreshKey]);
 
   const handleUpdateMcpTools = async () => {
     if (!toolDetail || !isMcpDetail(toolDetail)) return;
@@ -163,32 +192,66 @@ const ToolAuthDrawer: React.FC<ToolAuthDrawerProps> = ({ isOpen, onClose, tool, 
             <>
               {/* Authorization Status */}
               {((tool.type as string) === 'model' || tool.allow_delete !== false) && (
-                <div className="bg-primary-50/50 rounded-xl p-4 border border-primary-100">
-                  <div className="flex items-start gap-3">
-                    <ShieldCheck className={`w-5 h-5 mt-0.5 ${tool.is_team_authorization ? 'text-green-600' : 'text-primary-600'}`} />
-                    <div>
-                      <h4 className="font-medium text-gray-900 text-sm">
-                        {tool.is_team_authorization ? '已授权' : '需要授权'}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                        {tool.is_team_authorization 
-                          ? '该工具已获得授权，可以正常使用。如需更新授权信息，请点击下方按钮。' 
-                          : '使用该工具需要先进行授权配置。请点击下方按钮前往授权页面。'}
-                      </p>
-                    </div>
-                  </div>
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
+                  {/* Dropdown Header */}
                   <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.nativeEvent.stopImmediatePropagation();
-                      onAuthorize();
-                    }}
-                    className="mt-4 w-full py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary-200 flex items-center justify-center gap-2"
+                    onClick={() => setShowCredentials(!showCredentials)}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-gray-50/50 hover:bg-gray-50 transition-colors"
                   >
-                    {tool.is_team_authorization ? '更新授权' : '去授权'}
-                    <ExternalLink className="w-4 h-4" />
+                    <div className={`w-2 h-2 rounded-full ${tool.is_team_authorization || (credentialInfo?.credentials?.length > 0) ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-gray-300'}`}></div>
+                    <span className="text-sm font-medium text-gray-700">
+                      {(credentialInfo?.credentials?.length || 0)} 凭据
+                    </span>
+                    <LucideIcons.ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCredentials ? 'rotate-180' : ''}`} />
                   </button>
+
+                  {/* Dropdown Body */}
+                  {showCredentials && (
+                    <div className="p-4 border-t border-gray-100 bg-white space-y-4">
+                      {/* existing credentials */}
+                      {(credentialInfo?.credentials || []).map((cred: any, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-primary-100 hover:bg-primary-50/30 transition-colors group">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
+                            <span className="text-sm font-medium text-gray-800">{cred.name || cred.provider || '默认'}</span>
+                            {cred.is_default && (
+                              <span className="px-1.5 py-0.5 border border-gray-200 text-[10px] text-gray-500 rounded font-medium bg-gray-50">默认</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); onAuthorize(cred); }}
+                              className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+                            >
+                              <LucideIcons.Settings2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={async (e) => { 
+                                e.stopPropagation(); 
+                                try {
+                                  await apiService.removeBuiltInToolCredential(tool.name, cred.id || cred.credential_id);
+                                  await fetchCredentialInfo();
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            >
+                              <LucideIcons.Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Add new button */}
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onAuthorize(); }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium text-gray-700"
+                      >
+                        API Key 授权配置
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               {/* Tool Details */}
