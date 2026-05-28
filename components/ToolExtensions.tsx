@@ -638,6 +638,7 @@ const ToolExtensions: React.FC = () => {
   const [isAuthSettingsOpen, setIsAuthSettingsOpen] = useState(false);
   const [authSchema, setAuthSchema] = useState<ToolCredential[]>([]);
   const [authValues, setAuthValues] = useState<CredentialData>({});
+  const [credentialId, setCredentialId] = useState<string | null>(null);
   const [credentialType, setCredentialType] = useState<string>('api-key');
   const [supportedCredentialTypes, setSupportedCredentialTypes] = useState<string[]>(['api-key', 'oauth2', 'unauthorized']);
 
@@ -813,11 +814,16 @@ const ToolExtensions: React.FC = () => {
       setAuthSchema(schemaResponse);
       
       // Map ToolCredential[] to CredentialData
-      const initialValues: CredentialData = {};
+      let initialValues: CredentialData = {};
+      
       if (Array.isArray(credentialsResponse)) {
-        credentialsResponse.forEach(cred => {
+        credentialsResponse.forEach((cred: any) => {
           initialValues[cred.name] = cred.default || '';
         });
+        setCredentialId(null);
+      } else if (credentialsResponse && typeof credentialsResponse === 'object') {
+        initialValues = credentialsResponse.credentials || {};
+        setCredentialId(credentialsResponse.credential_id || null);
       }
       
       setAuthValues(initialValues);
@@ -855,7 +861,11 @@ const ToolExtensions: React.FC = () => {
           return;
         }
       } else {
-        await apiService.updateBuiltInToolCredential(selectedTool.name, values);
+        await apiService.updateBuiltInToolCredential(selectedTool.name, {
+          credentials: values,
+          credential_id: credentialId || undefined,
+          name: selectedTool.name
+        });
       }
       
       // Refresh tool list to show updated auth status

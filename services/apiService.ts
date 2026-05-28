@@ -1047,12 +1047,12 @@ class ApiService {
     return this.get(`/workspaces/current/tool-provider/builtin/${collectionName}/credential/schema/${credentialType}`);
   }
 
-  async fetchBuiltInToolCredential(collectionName: string): Promise<ToolCredential[]> {
+  async fetchBuiltInToolCredential(collectionName: string): Promise<any> {
     return this.get(`/workspaces/current/tool-provider/builtin/${collectionName}/credentials`);
   }
 
-  async updateBuiltInToolCredential(collectionName: string, credentials: Record<string, any>): Promise<void> {
-    return this.post(`/workspaces/current/tool-provider/builtin/${collectionName}/update`, { credentials } as any,);
+  async updateBuiltInToolCredential(collectionName: string, data: { credentials: Record<string, any>; credential_id?: string; name: string }): Promise<void> {
+    return this.post(`/workspaces/current/tool-provider/builtin/${collectionName}/update`, data as any,);
   }
 
   async removeBuiltInToolCredential(collectionName: string): Promise<void> {
