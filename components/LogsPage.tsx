@@ -1314,7 +1314,7 @@ const LogsPage: React.FC = () => {
         }
       >
         <div className="space-y-10">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100/50 flex gap-4">
+          <div className="bg-gradient-to-br from-blue-50 to-primary-50 rounded-2xl p-5 border border-blue-100/50 flex gap-4">
             <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
               <Info className="w-5 h-5 text-blue-600" />
             </div>

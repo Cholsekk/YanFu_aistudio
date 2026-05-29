@@ -25,7 +25,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-xl ${data.color} text-white shadow-lg shadow-indigo-100`}>
+          <div className={`p-2 rounded-xl ${data.color} text-white shadow-lg shadow-primary-100`}>
             {data.icon}
           </div>
           <div>
@@ -65,7 +65,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                 type="text" 
                 value={data.label}
                 onChange={(e) => onUpdateNode(selectedNode.id, { label: e.target.value })}
-                className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+                className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 transition-all font-medium"
               />
             </div>
           </section>
@@ -80,7 +80,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-gray-700">模型选择</label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium">
+                  <select className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 transition-all font-medium">
                     <option>Gemini 1.5 Pro</option>
                     <option>Gemini 1.5 Flash</option>
                     <option>GPT-4o</option>
@@ -90,17 +90,17 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   <label className="block text-xs font-bold text-gray-700">System Prompt</label>
                   <textarea 
                     placeholder="输入系统提示词..."
-                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium min-h-[120px] resize-none"
+                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 transition-all font-medium min-h-[120px] resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-xs font-bold text-gray-700">Temperature</label>
-                    <input type="number" step="0.1" defaultValue="0.7" className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium" />
+                    <input type="number" step="0.1" defaultValue="0.7" className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 transition-all font-medium" />
                   </div>
                   <div className="space-y-2">
                     <label className="block text-xs font-bold text-gray-700">Max Tokens</label>
-                    <input type="number" defaultValue="2048" className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium" />
+                    <input type="number" defaultValue="2048" className="w-full px-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 transition-all font-medium" />
                   </div>
                 </div>
               </div>
@@ -116,16 +116,16 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-gray-700">选择知识库</label>
-                  <div className="p-4 border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group">
-                    <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-indigo-100 transition-colors">
-                      <Plus className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
+                  <div className="p-4 border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-primary-200 hover:bg-primary-50/30 transition-all cursor-pointer group">
+                    <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-primary-100 transition-colors">
+                      <Plus className="w-4 h-4 text-gray-400 group-hover:text-primary-600" />
                     </div>
-                    <span className="text-[11px] font-bold text-gray-400 group-hover:text-indigo-600">关联知识库</span>
+                    <span className="text-[11px] font-bold text-gray-400 group-hover:text-primary-600">关联知识库</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-gray-700">Top K</label>
-                  <input type="range" min="1" max="10" defaultValue="3" className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                  <input type="range" min="1" max="10" defaultValue="3" className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-primary-600" />
                   <div className="flex justify-between text-[10px] font-bold text-gray-400">
                     <span>1</span>
                     <span>10</span>
@@ -154,7 +154,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       <div className="p-6 border-t border-gray-50 bg-gray-50/50">
         <button 
           onClick={onClose}
-          className="w-full py-3 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 bg-primary-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-primary-100 hover:bg-primary-700 transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-4 h-4" />
           保存配置

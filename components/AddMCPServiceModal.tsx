@@ -30,7 +30,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
     sse_read_timeout: initialData?.configuration?.sse_read_timeout || 300,
     icon: initialData?.icon || SYS_ICON_IDS[0],
     iconType: initialData?.iconType || 'sys-icon',
-    iconBgColor: initialData?.iconBgColor || 'bg-indigo-600',
+    iconBgColor: initialData?.iconBgColor || 'bg-primary-600',
     iconUrl: initialData?.icon_url || ''
   });
   const [headers, setHeaders] = useState<Header[]>(() => {
@@ -56,7 +56,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           sse_read_timeout: initialData.configuration?.sse_read_timeout || 300,
           icon: initialData.icon || SYS_ICON_IDS[0],
           iconType: initialData.iconType || 'sys-icon',
-          iconBgColor: initialData.iconBgColor || 'bg-indigo-600',
+          iconBgColor: initialData.iconBgColor || 'bg-primary-600',
           iconUrl: initialData.icon_url || ''
         });
         if (Array.isArray(initialData.headers)) {
@@ -78,7 +78,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           sse_read_timeout: 300,
           icon: SYS_ICON_IDS[0],
           iconType: 'sys-icon',
-          iconBgColor: 'bg-indigo-600',
+          iconBgColor: 'bg-primary-600',
           iconUrl: ''
         });
         setHeaders([]);
@@ -137,7 +137,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
   };
 
   const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
-    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-indigo-600', iconUrl: data.iconUrl || '' });
+    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-primary-600', iconUrl: data.iconUrl || '' });
   };
 
   return (
@@ -153,7 +153,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
             <button 
               onClick={handleSubmit} 
               disabled={!isFormValid}
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {initialData ? "保存" : "添加并授权"}
             </button>
@@ -165,19 +165,19 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2.5">服务端点 URL</label>
-              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="服务端点的 URL" value={formData.server_url} onChange={e => setFormData({...formData, server_url: e.target.value})} />
+              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="服务端点的 URL" value={formData.server_url} onChange={e => setFormData({...formData, server_url: e.target.value})} />
             </div>
             
             <div className="flex gap-4">
               <div className="flex-grow">
                 <label className="block text-sm font-semibold text-gray-900 mb-2.5">名称</label>
-                <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="命名你的 MCP 服务" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="命名你的 MCP 服务" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               </div>
               <div className="flex-shrink-0">
                 <label className="block text-sm font-semibold text-gray-900 mb-2.5">图标</label>
                 <button 
                   onClick={() => setIsIconPickerOpen(true)}
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200 overflow-hidden relative group"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md shadow-primary-200 overflow-hidden relative group"
                 >
                   {formData.iconType === 'image' ? (
                     <img src={formData.iconUrl || formData.icon} alt="icon" className="w-full h-full object-cover" />
@@ -197,7 +197,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2.5">服务器标识符</label>
-              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="服务器唯一标识，例如 my-mcp-server" value={formData.server_identifier} onChange={e => setFormData({...formData, server_identifier: e.target.value})} />
+              <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="服务器唯一标识，例如 my-mcp-server" value={formData.server_identifier} onChange={e => setFormData({...formData, server_identifier: e.target.value})} />
               <p className="text-xs text-gray-500 mt-2 leading-relaxed">工作空间内服务器的唯一标识。支持小写字母、数字、下划线和连字符，最多 24 个字符。</p>
             </div>
           </div>
@@ -208,7 +208,7 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === tab ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === tab ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 {tab === 'auth' ? '认证' : tab === 'headers' ? '请求头' : '配置'}
               </button>
@@ -219,9 +219,9 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
           <div className="min-h-[200px]">
             {activeTab === 'auth' && (
               <div className="space-y-5">
-                <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <span className="text-sm font-semibold text-indigo-900">使用动态客户端注册</span>
-                  <button onClick={() => setFormData({...formData, is_dynamic_registration: !formData.is_dynamic_registration})} className={`w-12 h-6 rounded-full transition-colors relative ${formData.is_dynamic_registration ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+                <div className="flex items-center justify-between p-4 bg-primary-50 rounded-xl border border-primary-100">
+                  <span className="text-sm font-semibold text-primary-900">使用动态客户端注册</span>
+                  <button onClick={() => setFormData({...formData, is_dynamic_registration: !formData.is_dynamic_registration})} className={`w-12 h-6 rounded-full transition-colors relative ${formData.is_dynamic_registration ? 'bg-primary-600' : 'bg-gray-300'}`}>
                     <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.is_dynamic_registration ? 'translate-x-6' : 'translate-x-0'}`} />
                   </button>
                 </div>
@@ -238,11 +238,11 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">客户端 ID</label>
-                  <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="客户端 ID" value={formData.client_id} onChange={e => setFormData({...formData, client_id: e.target.value})} />
+                  <input type="text" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="客户端 ID" value={formData.client_id} onChange={e => setFormData({...formData, client_id: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">客户端密钥</label>
-                  <input type="password" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="客户端密钥" value={formData.client_secret} onChange={e => setFormData({...formData, client_secret: e.target.value})} />
+                  <input type="password" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="客户端密钥" value={formData.client_secret} onChange={e => setFormData({...formData, client_secret: e.target.value})} />
                 </div>
               </div>
             )}
@@ -251,12 +251,12 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
               <div className="space-y-4">
                 {headers.map((header, index) => (
                   <div key={index} className="flex gap-3">
-                    <input type="text" className="w-1/3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="请求头名称" value={header.key} onChange={e => updateHeader(index, 'key', e.target.value)} />
-                    <input type="text" className="flex-grow px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="请求头值" value={header.value} onChange={e => updateHeader(index, 'value', e.target.value)} />
+                    <input type="text" className="w-1/3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="请求头名称" value={header.key} onChange={e => updateHeader(index, 'key', e.target.value)} />
+                    <input type="text" className="flex-grow px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" placeholder="请求头值" value={header.value} onChange={e => updateHeader(index, 'value', e.target.value)} />
                     <button onClick={() => removeHeader(index)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-5 h-5" /></button>
                   </div>
                 ))}
-                <button onClick={addHeader} className="flex items-center gap-2 text-sm text-indigo-600 font-semibold hover:text-indigo-700 transition-all">
+                <button onClick={addHeader} className="flex items-center gap-2 text-sm text-primary-600 font-semibold hover:text-primary-700 transition-all">
                   <Plus className="w-4 h-4" /> 添加请求头
                 </button>
               </div>
@@ -266,11 +266,11 @@ const AddMCPServiceModal: React.FC<AddMCPServiceModalProps> = ({ isOpen, onClose
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">超时时间 (秒)</label>
-                  <input type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" value={formData.timeout} onChange={e => setFormData({...formData, timeout: parseInt(e.target.value)})} />
+                  <input type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" value={formData.timeout} onChange={e => setFormData({...formData, timeout: parseInt(e.target.value)})} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">SSE 读取超时时间 (秒)</label>
-                  <input type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" value={formData.sse_read_timeout} onChange={e => setFormData({...formData, sse_read_timeout: parseInt(e.target.value)})} />
+                  <input type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" value={formData.sse_read_timeout} onChange={e => setFormData({...formData, sse_read_timeout: parseInt(e.target.value)})} />
                 </div>
               </div>
             )}

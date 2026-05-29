@@ -169,12 +169,12 @@ const initialNodes: Node<WorkflowNodeData>[] = [
     data: { 
       label: '图片OCR识别', 
       icon: <ImageIcon className="w-3.5 h-3.5" />, 
-      color: 'bg-indigo-600',
+      color: 'bg-primary-600',
       content: (
-        <div className="flex items-center gap-1.5 bg-indigo-50/50 p-1.5 rounded-lg border border-indigo-100/50">
-          <div className="w-4 h-4 bg-indigo-600 rounded flex items-center justify-center text-[8px] text-white font-bold shadow-sm">G</div>
+        <div className="flex items-center gap-1.5 bg-primary-50/50 p-1.5 rounded-lg border border-primary-100/50">
+          <div className="w-4 h-4 bg-primary-600 rounded flex items-center justify-center text-[8px] text-white font-bold shadow-sm">G</div>
           <span className="text-[9px] font-bold text-gray-700">glm-4v-flash</span>
-          <span className="text-[7px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-bold">CHAT</span>
+          <span className="text-[7px] bg-primary-100 text-primary-600 px-1.5 py-0.5 rounded font-bold">CHAT</span>
         </div>
       )
     },
@@ -214,7 +214,7 @@ const initialNodes: Node<WorkflowNodeData>[] = [
             <span>string +</span>
           </div>
           <div className="flex items-center gap-1.5 text-[9px] font-medium">
-            <ImageIcon className="w-2.5 h-2.5 text-indigo-400" />
+            <ImageIcon className="w-2.5 h-2.5 text-primary-400" />
             <span className="text-gray-600">图片OCR识别</span>
             <span className="text-blue-600">{'{x}'} text</span>
           </div>
@@ -234,12 +234,12 @@ const initialNodes: Node<WorkflowNodeData>[] = [
     data: { 
       label: 'LLM', 
       icon: <Cpu className="w-3.5 h-3.5" />, 
-      color: 'bg-indigo-600',
+      color: 'bg-primary-600',
       content: (
-        <div className="flex items-center gap-1.5 bg-indigo-50/50 p-1.5 rounded-lg border border-indigo-100/50">
-          <div className="w-4 h-4 bg-indigo-600 rounded flex items-center justify-center text-[8px] text-white font-bold shadow-sm">D</div>
+        <div className="flex items-center gap-1.5 bg-primary-50/50 p-1.5 rounded-lg border border-primary-100/50">
+          <div className="w-4 h-4 bg-primary-600 rounded flex items-center justify-center text-[8px] text-white font-bold shadow-sm">D</div>
           <span className="text-[9px] font-bold text-gray-700">DeepSeek-R1</span>
-          <span className="text-[7px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-bold">CHAT</span>
+          <span className="text-[7px] bg-primary-100 text-primary-600 px-1.5 py-0.5 rounded font-bold">CHAT</span>
         </div>
       )
     },
@@ -577,7 +577,7 @@ const WorkflowEditor: React.FC = () => {
 
   return (
     <ReactFlowProvider>
-      <div ref={reactFlowWrapper} className="w-full h-full min-h-[600px] bg-[#fdfdfd] rounded-3xl overflow-hidden border border-gray-200/60 shadow-2xl shadow-indigo-500/5 relative">
+      <div ref={reactFlowWrapper} className="w-full h-full min-h-[600px] bg-[#fdfdfd] rounded-3xl overflow-hidden border border-gray-200/60 shadow-2xl shadow-primary-500/5 relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -615,7 +615,7 @@ const WorkflowEditor: React.FC = () => {
           {/* Main Toolbar */}
           <div className="bg-white/80 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] border border-white/40 rounded-2xl p-2 flex items-center gap-2">
             <div className="flex items-center gap-1 pr-2 border-r border-gray-100/50">
-              <button className="p-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-200 group" title="选择模式">
+              <button className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-200 group" title="选择模式">
                 <MousePointer2 className="w-4 h-4" />
               </button>
             </div>
@@ -630,8 +630,8 @@ const WorkflowEditor: React.FC = () => {
                 className="p-2 hover:bg-gray-50 rounded-xl text-gray-600 transition-all flex items-center gap-2 group"
                 title="添加节点"
               >
-                <div className="p-2 bg-indigo-50 rounded-lg group-hover:bg-indigo-100 transition-colors">
-                  <Plus className="w-4 h-4 text-indigo-600" />
+                <div className="p-2 bg-primary-50 rounded-lg group-hover:bg-primary-100 transition-colors">
+                  <Plus className="w-4 h-4 text-primary-600" />
                 </div>
                 <div className="text-left pr-2">
                   <p className="text-[11px] font-bold leading-tight">添加节点</p>
@@ -681,7 +681,7 @@ const WorkflowEditor: React.FC = () => {
           </button>
           <button 
             onClick={handleRun}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 rounded-2xl text-xs font-bold text-white hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
+            className="flex items-center gap-2 px-6 py-3 bg-primary-600 rounded-2xl text-xs font-bold text-white hover:bg-primary-700 transition-all shadow-xl shadow-primary-200"
           >
             <Play className="w-4 h-4 fill-current" />
             运行工作流

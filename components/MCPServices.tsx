@@ -26,7 +26,7 @@ const MOCK_MCP_SERVICES = [
     sseTimeout: 300,
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600',
+    iconBgColor: 'bg-primary-600',
     is_team_authorization: true
   },
   {
@@ -44,7 +44,7 @@ const MOCK_MCP_SERVICES = [
     sseTimeout: 300,
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600',
+    iconBgColor: 'bg-primary-600',
     is_team_authorization: true
   },
   {
@@ -62,7 +62,7 @@ const MOCK_MCP_SERVICES = [
     sseTimeout: 300,
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600',
+    iconBgColor: 'bg-primary-600',
     is_team_authorization: false
   }
 ];
@@ -173,7 +173,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
             identifier: item.server_identifier || id,
             icon: icon,
             iconType: iconType,
-            iconBgColor: item.icon_background || 'bg-indigo-600',
+            iconBgColor: item.icon_background || 'bg-primary-600',
             iconUrl: item.icon_url || '',
             rawTools: item.tools || [],
             is_team_authorization: item.is_team_authorization
@@ -218,7 +218,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
     }
 
     return (
-      <div className={`${containerClass} ${service.iconBgColor || 'bg-indigo-600'} text-white flex items-center justify-center`}>
+      <div className={`${containerClass} ${service.iconBgColor || 'bg-primary-600'} text-white flex items-center justify-center`}>
         {getIcon(service.icon, iconClass)}
       </div>
     );
@@ -489,17 +489,17 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
             <input 
               type="text" 
               placeholder="搜索服务名称或标识符..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <button 
             onClick={handleRefresh}
-            className={`p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm ${isRefreshing ? 'animate-spin' : ''}`}
+            className={`p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm ${isRefreshing ? 'animate-spin' : ''}`}
             title="刷新列表"
           >
-            <Zap className={`w-4 h-4 ${isRefreshing ? 'text-indigo-500' : ''}`} />
+            <Zap className={`w-4 h-4 ${isRefreshing ? 'text-primary-500' : ''}`} />
           </button>
         </div>
       </div>
@@ -519,10 +519,10 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
           <button 
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center justify-center p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 bg-white transition-all shadow-sm w-[34px] h-[34px]"
+            className="flex items-center justify-center p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 bg-white transition-all shadow-sm w-[34px] h-[34px]"
             title="刷新数据"
           >
-            <Zap className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
+            <Zap className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-primary-600' : ''}`} />
           </button>
           <button 
             onClick={() => setIsModalOpen(true)}
@@ -545,14 +545,14 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
         {!searchQuery && (
           <div 
             id="tour-add-mcp-service"
-            className="group relative bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[180px]"
+            className="group relative bg-gradient-to-br from-primary-50/50 to-white rounded-2xl border-2 border-dashed border-primary-200 p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary-400 hover:shadow-xl hover:shadow-primary-500/10 hover:-translate-y-1 transition-all duration-300 ease-out min-h-[180px]"
             onClick={() => setIsModalOpen(true)}
           >
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-indigo-100 group-hover:scale-110 group-hover:bg-indigo-600 transition-all duration-300">
-              <Plus className="w-5 h-5 text-indigo-500 group-hover:text-white transition-colors" />
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-primary-100 group-hover:scale-110 group-hover:bg-primary-600 transition-all duration-300">
+              <Plus className="w-5 h-5 text-primary-500 group-hover:text-white transition-colors" />
             </div>
-            <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">添加新服务</span>
-            <p className="text-xs text-indigo-400 mt-2 text-center px-4 leading-relaxed">连接新的 MCP 服务器以扩展工具集</p>
+            <span className="text-sm font-bold text-primary-900 group-hover:text-primary-700 transition-colors">添加新服务</span>
+            <p className="text-xs text-primary-400 mt-2 text-center px-4 leading-relaxed">连接新的 MCP 服务器以扩展工具集</p>
           </div>
         )}
 
@@ -560,11 +560,11 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
         {filteredServices.map(service => (
           <div 
             key={service.id}
-            className={`group relative bg-white rounded-2xl border border-gray-100 p-5 flex flex-col cursor-pointer shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 ease-out ${menuOpenId === service.id ? 'z-50 ring-2 ring-indigo-500/20' : ''}`}
+            className={`group relative bg-white rounded-2xl border border-gray-100 p-5 flex flex-col cursor-pointer shadow-sm hover:shadow-xl hover:shadow-primary-500/10 hover:-translate-y-1 transition-all duration-300 ease-out ${menuOpenId === service.id ? 'z-50 ring-2 ring-primary-500/20' : ''}`}
             onClick={() => handleSelectService(service)}
           >
             {/* Top accent line */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl"></div>
 
             {/* Status Indicator */}
             <div className="absolute top-5 right-5">
@@ -579,9 +579,9 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
             </div>
 
             <div className="flex items-start gap-4 mb-5">
-              {renderServiceIcon(service, "w-12 h-12 rounded-xl shrink-0 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300", "w-6 h-6")}
+              {renderServiceIcon(service, "w-12 h-12 rounded-xl shrink-0 shadow-lg shadow-primary-500/20 group-hover:scale-105 transition-transform duration-300", "w-6 h-6")}
               <div className="flex-1 min-w-0 pr-4 pt-1">
-                <h3 className="font-bold text-gray-900 text-base truncate leading-tight group-hover:text-indigo-600 transition-colors">{service.name}</h3>
+                <h3 className="font-bold text-gray-900 text-base truncate leading-tight group-hover:text-primary-600 transition-colors">{service.name}</h3>
                 <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100">
                     <span className="text-[10px] text-gray-500 font-mono truncate max-w-[120px]">{service.server_identifier || service.identifier}</span>
                 </div>
@@ -634,7 +634,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
           <p className="text-sm text-gray-500 mt-1">尝试调整搜索关键词</p>
           <button 
             onClick={() => setSearchQuery('')}
-            className="mt-6 text-sm font-bold text-indigo-600 hover:text-indigo-700"
+            className="mt-6 text-sm font-bold text-primary-600 hover:text-primary-700"
           >
             清除搜索
           </button>
@@ -714,7 +714,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
             <div className="flex flex-col gap-4 mb-8">
               <button 
                 onClick={() => setIsAuthSettingsOpen(true)}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2"
               >
                 <ShieldCheck className="w-4 h-4" />
                 {selectedService.is_team_authorization ? '更新授权' : '授权'}
@@ -754,21 +754,21 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                       return (
                         <div 
                           key={index} 
-                          className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/5 transition-all cursor-pointer group relative overflow-hidden"
+                          className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-primary-200 hover:shadow-md hover:shadow-primary-500/5 transition-all cursor-pointer group relative overflow-hidden"
                           onClick={() => setSelectedTool(tool)}
                         >
-                          <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="absolute top-0 left-0 w-1 h-full bg-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <h5 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors">{nameText}</h5>
+                              <h5 className="font-bold text-sm text-gray-900 group-hover:text-primary-600 transition-colors">{nameText}</h5>
                               {tool.parameters?.length > 0 && (
                                 <span className="text-[10px] bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded border border-gray-100 font-mono">
                                   {tool.parameters.length} params
                                 </span>
                               )}
                             </div>
-                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
-                              <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors">
+                              <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary-500 transition-colors" />
                             </div>
                           </div>
                           <Tooltip 
@@ -810,7 +810,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-200">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -840,7 +840,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                       <Info className="w-3.5 h-3.5" />
                       描述
                     </h4>
-                    <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap bg-indigo-50/30 p-5 rounded-2xl border border-indigo-100/50">
+                    <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap bg-primary-50/30 p-5 rounded-2xl border border-primary-100/50">
                       {typeof selectedTool.description === 'string' 
                         ? selectedTool.description 
                         : (selectedTool.description?.zh_Hans || selectedTool.description?.en_US || JSON.stringify(selectedTool.description) || '无描述')}
@@ -856,7 +856,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500">所属服务</span>
-                        <span className="text-xs font-bold text-indigo-600">{selectedService?.name}</span>
+                        <span className="text-xs font-bold text-primary-600">{selectedService?.name}</span>
                       </div>
                     </div>
                   </div>
@@ -875,7 +875,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                         const paramLabel = param.label?.zh_Hans || param.label?.en_US || param.name;
                         const paramDesc = param.human_description?.zh_Hans || param.human_description?.en_US || '';
                         return (
-                          <div key={pIdx} className="group bg-white p-5 rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all">
+                          <div key={pIdx} className="group bg-white p-5 rounded-2xl border border-gray-100 hover:border-primary-200 hover:shadow-md transition-all">
                             <div className="flex items-start justify-between mb-3">
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2">
@@ -886,7 +886,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                                 </div>
                                 <code className="text-[10px] text-gray-400 font-mono block">{param.name}</code>
                               </div>
-                              <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider border border-indigo-100">{param.type}</span>
+                              <span className="text-[10px] bg-primary-50 text-primary-600 px-2.5 py-1 rounded-lg font-bold uppercase tracking-wider border border-primary-100">{param.type}</span>
                             </div>
                             {paramDesc && (
                               <p className="text-xs text-gray-500 leading-relaxed bg-gray-50/50 p-3 rounded-xl border border-gray-50">
@@ -905,7 +905,7 @@ const MCPServices: React.FC<MCPServicesProps> = ({ isEmbedded = false }) => {
                         <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                         <span className="text-[10px] text-gray-500 font-mono ml-2">parameters.json</span>
                       </div>
-                      <pre className="text-xs text-indigo-300 font-mono leading-relaxed">
+                      <pre className="text-xs text-primary-300 font-mono leading-relaxed">
                         {JSON.stringify(selectedTool.parameters, null, 2)}
                       </pre>
                     </div>

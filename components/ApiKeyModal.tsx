@@ -82,7 +82,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, appId }) => 
       <Modal
         title={
           <div className="flex items-center gap-2 text-gray-900">
-            <Key className="w-5 h-5 text-indigo-600" />
+            <Key className="w-5 h-5 text-primary-600" />
             <span>API 密钥管理</span>
           </div>
         }
@@ -104,7 +104,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, appId }) => 
             </div>
             <button 
               onClick={handleCreateKey}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               创建密钥
@@ -126,7 +126,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, appId }) => 
                   <tr>
                     <td colSpan={4} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-2 text-gray-400">
-                        <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
                         <span className="text-sm">加载中...</span>
                       </div>
                     </td>
@@ -145,8 +145,8 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, appId }) => 
                     <tr key={key.id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-indigo-600" />
+                          <div className="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center">
+                            <Shield className="w-4 h-4 text-primary-600" />
                           </div>
                           <code className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
                             {key.id.substring(0, 8)}...
@@ -169,7 +169,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, appId }) => 
                           <Tooltip title="复制 Token">
                             <button 
                               onClick={() => handleCopy(key.token, key.id)}
-                              className="p-2 hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-lg transition-all"
+                              className="p-2 hover:bg-primary-50 text-gray-400 hover:text-primary-600 rounded-lg transition-all"
                             >
                               {copyingId === key.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                             </button>
@@ -227,7 +227,7 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, appId }) => 
           </div>
           
           <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary-500 to-purple-500 rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
             <div className="relative flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
               <code className="flex-1 font-mono text-sm text-gray-800 break-all select-all">
                 {newKey?.token}

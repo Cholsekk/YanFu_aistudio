@@ -12,7 +12,7 @@ const getFileIcon = (name: string, isDir: boolean, isOpen: boolean) => {
   if (name.endsWith('.css')) return <FileText className="w-4 h-4 text-sky-500" />;
   if (name.endsWith('.json')) return <FileText className="w-4 h-4 text-yellow-600" />;
   if (name.endsWith('.py')) return <FileText className="w-4 h-4 text-emerald-500" />;
-  if (name.endsWith('.md')) return <FileText className="w-4 h-4 text-indigo-500" />;
+  if (name.endsWith('.md')) return <FileText className="w-4 h-4 text-primary-500" />;
   return <FileText className="w-4 h-4 text-gray-500" />;
 };
 
@@ -22,7 +22,7 @@ const getFileColor = (name: string, isDir: boolean) => {
   if (name.endsWith('.css')) return 'text-sky-700';
   if (name.endsWith('.json')) return 'text-yellow-700';
   if (name.endsWith('.py')) return 'text-emerald-700';
-  if (name.endsWith('.md')) return 'text-indigo-700';
+  if (name.endsWith('.md')) return 'text-primary-700';
   return 'text-gray-700';
 };
 
@@ -944,7 +944,7 @@ const SkillsTab: React.FC = () => {
           <button onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 text-gray-600">取消</button>
           <button 
             onClick={handleCreateSkill}
-            className={`px-4 py-2 rounded-lg ${newSkillName ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-indigo-100 text-indigo-400 cursor-not-allowed'}`}
+            className={`px-4 py-2 rounded-lg ${newSkillName ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-primary-100 text-primary-400 cursor-not-allowed'}`}
             disabled={!newSkillName}
           >
             创建

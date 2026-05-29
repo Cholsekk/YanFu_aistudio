@@ -587,7 +587,7 @@ const TAG_COLORS = [
   { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
   { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
   { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
-  { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  { bg: 'bg-primary-50', text: 'text-primary-700', border: 'border-primary-200' },
   { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
   { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
   { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
@@ -1067,8 +1067,8 @@ const ToolExtensions: React.FC = () => {
             onClick={() => setActiveTab('builtin')}
             className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'builtin'
-                ? 'bg-blue-600 text-white border-blue-600 font-medium'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                ? 'bg-primary-600 text-white border-primary-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
             }`}
           >
             内置工具
@@ -1078,8 +1078,8 @@ const ToolExtensions: React.FC = () => {
             onClick={() => setActiveTab('workflow')}
             className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'workflow'
-                ? 'bg-blue-600 text-white border-blue-600 font-medium'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                ? 'bg-primary-600 text-white border-primary-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
             }`}
           >
             工作流
@@ -1089,8 +1089,8 @@ const ToolExtensions: React.FC = () => {
             onClick={() => setActiveTab('mcp')}
             className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'mcp'
-                ? 'bg-blue-600 text-white border-blue-600 font-medium'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                ? 'bg-primary-600 text-white border-primary-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
             }`}
           >
             MCP工具
@@ -1100,8 +1100,8 @@ const ToolExtensions: React.FC = () => {
             onClick={() => setActiveTab('skills')}
             className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
               activeTab === 'skills'
-                ? 'bg-blue-600 text-white border-blue-600 font-medium'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                ? 'bg-primary-600 text-white border-primary-600 font-medium'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
             }`}
           >
             SKILLS
@@ -1211,7 +1211,7 @@ const ToolExtensions: React.FC = () => {
           <button 
             id="tour-guide-button"
             onClick={() => window.dispatchEvent(new CustomEvent('open-guide', { detail: { subTab: activeTab }, bubbles: true, composed: true }))}
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm h-[34px] ml-auto md:ml-0"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-600 border border-primary-100 rounded-lg text-sm font-medium hover:bg-primary-100 transition-all shadow-sm h-[34px] ml-auto md:ml-0"
           >
             <BookOpen className="w-4 h-4" />
             新手指引

@@ -179,19 +179,19 @@ interface KnowledgeBase {
 }
 
 const features = [
-  { id: 'opening', name: '对话开场白', desc: '在对话型应用中，让 AI 主动说第一段话可以拉近与用户间的距离。', icon: MessageSquare, color: 'bg-blue-500' },
+  { id: 'opening', name: '对话开场白', desc: '在对话型应用中，让 AI 主动说第一段话可以拉近与用户间的距离。', icon: MessageSquare, color: 'bg-primary-500' },
   { id: 'suggestion', name: '下一步问题建议', desc: '设置下一步问题建议可以让用户更好的对话。', icon: MessageSquare, color: 'bg-sky-500' },
-  { id: 'tts', name: '文字转语音', desc: '文本可以转换成语音。', icon: Type, color: 'bg-indigo-500' },
+  { id: 'tts', name: '文字转语音', desc: '文本可以转换成语音。', icon: Type, color: 'bg-primary-500' },
   { id: 'stt', name: '语音转文字', desc: '您可以使用语音输入。', icon: Mic, color: 'bg-purple-500' },
   { id: 'citation', name: '引用和归属', desc: '显示源文档和生成内容的归属部分。', icon: Quote, color: 'bg-orange-500' },
   { id: 'content_check', name: '内容审查', desc: '您可以调用审查 API 或者维护敏感词库来使模型更安全地输出。', icon: ShieldCheck, color: 'bg-emerald-500' },
-  { id: 'annotation', name: '标注回复', desc: '启用后，将标注用户的回复，以便在用户重复提问时快速响应。', icon: MessageSquare, color: 'bg-blue-500' },
+  { id: 'annotation', name: '标注回复', desc: '启用后，将标注用户的回复，以便在用户重复提问时快速响应。', icon: MessageSquare, color: 'bg-primary-500' },
   { id: 'attachment', name: '上传附件', desc: '支持上传图片、文档等附件。', icon: Plus, color: 'bg-amber-500' },
 ];
 
 const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
-  if (['doc', 'docx'].includes(ext || '')) return <LucideIcons.FileText className="w-6 h-6 text-blue-500" />;
+  if (['doc', 'docx'].includes(ext || '')) return <LucideIcons.FileText className="w-6 h-6 text-primary-500" />;
   if (['xls', 'xlsx', 'csv'].includes(ext || '')) return <LucideIcons.FileSpreadsheet className="w-6 h-6 text-green-500" />;
   if (['ppt', 'pptx'].includes(ext || '')) return <LucideIcons.File className="w-6 h-6 text-orange-500" />;
   if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext || '')) return <LucideIcons.FileArchive className="w-6 h-6 text-red-500" />;
@@ -2184,7 +2184,7 @@ const AppConfig: React.FC = () => {
                       className="grid grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-gray-50 bg-white group/var transition-colors"
                     >
                       <div className="col-span-4 flex items-center gap-2 text-sm text-gray-500">
-                        <div className="flex items-center justify-center w-6 h-6 rounded bg-blue-50 text-blue-500">
+                        <div className="flex items-center justify-center w-6 h-6 rounded bg-primary-50 text-primary-500">
                           {v.type === 'text-input' && <Type className="w-3.5 h-3.5" />}
                           {v.type === 'paragraph' && <AlignLeft className="w-3.5 h-3.5" />}
                           {v.type === 'select' && <CheckSquare className="w-3.5 h-3.5" />}
@@ -2677,7 +2677,7 @@ const AppConfig: React.FC = () => {
                 <Button 
                   type="primary" 
                   block 
-                  className="mb-2 bg-blue-600 h-10 rounded-lg font-medium" 
+                  className="mb-2 bg-primary-600 h-10 rounded-lg font-medium" 
                   onClick={() => {
                     setIsPublishPopoverOpen(false);
                     onPublish();
@@ -2694,7 +2694,7 @@ const AppConfig: React.FC = () => {
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                      <Store className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                       <span className="text-sm">发布到应用市场</span>
                     </div>
                   </div>
@@ -2706,7 +2706,7 @@ const AppConfig: React.FC = () => {
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <Code className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                      <Code className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                       <span className="text-sm">嵌入网站</span>
                     </div>
                   </div>
@@ -2751,7 +2751,7 @@ const AppConfig: React.FC = () => {
           footer: { borderTop: 'none', padding: '0 24px 24px' }
         }}
         okButtonProps={{
-          className: 'h-10 px-8 rounded-lg bg-blue-600 font-medium',
+          className: 'h-10 px-8 rounded-lg bg-primary-600 font-medium',
         }}
         cancelButtonProps={{
           className: 'h-10 px-8 rounded-lg font-medium',
@@ -2892,7 +2892,7 @@ const AppConfig: React.FC = () => {
                         placeholder={v.displayName || v.name} 
                         value={variableValues[v.id] || ''}
                         onChange={(e) => handleVariableChange(v.id, e.target.value)}
-                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-blue-500 h-10 rounded-lg transition-colors"
+                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-primary-500 h-10 rounded-lg transition-colors"
                       />
                     )}
                     {v.type === 'paragraph' && (
@@ -2901,7 +2901,7 @@ const AppConfig: React.FC = () => {
                         value={variableValues[v.id] || ''}
                         onChange={(e) => handleVariableChange(v.id, e.target.value)}
                         autoSize={{ minRows: 3, maxRows: 6 }}
-                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-blue-500 rounded-lg transition-colors"
+                        className="bg-gray-50 border-transparent hover:bg-gray-100 focus:bg-white focus:border-primary-500 rounded-lg transition-colors"
                       />
                     )}
                     {v.type === 'select' && (
@@ -2995,7 +2995,7 @@ const AppConfig: React.FC = () => {
                                       />
                                     ) : (
                                       <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-2xl border border-gray-100 shadow-sm w-[280px]">
-                                        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-blue-50/50 rounded-lg">
+                                        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-primary-50/50 rounded-lg">
                                           {getFileIcon(att.name)}
                                         </div>
                                         <div className="flex flex-col overflow-hidden">
@@ -3183,7 +3183,7 @@ const AppConfig: React.FC = () => {
                   ) : (
                     <Tooltip title={att.name}>
                       <div className="relative flex items-center gap-3 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm w-[240px]">
-                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-50/50 rounded-lg">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-primary-50/50 rounded-lg">
                           {getFileIcon(att.name)}
                         </div>
                         <div className="flex flex-col overflow-hidden w-full">
@@ -3206,7 +3206,7 @@ const AppConfig: React.FC = () => {
             </div>
             <motion.div 
               whileFocus={{ scale: 1.01 }}
-              className="relative flex items-center bg-white rounded-2xl border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all px-4 py-2 shadow-sm"
+              className="relative flex items-center bg-white rounded-2xl border border-gray-200 focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10 transition-all px-4 py-2 shadow-sm"
             >
               {enabledFeatures.attachment && (
                 <>
@@ -3234,12 +3234,12 @@ const AppConfig: React.FC = () => {
               <Button 
                 type="primary" 
                 icon={Object.values(isStreaming).some(s => s) ? <Square className="w-4 h-4 fill-current" /> : <Send className="w-4 h-4" />} 
-                className={`rounded-full h-10 w-10 flex items-center justify-center p-0 shadow-lg border-none hover:scale-110 transition-transform bg-blue-600 shadow-blue-500/20`}
+                className={`rounded-full h-10 w-10 flex items-center justify-center p-0 shadow-lg border-none hover:scale-110 transition-transform bg-primary-600 shadow-primary-500/20`}
                 onClick={Object.values(isStreaming).some(s => s) ? handleStopMessage : handleSendMessage}
               />
             </motion.div>
             
-            <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/50 rounded-xl border border-blue-100/50">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-primary-50/50 rounded-xl border border-primary-100/50">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-1.5">
                   {Object.entries(enabledFeatures || {}).filter(([_, enabled]) => enabled).map(([id, _]) => {
@@ -3252,12 +3252,12 @@ const AppConfig: React.FC = () => {
                     );
                   })}
                 </div>
-                <span className="text-xs text-blue-800 font-medium">功能已开启</span>
+                <span className="text-xs text-primary-800 font-medium">功能已开启</span>
               </div>
               <Button 
                 type="link" 
                 size="small" 
-                className="text-xs text-blue-600 p-0 flex items-center gap-1 hover:gap-2 transition-all font-medium"
+                className="text-xs text-primary-600 p-0 flex items-center gap-1 hover:gap-2 transition-all font-medium"
                 onClick={() => setShowFeaturesDrawer(true)}
               >
                 管理 <ArrowUpRight className="w-3 h-3" />
@@ -3358,14 +3358,14 @@ const AppConfig: React.FC = () => {
                               <div className="flex gap-2">
                                 <Button 
                                   size="small" 
-                                  className={`flex-grow rounded-lg text-xs ${ (model as any)[configKey] ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-100 text-gray-400' }`}
+                                  className={`flex-grow rounded-lg text-xs ${ (model as any)[configKey] ? 'bg-primary-50 border-primary-200 text-primary-600' : 'bg-gray-50 border-gray-100 text-gray-400' }`}
                                   onClick={() => updateModelParam(model.id, configKey, true)}
                                 >
                                   True
                                 </Button>
                                 <Button 
                                   size="small" 
-                                  className={`flex-grow rounded-lg text-xs ${ !(model as any)[configKey] ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-gray-50 border-gray-100 text-gray-400' }`}
+                                  className={`flex-grow rounded-lg text-xs ${ !(model as any)[configKey] ? 'bg-primary-50 border-primary-200 text-primary-600' : 'bg-gray-50 border-gray-100 text-gray-400' }`}
                                   onClick={() => updateModelParam(model.id, configKey, false)}
                                 >
                                   False
@@ -3521,7 +3521,7 @@ const AppConfig: React.FC = () => {
               </div>
 
               {editingKB.permission === 'partial_members' && (
-                <div className="p-4 bg-blue-50 rounded-lg space-y-4 border border-blue-100">
+                <div className="p-4 bg-primary-50 rounded-lg space-y-4 border border-primary-100">
                   <PartialTeamMembersSelector 
                     partialTeamData={editingKB.partial_team_data || { roles: [], departments: [], members: [] }}
                     updateKBSettings={updateKBSettings}
@@ -3541,22 +3541,22 @@ const AppConfig: React.FC = () => {
                 <label className="text-sm font-medium text-gray-900">索引模式</label>
                 <div className="grid grid-cols-2 gap-4">
                   <div 
-                    className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.indexing_technique === 'high_quality' ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.indexing_technique === 'high_quality' ? 'border-primary-500 bg-primary-50/50 ring-1 ring-primary-500' : 'border-gray-200 hover:border-gray-300'}`}
                     onClick={() => updateKBSettings({ indexing_technique: 'high_quality' })}
                   >
                     <div className="flex items-center gap-2 font-medium text-sm text-gray-900 mb-1">
                       <Sun className="w-4 h-4 text-orange-500" /> 高质量
-                      {editingKB.indexing_technique === 'high_quality' && <Check className="w-4 h-4 text-blue-600 ml-auto" />}
+                      {editingKB.indexing_technique === 'high_quality' && <Check className="w-4 h-4 text-primary-600 ml-auto" />}
                     </div>
                     <div className="text-xs text-gray-500">调用 Embedding 模型进行处理，在用户查询时提供更高的准确度。</div>
                   </div>
                   <div 
-                    className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.indexing_technique === 'economy' ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.indexing_technique === 'economy' ? 'border-primary-500 bg-primary-50/50 ring-1 ring-primary-500' : 'border-gray-200 hover:border-gray-300'}`}
                     onClick={() => updateKBSettings({ indexing_technique: 'economy' })}
                   >
                     <div className="flex items-center gap-2 font-medium text-sm text-gray-900 mb-1">
-                      <Database className="w-4 h-4 text-blue-500" /> 经济
-                      {editingKB.indexing_technique === 'economy' && <Check className="w-4 h-4 text-blue-600 ml-auto" />}
+                      <Database className="w-4 h-4 text-primary-500" /> 经济
+                      {editingKB.indexing_technique === 'economy' && <Check className="w-4 h-4 text-primary-600 ml-auto" />}
                     </div>
                     <div className="text-xs text-gray-500">使用离线的向量引擎、关键词索引等方式，降低了准确度但无需花费 Token。</div>
                   </div>
@@ -3581,13 +3581,13 @@ const AppConfig: React.FC = () => {
               
               {/* Vector Search Option */}
               <div 
-                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'semantic' ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'semantic' ? 'border-primary-500' : 'border-gray-200 hover:border-gray-300'}`}
                 onClick={() => updateKBSettings({ retrieval_config: { search_method: 'semantic' } })}
               >
-                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'semantic' ? 'bg-blue-50/30 rounded-t-xl' : ''}`}>
+                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'semantic' ? 'bg-primary-50/30 rounded-t-xl' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
-                      <LayoutGrid className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'semantic' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <LayoutGrid className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'semantic' ? 'text-primary-600' : 'text-gray-600'}`} />
                     </div>
                     <div>
                       <div className="font-medium text-sm text-gray-900">向量检索</div>
@@ -3597,7 +3597,7 @@ const AppConfig: React.FC = () => {
                 </div>
                 
                 {editingKB.retrieval_config?.search_method === 'semantic' && (
-                  <div className="p-4 pt-0 bg-blue-50/30 rounded-b-xl">
+                  <div className="p-4 pt-0 bg-primary-50/30 rounded-b-xl">
                     <div className="flex items-center gap-2 mb-3">
                       <Switch 
                         size="small" 
@@ -3682,13 +3682,13 @@ const AppConfig: React.FC = () => {
 
               {/* Full Text Search Option */}
               <div 
-                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'keyword' ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'keyword' ? 'border-primary-500' : 'border-gray-200 hover:border-gray-300'}`}
                 onClick={() => updateKBSettings({ retrieval_config: { search_method: 'keyword' } })}
               >
-                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'keyword' ? 'bg-blue-50/30 rounded-t-xl' : ''}`}>
+                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'keyword' ? 'bg-primary-50/30 rounded-t-xl' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
-                      <Database className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'keyword' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <Database className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'keyword' ? 'text-primary-600' : 'text-gray-600'}`} />
                     </div>
                     <div>
                       <div className="font-medium text-sm text-gray-900">全文检索</div>
@@ -3698,7 +3698,7 @@ const AppConfig: React.FC = () => {
                 </div>
                 
                 {editingKB.retrieval_config?.search_method === 'keyword' && (
-                  <div className="p-4 pt-0 bg-blue-50/30 rounded-b-xl">
+                  <div className="p-4 pt-0 bg-primary-50/30 rounded-b-xl">
                     <div className="flex items-center gap-2 mb-3">
                       <Switch 
                         size="small" 
@@ -3783,18 +3783,18 @@ const AppConfig: React.FC = () => {
 
               {/* Hybrid Search Option */}
               <div 
-                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'}`}
+                className={`border rounded-xl transition-colors cursor-pointer ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'border-primary-500' : 'border-gray-200 hover:border-gray-300'}`}
                 onClick={() => updateKBSettings({ retrieval_config: { search_method: 'hybrid' } })}
               >
-                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'bg-blue-50/30 rounded-t-xl' : ''}`}>
+                <div className={`p-4 ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'bg-primary-50/30 rounded-t-xl' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-gray-200">
-                      <LayoutGrid className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <LayoutGrid className={`w-4 h-4 ${editingKB.retrieval_config?.search_method === 'hybrid' ? 'text-primary-600' : 'text-gray-600'}`} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <div className="font-medium text-sm text-gray-900">混合检索</div>
-                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">推荐</span>
+                        <span className="text-[10px] bg-primary-100 text-primary-600 px-1.5 py-0.5 rounded">推荐</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5">同时执行全文检索和向量检索，并应用重排序步骤，从两类查询结果中选择匹配用户问题的最佳结果，用户可以选择设置权重或配置重新排序模型。</div>
                     </div>
@@ -3802,39 +3802,39 @@ const AppConfig: React.FC = () => {
                 </div>
                 
                 {editingKB.retrieval_config?.search_method === 'hybrid' && (
-                  <div className="p-4 pt-0 bg-blue-50/30 rounded-b-xl">
+                  <div className="p-4 pt-0 bg-primary-50/30 rounded-b-xl">
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <div 
-                        className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'border-blue-500 bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}
+                        className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'border-primary-500 bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}
                         onClick={(e) => { e.stopPropagation(); updateKBSettings({ retrieval_config: { reranking_mode: 'weighted_score' } }); }}
                       >
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5">
-                            <Layers className={`w-4 h-4 ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'text-blue-600' : 'text-gray-400'}`} />
+                            <Layers className={`w-4 h-4 ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'text-primary-600' : 'text-gray-400'}`} />
                           </div>
                           <div className="flex-1">
                             <div className="font-medium text-sm text-gray-900 mb-1">权重设置</div>
                             <div className="text-xs text-gray-500 leading-relaxed">通过调整分配的权重，重新排序策略确定是优先进行语义匹配还是关键字匹配。</div>
                           </div>
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'border-blue-600' : 'border-gray-300'}`}>
-                            {editingKB.retrieval_config?.reranking_mode === 'weighted_score' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editingKB.retrieval_config?.reranking_mode === 'weighted_score' ? 'border-primary-600' : 'border-gray-300'}`}>
+                            {editingKB.retrieval_config?.reranking_mode === 'weighted_score' && <div className="w-2 h-2 rounded-full bg-primary-600" />}
                           </div>
                         </div>
                       </div>
                       <div 
-                        className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'border-blue-500 bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}
+                        className={`p-4 border rounded-xl cursor-pointer transition-all ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'border-primary-500 bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}
                         onClick={(e) => { e.stopPropagation(); updateKBSettings({ retrieval_config: { reranking_mode: 'reranking_model' } }); }}
                       >
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5">
-                            <SlidersHorizontal className={`w-4 h-4 ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'text-blue-600' : 'text-gray-400'}`} />
+                            <SlidersHorizontal className={`w-4 h-4 ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'text-primary-600' : 'text-gray-400'}`} />
                           </div>
                           <div className="flex-1">
                             <div className="font-medium text-sm text-gray-900 mb-1">Rerank 模型</div>
                             <div className="text-xs text-gray-500 leading-relaxed">重排序模型将根据候选文档列表与用户问题语义匹配度进行重新排序，从而改进语义排序的结果</div>
                           </div>
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'border-blue-600' : 'border-gray-300'}`}>
-                            {editingKB.retrieval_config?.reranking_mode === 'reranking_model' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editingKB.retrieval_config?.reranking_mode === 'reranking_model' ? 'border-primary-600' : 'border-gray-300'}`}>
+                            {editingKB.retrieval_config?.reranking_mode === 'reranking_model' && <div className="w-2 h-2 rounded-full bg-primary-600" />}
                           </div>
                         </div>
                       </div>
@@ -3951,8 +3951,8 @@ const AppConfig: React.FC = () => {
 
       <Modal
         title={
-          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl border-b border-blue-100">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary-50 to-primary-50 rounded-t-xl border-b border-primary-100">
+            <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white shadow-lg shadow-primary-200">
               <Settings2 className="w-5 h-5" />
             </div>
             <div>
@@ -3995,7 +3995,7 @@ const AppConfig: React.FC = () => {
                 });
               }
               setIsRecallSettingsModalOpen(false);
-            }} className="rounded-lg bg-blue-600 hover:bg-blue-700">保存设置</Button>
+            }} className="rounded-lg bg-primary-600 hover:bg-primary-700">保存设置</Button>
           </div>
         }
         width={600}
@@ -4005,20 +4005,20 @@ const AppConfig: React.FC = () => {
         <div className="space-y-8">
           <div className="space-y-3">
             <div className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+              <span className="w-1 h-4 bg-primary-600 rounded-full"></span>
               RERANK 模式
             </div>
             <div className="flex p-1 bg-gray-100 rounded-xl border border-gray-200">
               <Button 
                 type={rerankingMode === RerankingModeEnum.WeightedScore ? 'primary' : 'text'}
-                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.WeightedScore ? 'bg-white shadow-sm text-blue-600 font-bold' : 'text-gray-600'}`}
+                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.WeightedScore ? 'bg-white shadow-sm text-primary-600 font-bold' : 'text-gray-600'}`}
                 onClick={() => setRerankingMode(RerankingModeEnum.WeightedScore)}
               >
                 权重设置
               </Button>
               <Button 
                 type={rerankingMode === RerankingModeEnum.RerankingModel ? 'primary' : 'text'}
-                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.RerankingModel ? 'bg-white shadow-sm text-indigo-600 font-bold' : 'text-gray-600'}`}
+                className={`flex-1 h-10 rounded-lg transition-all ${rerankingMode === RerankingModeEnum.RerankingModel ? 'bg-white shadow-sm text-primary-600 font-bold' : 'text-gray-600'}`}
                 onClick={() => setRerankingMode(RerankingModeEnum.RerankingModel)}
               >
                 Rerank 模型
@@ -4027,7 +4027,7 @@ const AppConfig: React.FC = () => {
           </div>
 
           {rerankingMode === RerankingModeEnum.WeightedScore ? (
-            <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 space-y-4">
+            <div className="p-5 bg-gradient-to-br from-primary-50 to-primary-50 rounded-2xl border border-primary-100 space-y-4">
               <div className="flex items-center justify-between text-sm font-bold text-gray-800">
                 <span>语义匹配</span>
                 <span>关键词匹配</span>
@@ -4041,7 +4041,7 @@ const AppConfig: React.FC = () => {
                 trackStyle={{ background: 'linear-gradient(90deg, #2563eb, #4f46e5)' }}
                 handleStyle={{ borderColor: '#2563eb', backgroundColor: '#fff' }}
               />
-              <div className="flex items-center justify-between text-xs font-mono font-bold text-blue-700">
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-primary-700">
                 <span>{vectorWeight.toFixed(1)}</span>
                 <span>{(1 - vectorWeight).toFixed(1)}</span>
               </div>

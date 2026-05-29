@@ -39,7 +39,7 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({ data }) => {
           e.stopPropagation();
           data.onAddBefore?.(e);
         }}
-        className="absolute left-[-24px] top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-indigo-500 hover:text-white hover:bg-indigo-500 transition-all opacity-0 group-hover:opacity-100 z-30 shadow-md scale-90 hover:scale-110"
+        className="absolute left-[-24px] top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-primary-500 hover:text-white hover:bg-primary-500 transition-all opacity-0 group-hover:opacity-100 z-30 shadow-md scale-90 hover:scale-110"
         title="在前面添加节点"
       >
         <Plus className="w-3.5 h-3.5" />
@@ -53,7 +53,7 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({ data }) => {
           e.stopPropagation();
           data.onAddAfter?.(e);
         }}
-        className="absolute right-[-24px] top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-indigo-500 hover:text-white hover:bg-indigo-500 transition-all opacity-0 group-hover:opacity-100 z-30 shadow-md scale-90 hover:scale-110"
+        className="absolute right-[-24px] top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-primary-500 hover:text-white hover:bg-primary-500 transition-all opacity-0 group-hover:opacity-100 z-30 shadow-md scale-90 hover:scale-110"
         title="在后面添加节点"
       >
         <Plus className="w-3.5 h-3.5" />
@@ -68,7 +68,7 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({ data }) => {
             e.stopPropagation();
             setIsMenuOpen(!isMenuOpen);
           }}
-          className="w-8 h-8 bg-white/80 backdrop-blur-md border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
+          className="w-8 h-8 bg-white/80 backdrop-blur-md border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-primary-600 hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
         >
           <MoreHorizontal className="w-4 h-4" />
         </button>

@@ -53,7 +53,7 @@ export const SYSTEM_ICONS = [
   { name: 'MessageSquare', bgColor: 'bg-primary-600' },
   { name: 'TrendingUp', bgColor: 'bg-cyan-500' },
   { name: 'Briefcase', bgColor: 'bg-green-500' },
-  { name: 'Layers', bgColor: 'bg-indigo-600' },
+  { name: 'Layers', bgColor: 'bg-primary-600' },
   { name: 'Box', bgColor: 'bg-primary-400' },
   { name: 'Zap', bgColor: 'bg-orange-500' },
   { name: 'Database', bgColor: 'bg-primary-700' },

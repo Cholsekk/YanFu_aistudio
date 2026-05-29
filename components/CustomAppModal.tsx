@@ -32,7 +32,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     description: '',
     icon: 'LayoutGrid',
     iconType: 'icon' as 'icon' | 'image' | 'sys-icon',
-    iconBgColor: 'bg-indigo-600',
+    iconBgColor: 'bg-primary-600',
     iconUrl: ''
   });
 
@@ -149,7 +149,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         description: initialData.description,
         icon: initialData.icon,
         iconType: initialData.iconType,
-        iconBgColor: initialData.iconBgColor || 'bg-indigo-600',
+        iconBgColor: initialData.iconBgColor || 'bg-primary-600',
         iconUrl: initialData.icon_url || ''
       });
     } else {
@@ -169,7 +169,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
         description: '',
         icon: 'LayoutGrid',
         iconType: 'icon',
-        iconBgColor: 'bg-indigo-600',
+        iconBgColor: 'bg-primary-600',
         iconUrl: ''
       }));
     }
@@ -244,7 +244,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
   };
 
   const handleIconConfirm = (data: { icon: string; iconType: 'icon' | 'image' | 'sys-icon'; iconBgColor?: string; iconUrl?: string }) => {
-    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-indigo-600', iconUrl: data.iconUrl || '' });
+    setFormData({ ...formData, icon: data.icon, iconType: data.iconType, iconBgColor: data.iconBgColor || 'bg-primary-600', iconUrl: data.iconUrl || '' });
   };
 
   const addMenuItem = () => {

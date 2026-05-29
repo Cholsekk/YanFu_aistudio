@@ -598,7 +598,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onSave }) 
           </button>
           <button 
             onClick={handleSubmit}
-            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-primary-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <Save className="w-4 h-4" />
             保存任务

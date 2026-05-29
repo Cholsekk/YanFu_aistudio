@@ -632,7 +632,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ isOpen, onClose, onSave, 
           </button>
           <button 
             onClick={handleSubmit}
-            className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-indigo-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-600 text-white rounded-lg text-sm font-medium hover:from-primary-700 hover:to-primary-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             保存修改

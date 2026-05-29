@@ -157,7 +157,7 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
           {
             title: '全局默认模型',
             description: '在此处您可以为平台设置统一个默认推荐模型及 Embedding 分析模型，创建新应用时将自动采用此配置。',
-            target: () => document.querySelector('.bg-indigo-50\\/50') as HTMLElement || document.body,
+            target: () => document.querySelector('.bg-primary-50\\/50') as HTMLElement || document.body,
           },
           {
             title: '配置模型供应商',

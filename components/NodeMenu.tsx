@@ -35,7 +35,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ onAddNode, onAddTool, onClos
             autoFocus
             type="text"
             placeholder={activeTab === 'node' ? "搜索节点" : "搜索工具"}
-            className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border-none rounded-xl text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border-none rounded-xl text-xs focus:ring-2 focus:ring-primary-500/20 transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -47,20 +47,20 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ onAddNode, onAddTool, onClos
         <button 
           onClick={() => setActiveTab('node')}
           className={`px-4 py-1.5 text-xs font-medium transition-all relative ${
-            activeTab === 'node' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'node' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           节点
-          {activeTab === 'node' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full" />}
+          {activeTab === 'node' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full" />}
         </button>
         <button 
           onClick={() => setActiveTab('tool')}
           className={`px-4 py-1.5 text-xs font-medium transition-all relative ${
-            activeTab === 'tool' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'tool' ? 'text-primary-600' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           工具
-          {activeTab === 'tool' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full" />}
+          {activeTab === 'tool' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-full" />}
         </button>
       </div>
 
@@ -81,7 +81,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ onAddNode, onAddTool, onClos
                     <button
                       key={node.type}
                       onClick={() => onAddNode(node)}
-                      className="w-full px-4 py-2 flex items-center gap-3 hover:bg-indigo-50/50 transition-colors group text-left"
+                      className="w-full px-4 py-2 flex items-center gap-3 hover:bg-primary-50/50 transition-colors group text-left"
                     >
                       <div className={`p-1.5 rounded-lg ${node.color} text-white shadow-sm group-hover:scale-110 transition-transform`}>
                         {node.icon}
@@ -119,7 +119,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ onAddNode, onAddTool, onClos
               <button
                 key={tool.id}
                 onClick={() => onAddTool(tool)}
-                className="w-full px-4 py-2 flex items-center justify-between hover:bg-indigo-50/50 transition-colors group text-left"
+                className="w-full px-4 py-2 flex items-center justify-between hover:bg-primary-50/50 transition-colors group text-left"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-1.5 bg-white border border-gray-100 rounded-lg shadow-sm group-hover:scale-110 transition-transform">
@@ -127,7 +127,7 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({ onAddNode, onAddTool, onClos
                   </div>
                   <span className="text-xs font-medium text-gray-700">{tool.label}</span>
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors" />
+                <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary-400 transition-colors" />
               </button>
             ))}
           </div>

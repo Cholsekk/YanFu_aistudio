@@ -51,14 +51,14 @@ const getChartColor = (colorClass: string) => {
     case 'border-green-500': return '#22c55e';
     case 'border-orange-500': return '#f97316';
     case 'border-red-500': return '#ef4444';
-    case 'border-indigo-500': return '#6366f1';
+    case 'border-primary-500': return '#6366f1';
     case 'border-pink-500': return '#ec4899';
     default: return '#4f46e5';
   }
 };
 
 const MetricCard = ({ title, value, unit, chartData, colorClass, tooltip }: { title: string, value: string | number, unit?: string, chartData?: any[], colorClass?: string, tooltip?: string }) => (
-  <div className={`bg-white p-6 rounded-2xl border-l-4 ${colorClass || 'border-indigo-500'} shadow-sm hover:shadow-md transition-all`}>
+  <div className={`bg-white p-6 rounded-2xl border-l-4 ${colorClass || 'border-primary-500'} shadow-sm hover:shadow-md transition-all`}>
     <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
       {tooltip ? (
         <div className="relative group cursor-help">
@@ -87,7 +87,7 @@ const MetricCard = ({ title, value, unit, chartData, colorClass, tooltip }: { ti
               itemStyle={{ color: '#fff' }}
               cursor={{ stroke: '#9ca3af', strokeWidth: 1 }}
             />
-            <Line type="monotone" dataKey="value" stroke={getChartColor(colorClass || 'border-indigo-500')} strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="value" stroke={getChartColor(colorClass || 'border-primary-500')} strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -390,7 +390,7 @@ const MonitoringPage = () => {
         )}
         <MetricCard title="Token 输出速度" value={metrics.tps.toFixed(1)} unit="Token/秒" chartData={data} colorClass="border-orange-500" tooltip="衡量 LLM 的性能。统计 LLM 从请求开始到输出完毕这段期间的 Tokens 输出速度。" />
         <MetricCard title="用户满意度" value={`${(metrics.satisfactionRate * 100).toFixed(1)}%`} chartData={data} colorClass="border-red-500" tooltip="每 1000 条消息的点赞数。反应了用户对回答十分满意的比例。" />
-        <MetricCard title="费用消耗" value={metrics.tokenCosts} unit="Tokens" chartData={data} colorClass="border-indigo-500" tooltip="反映每日该应用请求语言模型的 Tokens 花费，用于成本控制。" />
+        <MetricCard title="费用消耗" value={metrics.tokenCosts} unit="Tokens" chartData={data} colorClass="border-primary-500" tooltip="反映每日该应用请求语言模型的 Tokens 花费，用于成本控制。" />
         <MetricCard title="全部消息数" value={metrics.dailyMessages} chartData={data} colorClass="border-pink-500" tooltip="反映 AI 每天的互动总次数，每回答用户一个问题算一条 Message。" />
       </div>
 

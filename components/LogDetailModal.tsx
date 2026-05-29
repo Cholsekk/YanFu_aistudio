@@ -98,7 +98,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ visible, onClose, curre
                         label: (
                           <div className="flex items-center justify-between w-full pr-4">
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded bg-indigo-500 flex items-center justify-center text-white">
+                              <div className="w-6 h-6 rounded bg-primary-500 flex items-center justify-center text-white">
                                 <Cpu className="w-3.5 h-3.5" />
                               </div>
                               <span className="font-bold text-gray-800">LLM</span>
