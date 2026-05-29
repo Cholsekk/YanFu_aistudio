@@ -46,7 +46,7 @@ const data = [
 
 const getChartColor = (colorClass: string) => {
   switch (colorClass) {
-    case 'border-blue-500': return '#3b82f6';
+    case 'border-primary-500': return '#3b82f6';
     case 'border-purple-500': return '#a855f7';
     case 'border-green-500': return '#22c55e';
     case 'border-orange-500': return '#f97316';
@@ -253,9 +253,9 @@ const MonitoringPage = () => {
         <h1 className="text-2xl font-semibold text-gray-900">监测</h1>
         <button 
           onClick={() => setIsTracingModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors shadow-sm"
         >
-          <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center">
+          <div className="w-5 h-5 rounded-md bg-primary-600 flex items-center justify-center">
             <Activity className="w-3.5 h-3.5 text-white" />
           </div>
           追踪应用性能
@@ -268,8 +268,8 @@ const MonitoringPage = () => {
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Activity className="w-6 h-6 text-blue-600" />
+              <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
+                <Activity className="w-6 h-6 text-primary-600" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">言复助手</h3>
@@ -291,7 +291,7 @@ const MonitoringPage = () => {
                     message.error('更新状态失败');
                   }
                 }}
-                className={`w-10 h-5 rounded-full relative transition-colors ${isServiceRunning ? 'bg-blue-600' : 'bg-gray-300'}`}
+                className={`w-10 h-5 rounded-full relative transition-colors ${isServiceRunning ? 'bg-primary-600' : 'bg-gray-300'}`}
               >
                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isServiceRunning ? 'right-1' : 'left-1'}`} />
               </button>
@@ -355,7 +355,7 @@ const MonitoringPage = () => {
                     message.error('更新状态失败');
                   }
                 }}
-                className={`w-10 h-5 rounded-full relative transition-colors ${isApiRunning ? 'bg-blue-600' : 'bg-gray-300'}`}
+                className={`w-10 h-5 rounded-full relative transition-colors ${isApiRunning ? 'bg-primary-600' : 'bg-gray-300'}`}
               >
                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isApiRunning ? 'right-1' : 'left-1'}`} />
               </button>
@@ -383,7 +383,7 @@ const MonitoringPage = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <MetricCard title="全部会话数" value={metrics.dailyConversations} chartData={data} colorClass="border-blue-500" tooltip="反映 AI 每天的会话总次数，提示词编排和调试的消息不计入。" />
+        <MetricCard title="全部会话数" value={metrics.dailyConversations} chartData={data} colorClass="border-primary-500" tooltip="反映 AI 每天的会话总次数，提示词编排和调试的消息不计入。" />
         <MetricCard title="活跃用户数" value={metrics.dailyEndUsers} chartData={data} colorClass="border-purple-500" tooltip="与 AI 有效互动，即有一问一答以上的唯一用户数。提示词编排和调试的会话不计入。" />
         {appMode !== 'workflow' && (
           <MetricCard title="平均会话互动数" value={metrics.averageInteractions.toFixed(1)} chartData={data} colorClass="border-green-500" tooltip="反应每个会话用户的持续沟通次数，如果用户与 AI 问答了 10 轮，即为 10。该指标反映了用户粘性。仅在对话型应用提供。" />

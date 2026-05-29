@@ -197,7 +197,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                         </label>
                         <input 
                           type="password"
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                           placeholder="输入你的API Key"
                           value={settingsForm['api_key'] || ''}
                           onChange={e => setSettingsForm({...settingsForm, api_key: e.target.value})}
@@ -210,7 +210,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                         </label>
                         <input 
                           type="text"
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                           placeholder="输入你的项目"
                           value={settingsForm['project'] || ''}
                           onChange={e => setSettingsForm({...settingsForm, project: e.target.value})}
@@ -240,7 +240,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                         </label>
                         <input 
                           type="text"
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                           placeholder="输入你的Public Key"
                           value={settingsForm['public_key'] || ''}
                           onChange={e => setSettingsForm({...settingsForm, public_key: e.target.value})}
@@ -253,7 +253,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                         </label>
                         <input 
                           type="password"
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                           placeholder="输入你的Secret Key"
                           value={settingsForm['secret_key'] || ''}
                           onChange={e => setSettingsForm({...settingsForm, secret_key: e.target.value})}
@@ -296,7 +296,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                     <button 
                       onClick={handleSaveAndEnable}
                       disabled={isSaving}
-                      className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors shadow-sm shrink-0 whitespace-nowrap disabled:opacity-50"
+                      className="px-5 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors shadow-sm shrink-0 whitespace-nowrap disabled:opacity-50"
                     >
                       {isSaving ? '保存中...' : '保存并启用'}
                     </button>
@@ -306,7 +306,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                       href={TRACING_PROVIDERS.find(p => p.id === activeProvider)?.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-[13px] text-blue-600 hover:text-blue-700 flex items-center gap-1 font-medium transition-colors"
+                      className="text-[13px] text-primary-600 hover:text-primary-700 flex items-center gap-1 font-medium transition-colors"
                     >
                       查看 {TRACING_PROVIDERS.find(p => p.id === activeProvider)?.name} 的文档 <ExternalLink className="w-3.5 h-3.5" />
                     </a>
@@ -317,7 +317,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
               {/* Footer */}
               <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-gray-500 pb-8">
                 <Lock className="w-3.5 h-3.5" />
-                <span>您的密钥将使用 <span className="text-blue-600 font-medium">PKCS1_OAEP</span> 技术进行加密和存储。</span>
+                <span>您的密钥将使用 <span className="text-primary-600 font-medium">PKCS1_OAEP</span> 技术进行加密和存储。</span>
               </div>
             </div>
           ) : (
@@ -336,10 +336,10 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
               </div>
 
               {/* Main Enable Card */}
-              <div className="p-5 mx-6 mt-4 rounded-2xl bg-blue-50/50 border border-blue-100 mb-6">
+              <div className="p-5 mx-6 mt-4 rounded-2xl bg-primary-50/50 border border-primary-100 mb-6">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
                       <Activity className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-lg font-bold text-gray-900">追踪</span>
@@ -359,7 +359,7 @@ export const TracingPerformanceModal: React.FC<TracingPerformanceModalProps> = (
                           handleToggle();
                         }
                       }}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-blue-600' : 'bg-gray-200'} ${(config && config.tracing_provider) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-primary-600' : 'bg-gray-200'} ${(config && config.tracing_provider) ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>

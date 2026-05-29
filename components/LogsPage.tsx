@@ -79,7 +79,7 @@ const CodeBlock: React.FC<{ title: string, content: string }> = ({ title, conten
           {title}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setIsFullView(!isFullView)} className="text-xs text-gray-500 hover:text-blue-600">
+          <button onClick={() => setIsFullView(!isFullView)} className="text-xs text-gray-500 hover:text-primary-600">
             {isFullView ? '收起' : '展开'}
           </button>
           <button onClick={handleCopy} className="text-gray-400 hover:text-gray-600">
@@ -674,12 +674,12 @@ const LogsPage: React.FC = () => {
       width: '30%',
       render: (text: string, record: LogItem) => (
         <div className="flex items-center gap-2">
-          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${record.annotated ? 'bg-blue-500' : 'bg-gray-300'}`} />
+          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${record.annotated ? 'bg-primary-500' : 'bg-gray-300'}`} />
           <Tooltip title={text || '无摘要'}>
             <span className="text-gray-900 font-medium line-clamp-1 cursor-help">{text || '无摘要'}</span>
           </Tooltip>
           {record.annotated && (
-            <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase shrink-0">
+            <span className="px-1.5 py-0.5 bg-primary-50 text-primary-600 text-[10px] font-bold rounded uppercase shrink-0">
               已标注
             </span>
           )}
@@ -791,7 +791,7 @@ const LogsPage: React.FC = () => {
     if (status === 'stopped') {
       return <span className="text-yellow-500 flex items-center gap-1.5 text-xs font-medium"><div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>Stop</span>;
     }
-    return <span className="text-blue-500 flex items-center gap-1.5 text-xs font-medium"><div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>Running</span>;
+    return <span className="text-primary-500 flex items-center gap-1.5 text-xs font-medium"><div className="w-1.5 h-1.5 rounded-full bg-primary-500"></div>Running</span>;
   };
 
   const workflowColumns = [
@@ -800,7 +800,7 @@ const LogsPage: React.FC = () => {
       key: 'read_status',
       width: 24,
       render: (record: any) => (
-        !record.read_at ? <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" /> : null
+        !record.read_at ? <div className="w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" /> : null
       )
     },
     {
@@ -1073,7 +1073,7 @@ const LogsPage: React.FC = () => {
                       <button
                         key={option.value}
                         onClick={() => handleFilterChange('status', option.value)}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.status === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.status === option.value ? 'text-primary-600 font-medium' : 'text-gray-700'}`}
                       >
                         <span>{option.label}{(option as any).count !== undefined && ` (${(option as any).count} 项)`}</span>
                         {filters.status === option.value && <Check className="w-4 h-4" />}
@@ -1114,7 +1114,7 @@ const LogsPage: React.FC = () => {
                           <button
                             key={option.value}
                             onClick={() => handleFilterChange('sort_by', option.value)}
-                            className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.sort_by === option.value ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                            className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 ${filters.sort_by === option.value ? 'text-primary-600 font-medium' : 'text-gray-700'}`}
                           >
                             {option.label}
                             {filters.sort_by === option.value && <Check className="w-4 h-4" />}
@@ -1202,7 +1202,7 @@ const LogsPage: React.FC = () => {
               onRow={(record) => ({
                 onClick: () => handleRowClick(record),
                 className: `cursor-pointer transition-colors ${
-                  record.annotated ? 'bg-blue-50/30 hover:bg-blue-50/50' : ''
+                  record.annotated ? 'bg-primary-50/30 hover:bg-primary-50/50' : ''
                 } ${
                   app?.type === '工作流应用' && selectedWorkflowLog?.id === record.id ? 'selected-row' : ''
                 }`
@@ -1314,13 +1314,13 @@ const LogsPage: React.FC = () => {
         }
       >
         <div className="space-y-10">
-          <div className="bg-gradient-to-br from-blue-50 to-primary-50 rounded-2xl p-5 border border-blue-100/50 flex gap-4">
+          <div className="bg-gradient-to-br from-primary-50 to-primary-50 rounded-2xl p-5 border border-primary-100/50 flex gap-4">
             <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-              <Info className="w-5 h-5 text-blue-600" />
+              <Info className="w-5 h-5 text-primary-600" />
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-bold text-blue-900">什么是标注回复？</p>
-              <p className="text-[11px] text-blue-700/80 leading-relaxed">
+              <p className="text-xs font-bold text-primary-900">什么是标注回复？</p>
+              <p className="text-[11px] text-primary-700/80 leading-relaxed">
                 标注回复可以帮助 AI 更好地理解特定场景下的用户意图。当用户提问与标注问题相似度较高时，将优先使用标注回复。
               </p>
             </div>
@@ -1455,8 +1455,8 @@ const LogsPage: React.FC = () => {
 
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Cpu className="w-4 h-4 text-blue-500" />
+              <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
+                <Cpu className="w-4 h-4 text-primary-500" />
               </div>
               <span className="text-sm font-bold text-gray-900">Embedding 模型</span>
               <Tooltip title="标注文本向量化模型，切换模型会重新嵌入，产生额外费用消耗">
@@ -1523,8 +1523,8 @@ const LogsPage: React.FC = () => {
               <div className="space-y-10">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                      <User className="w-5 h-5 text-blue-600" />
+                    <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                      <User className="w-5 h-5 text-primary-600" />
                     </div>
                     <span className="text-sm font-bold text-gray-900">用户提问</span>
                   </div>
@@ -1621,7 +1621,7 @@ const LogsPage: React.FC = () => {
                           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                             {dayjs(hit.created_at * 1000).format('YYYY-MM-DD HH:mm:ss')}
                           </span>
-                          <span className="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase">
+                          <span className="px-2 py-1 bg-primary-50 text-primary-600 text-[10px] font-bold rounded uppercase">
                             Score: {hit.score?.toFixed(2) || 'N/A'}
                           </span>
                         </div>
@@ -1702,7 +1702,7 @@ const LogsPage: React.FC = () => {
                     ? (selectedLog?.model_config?.model as any).name 
                     : (selectedLog?.model_config?.model || 'deepseek-r1:14b')}
                 </span>
-                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold rounded uppercase">Chat</span>
+                <span className="px-1.5 py-0.5 bg-primary-100 text-primary-600 text-[10px] font-bold rounded uppercase">Chat</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
                 <span className="text-xs font-medium text-gray-700">Custom</span>
@@ -1728,11 +1728,11 @@ const LogsPage: React.FC = () => {
                 <div key={msg.id} className="space-y-6">
                   {/* User Message */}
                   <div className="flex justify-end items-start gap-4 group/user-message">
-                    <div className="max-w-[80%] bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-sm relative group">
+                    <div className="max-w-[80%] bg-primary-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-sm relative group">
                       <p className="text-sm leading-relaxed">{(msg as any).annotation?.question || msg.query}</p>
                       {(msg as any).annotation?.question && (
                         <div className="absolute -left-16 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <span className="text-[10px] bg-blue-500/20 text-blue-100 px-1.5 py-0.5 rounded border border-blue-400/30">已修改</span>
+                          <span className="text-[10px] bg-primary-500/20 text-primary-100 px-1.5 py-0.5 rounded border border-primary-400/30">已修改</span>
                         </div>
                       )}
                       
@@ -1752,8 +1752,8 @@ const LogsPage: React.FC = () => {
                         </Tooltip>
                       </div>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                      <User className="w-6 h-6 text-blue-600" />
+                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                      <User className="w-6 h-6 text-primary-600" />
                     </div>
                   </div>
 
@@ -1777,13 +1777,13 @@ const LogsPage: React.FC = () => {
                       )}
                       
                       {/* Answer */}
-                      <div className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${ (msg as any).annotation ? 'border-blue-200 ring-4 ring-blue-500/5' : 'border-gray-100' }`}>
+                      <div className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${ (msg as any).annotation ? 'border-primary-200 ring-4 ring-primary-500/5' : 'border-gray-100' }`}>
                         <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed">
                           <Markdown>{(msg as any).annotation?.answer || msg.answer}</Markdown>
                         </div>
 
                         {(msg as any).annotation && (
-                          <div className="mt-4 pt-3 border-t border-blue-50 flex items-center gap-2 text-[10px] text-blue-400 font-medium italic">
+                          <div className="mt-4 pt-3 border-t border-primary-50 flex items-center gap-2 text-[10px] text-primary-400 font-medium italic">
                             <Edit3 className="w-3 h-3" />
                             <span>{(msg as any).annotation.account?.name || '管理员'} 编辑的标注回复</span>
                           </div>
@@ -1867,7 +1867,7 @@ const LogsPage: React.FC = () => {
                                 );
                               }}
                             >
-                              <button className={`flex items-center gap-1 transition-colors ${(msg as any).annotation ? 'text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg' : 'text-gray-400 hover:text-blue-500'}`}>
+                              <button className={`flex items-center gap-1 transition-colors ${(msg as any).annotation ? 'text-primary-600 bg-primary-50 px-2 py-0.5 rounded-lg' : 'text-gray-400 hover:text-primary-500'}`}>
                                 <span className="text-xs">{(msg as any).annotation ? '✅ 已标注' : '📝 标注'}</span>
                                 {(msg as any).annotation && <ChevronDown className="w-3 h-3" />}
                               </button>
@@ -1936,7 +1936,7 @@ const LogsPage: React.FC = () => {
           <div className="flex items-center gap-2 text-gray-800">
             <span className="font-semibold text-base">工作流日志详情</span>
             {selectedWorkflowLog && !selectedWorkflowLog.read_at && (
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+              <div className="w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
             )}
             {selectedWorkflowLog && (
               <span className="text-xs text-gray-400 font-normal">
@@ -1968,13 +1968,13 @@ const LogsPage: React.FC = () => {
                 onClick={() => setWorkflowDetailTab(tab.id as any)}
                 className={`pb-3 text-sm font-medium transition-colors relative ${
                   workflowDetailTab === tab.id 
-                    ? 'text-blue-600' 
+                    ? 'text-primary-600' 
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {tab.label}
                 {workflowDetailTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-full" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 rounded-t-full" />
                 )}
               </button>
             ))}
@@ -1984,7 +1984,7 @@ const LogsPage: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-6">
             {workflowRunDetailLoading ? (
               <div className="flex items-center justify-center h-full">
-                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : workflowRunDetail ? (
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">

@@ -233,7 +233,7 @@ const AppCard: React.FC<AppCardProps> = ({
 
   const getTypeColor = (type: string) => {
     if (type.includes('对话')) return 'bg-primary-500';
-    if (type.includes('智能体')) return 'bg-blue-500';
+    if (type.includes('智能体')) return 'bg-primary-500';
     if (type.includes('工作流')) return 'bg-orange-500';
     if (type.includes('文本')) return 'bg-green-500';
     return 'bg-purple-500';

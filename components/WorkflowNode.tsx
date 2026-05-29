@@ -167,12 +167,12 @@ const WorkflowNode: React.FC<WorkflowNodeProps> = ({ data }) => {
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-3 !h-3 !bg-white !border-2 !border-gray-300 hover:!border-blue-400 !transition-colors !shadow-sm !-left-1.5"
+          className="!w-3 !h-3 !bg-white !border-2 !border-gray-300 hover:!border-primary-400 !transition-colors !shadow-sm !-left-1.5"
         />
         <Handle
           type="source"
           position={Position.Right}
-          className="!w-3 !h-3 !bg-white !border-2 !border-gray-300 hover:!border-blue-400 !transition-colors !shadow-sm !-right-1.5"
+          className="!w-3 !h-3 !bg-white !border-2 !border-gray-300 hover:!border-primary-400 !transition-colors !shadow-sm !-right-1.5"
         />
       </div>
     </div>

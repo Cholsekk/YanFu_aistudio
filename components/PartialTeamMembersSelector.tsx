@@ -60,7 +60,7 @@ export const PartialTeamMembersSelector: React.FC<PartialTeamMembersSelectorProp
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-medium text-blue-600 uppercase">角色</label>
+            <label className="text-xs font-medium text-primary-600 uppercase">角色</label>
             <Select
               mode="multiple"
               className="w-full"
@@ -73,7 +73,7 @@ export const PartialTeamMembersSelector: React.FC<PartialTeamMembersSelectorProp
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-medium text-blue-600 uppercase">部门</label>
+            <label className="text-xs font-medium text-primary-600 uppercase">部门</label>
             <Select
               mode="multiple"
               className="w-full"
@@ -87,7 +87,7 @@ export const PartialTeamMembersSelector: React.FC<PartialTeamMembersSelectorProp
           </div>
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-medium text-blue-600 uppercase">成员</label>
+          <label className="text-xs font-medium text-primary-600 uppercase">成员</label>
           <Input 
             placeholder="搜索用户" 
             prefix={<Search className="w-4 h-4 text-gray-400" />}
@@ -112,7 +112,7 @@ export const PartialTeamMembersSelector: React.FC<PartialTeamMembersSelectorProp
               return (
                 <div 
                   key={member.id} 
-                  className={`flex items-center justify-between p-2 rounded hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}
+                  className={`flex items-center justify-between p-2 rounded hover:bg-gray-50 ${isSelected ? 'bg-primary-50' : ''}`}
                 >
                   <div className="flex items-center gap-2">
                     {member.avatar ? (

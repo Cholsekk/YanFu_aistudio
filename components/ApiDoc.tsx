@@ -375,9 +375,9 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
                 <h5 className="text-sm font-bold text-zinc-900 mb-1">{isEn ? 'Fast Integration' : '极速集成'}</h5>
                 <p className="text-xs text-zinc-500">{isEn ? 'Standard RESTful API for any platform.' : '标准 RESTful 接口，支持多种编程语言。'}</p>
               </div>
-              <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-100 group hover:border-blue-100 transition-all">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm mb-4 group-hover:bg-blue-50 transition-colors">
-                  <ShieldCheck className="w-5 h-5 text-blue-500" />
+              <div className="p-6 rounded-2xl bg-zinc-50 border border-zinc-100 group hover:border-primary-100 transition-all">
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm mb-4 group-hover:bg-primary-50 transition-colors">
+                  <ShieldCheck className="w-5 h-5 text-primary-500" />
                 </div>
                 <h5 className="text-sm font-bold text-zinc-900 mb-1">{isEn ? 'Secure Auth' : '安全认证'}</h5>
                 <p className="text-xs text-zinc-500">{isEn ? 'Enterprise-grade Bearer Token auth.' : '企业级 Bearer Token 认证机制。'}</p>

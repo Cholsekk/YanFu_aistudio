@@ -126,10 +126,10 @@ const initialNodes: Node<WorkflowNodeData>[] = [
     data: { 
       label: '开始', 
       icon: <PlayCircle className="w-3.5 h-3.5" />, 
-      color: 'bg-blue-600',
+      color: 'bg-primary-600',
       content: (
         <div className="flex justify-between items-center text-[10px]">
-          <span className="text-blue-600 font-medium">{'{x}'} file</span>
+          <span className="text-primary-600 font-medium">{'{x}'} file</span>
           <span className="text-gray-400">必填</span>
         </div>
       )
@@ -145,12 +145,12 @@ const initialNodes: Node<WorkflowNodeData>[] = [
       color: 'bg-cyan-600',
       content: (
         <div className="space-y-1 text-[9px]">
-          <div className="flex items-center gap-1 text-blue-600">
+          <div className="flex items-center gap-1 text-primary-600">
             <span>{'{x}'} file.extensi...</span>
             <span className="text-gray-400">包含 png</span>
           </div>
-          <div className="text-right text-blue-400 text-[8px] font-bold">OR</div>
-          <div className="flex items-center gap-1 text-blue-600">
+          <div className="text-right text-primary-400 text-[8px] font-bold">OR</div>
+          <div className="flex items-center gap-1 text-primary-600">
             <span>{'{x}'} file.extensi...</span>
             <span className="text-gray-400">包含 jpg</span>
           </div>
@@ -191,9 +191,9 @@ const initialNodes: Node<WorkflowNodeData>[] = [
         <div className="space-y-1.5">
           <div className="text-[8px] text-gray-400 uppercase font-bold tracking-tighter">输入变量</div>
           <div className="flex items-center gap-1.5 text-[9px] font-medium">
-            <PlayCircle className="w-2.5 h-2.5 text-blue-500" />
+            <PlayCircle className="w-2.5 h-2.5 text-primary-500" />
             <span className="text-gray-600">开始</span>
-            <span className="text-blue-600">{'{x}'} file</span>
+            <span className="text-primary-600">{'{x}'} file</span>
           </div>
         </div>
       )
@@ -216,12 +216,12 @@ const initialNodes: Node<WorkflowNodeData>[] = [
           <div className="flex items-center gap-1.5 text-[9px] font-medium">
             <ImageIcon className="w-2.5 h-2.5 text-primary-400" />
             <span className="text-gray-600">图片OCR识别</span>
-            <span className="text-blue-600">{'{x}'} text</span>
+            <span className="text-primary-600">{'{x}'} text</span>
           </div>
           <div className="flex items-center gap-1.5 text-[9px] font-medium">
             <FileText className="w-2.5 h-2.5 text-emerald-400" />
             <span className="text-gray-600">文档提取器</span>
-            <span className="text-blue-600">{'{x}'} text</span>
+            <span className="text-primary-600">{'{x}'} text</span>
           </div>
         </div>
       )
@@ -251,7 +251,7 @@ const initialNodes: Node<WorkflowNodeData>[] = [
     data: { 
       label: '模板转换', 
       icon: <Layers className="w-3.5 h-3.5" />, 
-      color: 'bg-blue-600',
+      color: 'bg-primary-600',
     },
   },
   {
@@ -264,9 +264,9 @@ const initialNodes: Node<WorkflowNodeData>[] = [
       color: 'bg-orange-500',
       content: (
         <div className="flex items-center gap-1.5 text-[9px] font-medium">
-          <Layers className="w-2.5 h-2.5 text-blue-400" />
+          <Layers className="w-2.5 h-2.5 text-primary-400" />
           <span className="text-gray-600">模板转换</span>
-          <span className="text-blue-600">{'{x}'} output</span>
+          <span className="text-primary-600">{'{x}'} output</span>
         </div>
       )
     },

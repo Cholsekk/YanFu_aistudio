@@ -107,7 +107,7 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
         {/* Left: Input Area */}
         <div className="w-1/2 p-8 flex flex-col gap-8 overflow-y-auto custom-scrollbar">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-blue-600">提示词生成器</h2>
+            <h2 className="text-2xl font-bold text-primary-600">提示词生成器</h2>
             <p className="text-sm text-gray-500 leading-relaxed">
               提示词生成器使用配置的模型来优化提示词，以获得更高的质量和更好的结构。请写出清晰详细的说明。
             </p>
@@ -123,10 +123,10 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
                 <button
                   key={key}
                   onClick={() => setInstruction(template.instruction)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100/50 hover:bg-blue-50 hover:text-blue-600 transition-all text-left group border border-transparent hover:border-blue-100"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100/50 hover:bg-primary-50 hover:text-primary-600 transition-all text-left group border border-transparent hover:border-primary-100"
                 >
-                  <span className="text-gray-400 group-hover:text-blue-500 transition-colors"><Cpu className="w-3.5 h-3.5" /></span>
-                  <span className="text-xs text-gray-600 group-hover:text-blue-600 font-medium">{template.name}</span>
+                  <span className="text-gray-400 group-hover:text-primary-500 transition-colors"><Cpu className="w-3.5 h-3.5" /></span>
+                  <span className="text-xs text-gray-600 group-hover:text-primary-600 font-medium">{template.name}</span>
                 </button>
               ))}
             </div>
@@ -148,7 +148,7 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
                   onClick={handleGenerate} 
                   loading={isGenerating}
                   disabled={!instruction.trim()}
-                  className="rounded-xl px-6 bg-blue-100 text-blue-600 border-none hover:bg-blue-200 shadow-none flex items-center gap-2 h-10"
+                  className="rounded-xl px-6 bg-primary-100 text-primary-600 border-none hover:bg-primary-200 shadow-none flex items-center gap-2 h-10"
                   icon={<Sparkles className="w-4 h-4" />}
                 >
                   生成
@@ -176,7 +176,7 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
                       opacity: [0.3, 1, 0.3]
                     }}
                     transition={{ repeat: Infinity, duration: 1.5, delay: 0 }}
-                    className="w-2.5 h-2.5 bg-blue-400 rounded-sm"
+                    className="w-2.5 h-2.5 bg-primary-400 rounded-sm"
                   />
                   <motion.div
                     animate={{ 
@@ -184,7 +184,7 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
                       opacity: [0.3, 1, 0.3]
                     }}
                     transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }}
-                    className="w-2.5 h-2.5 bg-blue-300 rounded-sm"
+                    className="w-2.5 h-2.5 bg-primary-300 rounded-sm"
                   />
                 </div>
                 <p className="text-sm text-gray-400 font-medium tracking-wide">为您编排应用程序中...</p>
@@ -198,9 +198,9 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
               >
                 <h3 className="text-lg font-bold text-gray-900">生成的提示词</h3>
                 
-                <div className="flex flex-col border-2 border-blue-500 rounded-2xl overflow-hidden shadow-lg shadow-blue-500/5">
-                  <div className="bg-blue-50 px-4 py-3 border-b border-blue-100 flex items-center justify-between">
-                    <span className="text-sm font-bold text-blue-700">提示词</span>
+                <div className="flex flex-col border-2 border-primary-500 rounded-2xl overflow-hidden shadow-lg shadow-primary-500/5">
+                  <div className="bg-primary-50 px-4 py-3 border-b border-primary-100 flex items-center justify-between">
+                    <span className="text-sm font-bold text-primary-700">提示词</span>
                   </div>
                   <div className="relative bg-white p-4 min-h-[300px] flex flex-col">
                     <TextArea
@@ -252,14 +252,14 @@ const PromptGeneratorModal: React.FC<PromptGeneratorModalProps> = ({ isOpen, onC
                 <div className="flex justify-end gap-3 mt-auto pt-4 sticky bottom-0 bg-white pb-2">
                   <Button 
                     onClick={() => setResult(null)}
-                    className="rounded-xl px-6 h-10 border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200"
+                    className="rounded-xl px-6 h-10 border-gray-200 text-gray-600 hover:text-primary-600 hover:border-primary-200"
                   >
                     取消
                   </Button>
                   <Button 
                     type="primary"
                     onClick={handleApply}
-                    className="rounded-xl px-8 h-10 bg-blue-600 shadow-lg shadow-blue-600/20"
+                    className="rounded-xl px-8 h-10 bg-primary-600 shadow-lg shadow-primary-600/20"
                   >
                     应用
                   </Button>

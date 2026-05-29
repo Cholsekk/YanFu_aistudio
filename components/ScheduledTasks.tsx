@@ -212,7 +212,7 @@ const ScheduledTasks: React.FC = () => {
           <button 
             id="tour-guide-button"
             onClick={() => window.dispatchEvent(new CustomEvent('open-guide', { bubbles: true, composed: true }))}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 border border-primary-100 rounded-lg text-sm font-medium hover:bg-primary-100 transition-all shadow-sm"
           >
             <BookOpen className="w-4 h-4" />
             新手指引

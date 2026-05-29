@@ -83,7 +83,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
   const getTypeIcon = () => {
     switch (app.mode) {
       case 'chat': return <MessageSquare className="w-4 h-4 text-primary-600" />;
-      case 'agent-chat': return <Bot className="w-4 h-4 text-blue-600" />;
+      case 'agent-chat': return <Bot className="w-4 h-4 text-primary-600" />;
       case 'workflow': return <Zap className="w-4 h-4 text-orange-600" />;
       case 'completion': return <Edit3 className="w-4 h-4 text-green-600" />;
       default: return <MessageSquare className="w-4 h-4 text-primary-600" />;
@@ -178,7 +178,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
   const getTypeColor = () => {
     switch (app.mode) {
       case 'chat': return 'bg-primary-50 text-primary-700 border-primary-100';
-      case 'agent-chat': return 'bg-blue-50 text-blue-700 border-blue-100';
+      case 'agent-chat': return 'bg-primary-50 text-primary-700 border-primary-100';
       case 'workflow': return 'bg-orange-50 text-orange-700 border-orange-100';
       case 'completion': return 'bg-green-50 text-green-700 border-green-100';
       default: return 'bg-gray-50 text-gray-700 border-gray-100';

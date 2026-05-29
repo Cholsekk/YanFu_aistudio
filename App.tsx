@@ -841,11 +841,11 @@ const App: React.FC = () => {
               onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
               className="w-full flex items-center gap-3 group text-left"
             >
-              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+              <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 group-hover:bg-primary-100 transition-colors">
                 <Plus className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-blue-600 leading-tight">新建应用</p>
+                <p className="text-sm font-semibold text-primary-600 leading-tight">新建应用</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">创建全新的对话或工作流应用</p>
               </div>
             </button>
@@ -853,11 +853,11 @@ const App: React.FC = () => {
               onClick={() => { setEditingApp(null); setIsCustomAppModalOpen(true); }}
               className="w-full flex items-center gap-3 group text-left"
             >
-              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+              <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 group-hover:bg-primary-100 transition-colors">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-blue-600 leading-tight">创建定制化应用</p>
+                <p className="text-sm font-semibold text-primary-600 leading-tight">创建定制化应用</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">基于模板快速构建</p>
               </div>
             </button>
@@ -865,11 +865,11 @@ const App: React.FC = () => {
               onClick={() => setIsImportAppModalOpen(true)}
               className="w-full flex items-center gap-3 group text-left"
             >
-              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+              <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 group-hover:bg-primary-100 transition-colors">
                 <BookOpen className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-blue-600 leading-tight">导入应用</p>
+                <p className="text-sm font-semibold text-primary-600 leading-tight">导入应用</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">从外部文件或链接导入</p>
               </div>
             </button>
@@ -963,8 +963,8 @@ const App: React.FC = () => {
                 }}
                 className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
                   activeFilterTab === type 
-                    ? 'bg-blue-600 text-white border-blue-600 font-medium' 
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                    ? 'bg-primary-600 text-white border-primary-600 font-medium' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
                 }`}
               >
                 {type}
@@ -1088,7 +1088,7 @@ const App: React.FC = () => {
             <button 
               id="tour-guide-button"
               onClick={() => window.dispatchEvent(new Event('open-guide'))}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all shadow-sm h-[34px]"
+              className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-600 border border-primary-100 rounded-lg text-sm font-medium hover:bg-primary-100 transition-all shadow-sm h-[34px]"
             >
               <BookOpen className="w-4 h-4" />
               新手指引

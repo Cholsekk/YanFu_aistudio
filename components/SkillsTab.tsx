@@ -8,7 +8,7 @@ import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 // Helper to determine icon/color based on file type/name
 const getFileIcon = (name: string, isDir: boolean, isOpen: boolean) => {
   if (isDir) return isOpen ? <Folder className="w-4 h-4 text-amber-600" /> : <Folder className="w-4 h-4 text-amber-500" />;
-  if (name.endsWith('.tsx') || name.endsWith('.ts')) return <FileText className="w-4 h-4 text-blue-600" />;
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return <FileText className="w-4 h-4 text-primary-600" />;
   if (name.endsWith('.css')) return <FileText className="w-4 h-4 text-sky-500" />;
   if (name.endsWith('.json')) return <FileText className="w-4 h-4 text-yellow-600" />;
   if (name.endsWith('.py')) return <FileText className="w-4 h-4 text-emerald-500" />;
@@ -18,7 +18,7 @@ const getFileIcon = (name: string, isDir: boolean, isOpen: boolean) => {
 
 const getFileColor = (name: string, isDir: boolean) => {
   if (isDir) return 'text-amber-700';
-  if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'text-blue-700';
+  if (name.endsWith('.tsx') || name.endsWith('.ts')) return 'text-primary-700';
   if (name.endsWith('.css')) return 'text-sky-700';
   if (name.endsWith('.json')) return 'text-yellow-700';
   if (name.endsWith('.py')) return 'text-emerald-700';
@@ -843,8 +843,8 @@ const SkillsTab: React.FC = () => {
           <div className="flex flex-col h-full">
             <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between bg-white">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 bg-blue-50 rounded-xl">
-                  <FileText className="w-4 h-4 text-blue-600" />
+                <div className="p-2 bg-primary-50 rounded-xl">
+                  <FileText className="w-4 h-4 text-primary-600" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-sm font-bold text-gray-900 truncate">{selectedFile.name}</h3>

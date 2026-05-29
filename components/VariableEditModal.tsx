@@ -111,7 +111,7 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
                 onClick={() => setFormData({ ...formData, type: t.id })}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
                   formData.type === t.id
-                    ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-[0_0_0_1px_rgba(59,130,246,0.5)]'
+                    ? 'border-primary-500 bg-primary-50 text-primary-600 shadow-[0_0_0_1px_rgba(59,130,246,0.5)]'
                     : 'border-gray-100 bg-gray-50/50 text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -154,7 +154,7 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
                   <Input
                     value={option}
                     onChange={(e) => updateOption(index, e.target.value)}
-                    className="flex-grow bg-white border-gray-200 h-10 rounded-lg focus:border-blue-500"
+                    className="flex-grow bg-white border-gray-200 h-10 rounded-lg focus:border-primary-500"
                   />
                   <Button
                     type="text"
@@ -214,7 +214,7 @@ const VariableEditModal: React.FC<VariableEditModalProps> = ({ isOpen, onClose, 
           <Button onClick={onClose} className="h-10 px-6 rounded-lg text-gray-600 hover:text-gray-900 border-gray-200">
             取消
           </Button>
-          <Button type="primary" onClick={handleSave} className="h-10 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 border-none">
+          <Button type="primary" onClick={handleSave} className="h-10 px-6 rounded-lg bg-primary-600 hover:bg-primary-700 border-none">
             保存
           </Button>
         </div>

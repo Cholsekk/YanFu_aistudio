@@ -137,7 +137,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ visible, onClose, curre
                                 </div>
                               </div>
                               <div className="p-3 font-mono text-xs text-red-600 whitespace-pre-wrap max-h-[150px] overflow-y-auto custom-scrollbar flex gap-4">
-                                <span className="text-blue-500 select-none">1</span>
+                                <span className="text-primary-500 select-none">1</span>
                                 <span>""</span>
                               </div>
                             </div>
@@ -168,7 +168,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ visible, onClose, curre
                                 </div>
                               </div>
                               <div className="p-3 font-mono text-xs text-red-600 whitespace-pre-wrap max-h-[250px] overflow-y-auto custom-scrollbar flex gap-4">
-                                <span className="text-blue-500 select-none">1</span>
+                                <span className="text-primary-500 select-none">1</span>
                                 <span>{JSON.stringify(currentLogMsg.assistantMsg?.content || '')}</span>
                               </div>
                             </div>

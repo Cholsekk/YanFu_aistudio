@@ -165,14 +165,14 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
             className={`
               flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer group
               ${selectedIds.includes(kb.id) 
-                ? 'border-blue-500 bg-blue-50/50' 
-                : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50/50'}
+                ? 'border-primary-500 bg-primary-50/50' 
+                : 'border-gray-100 hover:border-primary-200 hover:bg-gray-50/50'}
             `}
           >
             <div className="flex items-center gap-3">
               <div className={`
                 w-8 h-8 rounded-md flex items-center justify-center transition-colors
-                ${selectedIds.includes(kb.id) ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-500'}
+                ${selectedIds.includes(kb.id) ? 'bg-primary-500 text-white' : 'bg-primary-50 text-primary-500'}
               `}>
                 <Folder className="w-4 h-4" />
               </div>
@@ -191,8 +191,8 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
             <div className={`
               w-4 h-4 rounded border flex items-center justify-center transition-all
               ${selectedIds.includes(kb.id) 
-                ? 'bg-blue-500 border-blue-500 text-white' 
-                : 'border-gray-300 group-hover:border-blue-300'}
+                ? 'bg-primary-500 border-primary-500 text-white' 
+                : 'border-gray-300 group-hover:border-primary-300'}
             `}>
               {selectedIds.includes(kb.id) && <Check className="w-3 h-3" />}
             </div>
@@ -201,7 +201,7 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
         
         {isLoading && (
           <div className="py-4 flex justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
           </div>
         )}
 
@@ -219,7 +219,7 @@ const KnowledgeBaseModal: React.FC<KnowledgeBaseModalProps> = ({ isOpen, onClose
           type="primary" 
           onClick={handleAdd} 
           disabled={selectedIds.length === 0}
-          className="rounded-full px-8 bg-blue-600"
+          className="rounded-full px-8 bg-primary-600"
         >
           添加 ({selectedIds.length})
         </Button>
