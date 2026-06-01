@@ -950,7 +950,7 @@ const App: React.FC = () => {
 
     return (
       <>
-        <div id="tour-filter-search" className="sticky top-0 z-30 backdrop-blur-sm py-4 -mt-4 mb-6 transition-all flex flex-col md:flex-row gap-6 md:items-center justify-between">
+        <div id="tour-filter-search" className="mb-6 transition-all flex flex-col md:flex-row gap-6 md:items-center justify-between">
           <div className="flex flex-wrap items-center gap-2 w-fit">
             {APP_TYPES.map(type => (
               <button
@@ -1157,11 +1157,30 @@ const App: React.FC = () => {
     return <ApiDocPage appId={appId} />;
   }
 
+  const [primaryColor, setPrimaryColor] = React.useState('#15803d');
+
+  React.useEffect(() => {
+    // Try to read CSS variable if it exists
+    const rootStyle = getComputedStyle(document.documentElement);
+    const cssVarColor = rootStyle.getPropertyValue('--client-primary-color').trim();
+    
+    if (cssVarColor) {
+      setPrimaryColor(cssVarColor);
+    } else {
+      // Fallback to Tailwind config or default
+      const twColor = typeof window !== 'undefined' && (window as any).tailwind?.config?.theme?.extend?.colors?.primary?.[600];
+      if (twColor) {
+        setPrimaryColor(twColor);
+      }
+    }
+  }, []);
+
   return (
     <ConfigProvider 
       theme={{
         token: {
           borderRadius: 14,
+          colorPrimary: primaryColor,
         },
       }}
       getPopupContainer={(node) => {
@@ -1173,7 +1192,7 @@ const App: React.FC = () => {
     >
       <div className={`flex flex-col ${selectedApp ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-gray-50/50`}>
         <div ref={topRef} />
-        <header className="bg-white sticky top-0 z-[60] border-b border-gray-100">
+        <div className="bg-white sticky top-0 z-[60] border-b border-gray-100">
           <div className="max-w-[1600px] mx-auto px-7 h-16 flex items-center justify-between">
             <h1 className="text-lg font-bold text-gray-900">
               应用开发
@@ -1208,7 +1227,7 @@ const App: React.FC = () => {
               </nav>
             )}
           </div>
-        </header>
+        </div>
 
         <main className={`flex-grow flex flex-col min-h-0 ${selectedApp ? 'w-full' : 'max-w-[1600px] w-full mx-auto px-7 py-8'}`}>
           {renderContent()}
