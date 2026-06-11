@@ -314,9 +314,14 @@ const AppConfig: React.FC = () => {
   const [appDetail, setAppDetail] = useState<any>(null);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [isPublishPopoverOpen, setIsPublishPopoverOpen] = useState(false);
+  const [published, setPublished] = useState(true);
+  const lastPublishedSnapshotRef = useRef<any>(null);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const lastSavedConfigRef = useRef<string>('');
 
   const appMode = appDetail ? ((appDetail.mode !== 'completion' && appDetail.mode !== 'workflow') ? 'chat' : appDetail.mode) : 'chat';
+  const isChatApp = appDetail ? (appDetail.mode === 'chat' || appDetail.mode === 'agent-chat' || appDetail.mode === 'completion') : true;
+  const hasPublishedAt = appDetail?.published_at || appDetail?.created_at || false;
   const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.access_token}` : "";
 
   const [relativeTimeString, setRelativeTimeString] = useState<string>('');
@@ -1287,6 +1292,12 @@ const AppConfig: React.FC = () => {
       message.success('配置更新成功！');
       setDraftUpdatedAt(Date.now());
       lastSavedConfigRef.current = getConfigString();
+      lastPublishedSnapshotRef.current = {
+        prompt, variables, datasetQueryVariable, knowledgeBases, 
+        metadataFilter, manualFilters, metadataModelConfig, 
+        models, tools, enabledFeatures
+      };
+      setPublished(true);
     } catch (error) {
       console.error('Failed to update:', error);
       message.error('更新失败');
@@ -1911,6 +1922,57 @@ const AppConfig: React.FC = () => {
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
   const [tools, setTools] = useState<any[]>([]);
   const [selectedToolForParams, setSelectedToolForParams] = useState<any>(null);
+
+  // === 快照与恢复逻辑 开始 ===
+  useEffect(() => {
+    if (isLoaded && !lastPublishedSnapshotRef.current) {
+      lastPublishedSnapshotRef.current = {
+        prompt, variables, datasetQueryVariable, knowledgeBases, 
+        metadataFilter, manualFilters, metadataModelConfig, 
+        models, tools, enabledFeatures
+      };
+      setPublished(true);
+    }
+  }, [isLoaded, prompt, variables, datasetQueryVariable, knowledgeBases, metadataFilter, manualFilters, metadataModelConfig, models, tools, enabledFeatures]);
+
+  useEffect(() => {
+    if (!isLoaded || !lastPublishedSnapshotRef.current) return;
+    const snap = lastPublishedSnapshotRef.current;
+    const isSame = (
+       prompt === snap.prompt &&
+       JSON.stringify(variables) === JSON.stringify(snap.variables) &&
+       datasetQueryVariable === snap.datasetQueryVariable &&
+       JSON.stringify(knowledgeBases) === JSON.stringify(snap.knowledgeBases) &&
+       metadataFilter === snap.metadataFilter &&
+       JSON.stringify(manualFilters) === JSON.stringify(snap.manualFilters) &&
+       JSON.stringify(metadataModelConfig) === JSON.stringify(snap.metadataModelConfig) &&
+       JSON.stringify(models) === JSON.stringify(snap.models) &&
+       JSON.stringify(tools) === JSON.stringify(snap.tools) &&
+       JSON.stringify(enabledFeatures) === JSON.stringify(snap.enabledFeatures)
+    );
+    setPublished(isSame);
+  }, [prompt, variables, datasetQueryVariable, knowledgeBases, metadataFilter, manualFilters, metadataModelConfig, models, tools, enabledFeatures, isLoaded]);
+
+  const handleRestore = () => {
+    if (!lastPublishedSnapshotRef.current) return;
+    const snap = lastPublishedSnapshotRef.current;
+    
+    setPrompt(snap.prompt);
+    setVariables(snap.variables);
+    setDatasetQueryVariable(snap.datasetQueryVariable);
+    setKnowledgeBases(snap.knowledgeBases);
+    setMetadataFilter(snap.metadataFilter);
+    setManualFilters(snap.manualFilters);
+    setMetadataModelConfig(snap.metadataModelConfig);
+    setModels(snap.models);
+    setTools(snap.tools);
+    setEnabledFeatures(snap.enabledFeatures);
+
+    setPublished(true);
+    setIsRestoreModalOpen(false);
+    message.success('已恢复为上一次发布状态');
+  };
+  // === 快照与恢复逻辑 结束 ===
 
   const renderToolIcon = (iconData: any) => {
     if (!iconData) return <Wand2 className="w-4 h-4 text-primary-600" />;
@@ -2685,6 +2747,19 @@ const AppConfig: React.FC = () => {
                 >
                   更新配置
                 </Button>
+                {hasPublishedAt && isChatApp && (
+                  <Button
+                    block
+                    disabled={published}
+                    className={`mb-2 h-10 rounded-lg font-medium border-none !bg-gray-100 items-center justify-center ${published ? '!text-gray-400' : '!text-red-500 hover:!bg-red-50 hover:!text-red-600'}`}
+                    onClick={() => {
+                      setIsPublishPopoverOpen(false);
+                      setIsRestoreModalOpen(true);
+                    }}
+                  >
+                    恢复
+                  </Button>
+                )}
                 <div className="space-y-1 mt-2">
                   <div 
                     className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-700 group transition-colors"
@@ -2725,6 +2800,46 @@ const AppConfig: React.FC = () => {
           </Popover>
         </div>
       </div>
+
+      {/* Restore Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+              <RotateCcw className="w-6 h-6" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">恢复配置</span>
+          </div>
+        }
+        open={isRestoreModalOpen}
+        onCancel={() => setIsRestoreModalOpen(false)}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={() => setIsRestoreModalOpen(false)}
+            className="h-10 px-6 rounded-lg font-medium"
+          >
+            取消
+          </Button>,
+          <Button 
+            key="restore" 
+            type="primary"
+            danger
+            onClick={handleRestore}
+            className="h-10 px-6 rounded-lg font-medium"
+          >
+            确定恢复
+          </Button>
+        ]}
+        width={480}
+        centered
+        className="rounded-2xl overflow-hidden [&_.ant-modal-content]:rounded-2xl [&_.ant-modal-header]:border-none [&_.ant-modal-footer]:border-none [&_.ant-modal-body]:py-6"
+        closeIcon={<X className="w-5 h-5 text-gray-400" />}
+      >
+        <div className="px-1 text-gray-600 text-base">
+          你确定要放弃当前对组件和设定的修改，以将其恢复到上一次发布的配置吗？
+        </div>
+      </Modal>
 
       {/* Market Modal */}
       <Modal
