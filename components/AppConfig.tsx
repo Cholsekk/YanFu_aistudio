@@ -317,11 +317,11 @@ const AppConfig: React.FC = () => {
   const [published, setPublished] = useState(true);
   const lastPublishedSnapshotRef = useRef<any>(null);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [isPublishedToMarket, setIsPublishedToMarket] = useState(false);
   const lastSavedConfigRef = useRef<string>('');
 
   const appMode = appDetail ? ((appDetail.mode !== 'completion' && appDetail.mode !== 'workflow') ? 'chat' : appDetail.mode) : 'chat';
   const isChatApp = appDetail ? (appDetail.mode === 'chat' || appDetail.mode === 'agent-chat' || appDetail.mode === 'completion') : true;
-  const hasPublishedAt = appDetail?.published_at || appDetail?.created_at || false;
   const publicUrl = appDetail?.site?.app_base_url ? `${appDetail.site.app_base_url}/${appMode}/${appDetail.site.access_token}` : "";
 
   const [relativeTimeString, setRelativeTimeString] = useState<string>('');
@@ -615,6 +615,13 @@ const AppConfig: React.FC = () => {
 
       setDraftUpdatedAt(Date.now());
       setIsMarketModalOpen(false);
+      setIsPublishedToMarket(true);
+      lastPublishedSnapshotRef.current = {
+        prompt, variables, datasetQueryVariable, knowledgeBases, 
+        metadataFilter, manualFilters, metadataModelConfig, 
+        models, tools, enabledFeatures
+      };
+      setPublished(true);
     } catch (error) {
       console.error('Failed to publish to market:', error);
       message.error('发布到应用市场失败');
@@ -1087,6 +1094,14 @@ const AppConfig: React.FC = () => {
       } catch (e) {
         console.error('Failed to fetch app detail:', e);
       }
+      
+      try {
+        const marketApps = await apiService.getApps({ is_custom_app_list: true, limit: 100 });
+        const existingApp = marketApps.data.find((item: any) => item.app_id === appId);
+        setIsPublishedToMarket(!!existingApp);
+      } catch (e) {
+        console.error('Failed to fetch market apps status:', e);
+      }
     };
     fetchAppDetail();
   }, [appId]);
@@ -1292,12 +1307,6 @@ const AppConfig: React.FC = () => {
       message.success('配置更新成功！');
       setDraftUpdatedAt(Date.now());
       lastSavedConfigRef.current = getConfigString();
-      lastPublishedSnapshotRef.current = {
-        prompt, variables, datasetQueryVariable, knowledgeBases, 
-        metadataFilter, manualFilters, metadataModelConfig, 
-        models, tools, enabledFeatures
-      };
-      setPublished(true);
     } catch (error) {
       console.error('Failed to update:', error);
       message.error('更新失败');
@@ -2731,9 +2740,26 @@ const AppConfig: React.FC = () => {
             content={
               <div className="w-64">
                 <div className="mb-3">
-                  <div className="text-gray-600 text-sm mb-1">当前草稿未发布</div>
-                  <div className="text-gray-400 text-xs">
-                    {isAutoSaving ? '正在自动保存...' : draftUpdatedAt ? `自动保存于 ${relativeTimeString}` : '自动保存 ·'}
+                  <div className="text-gray-600 text-sm mb-1">
+                    {isPublishedToMarket && published ? '应用已发布' : '当前草稿未发布'}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-gray-400 text-xs">
+                      {isAutoSaving ? '正在自动保存...' : draftUpdatedAt ? `自动保存于 ${relativeTimeString}` : '自动保存 ·'}
+                    </div>
+                    {isPublishedToMarket && isChatApp && (
+                      <div 
+                        className={`text-xs transition-colors ${published ? 'text-gray-300 cursor-not-allowed' : 'text-primary-600 hover:text-primary-700 cursor-pointer'}`}
+                        onClick={(e) => {
+                          if (published) return;
+                          e.preventDefault();
+                          setIsPublishPopoverOpen(false);
+                          setIsRestoreModalOpen(true);
+                        }}
+                      >
+                        恢复
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Button 
@@ -2747,19 +2773,6 @@ const AppConfig: React.FC = () => {
                 >
                   更新配置
                 </Button>
-                {hasPublishedAt && isChatApp && (
-                  <Button
-                    block
-                    disabled={published}
-                    className={`mb-2 h-10 rounded-lg font-medium border-none !bg-gray-100 items-center justify-center ${published ? '!text-gray-400' : '!text-red-500 hover:!bg-red-50 hover:!text-red-600'}`}
-                    onClick={() => {
-                      setIsPublishPopoverOpen(false);
-                      setIsRestoreModalOpen(true);
-                    }}
-                  >
-                    恢复
-                  </Button>
-                )}
                 <div className="space-y-1 mt-2">
                   <div 
                     className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer text-gray-700 group transition-colors"
