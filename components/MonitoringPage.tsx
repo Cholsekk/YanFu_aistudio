@@ -61,7 +61,7 @@ const MetricCard = ({ title, value, unit, chartData, colorClass, tooltip }: { ti
   <div className={`bg-white p-6 rounded-2xl border-l-4 ${colorClass || 'border-primary-500'} shadow-sm hover:shadow-md transition-all`}>
     <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
       {tooltip ? (
-        <div className="relative group cursor-help">
+        <div className="relative group ">
           {title}
           <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
             {tooltip}
@@ -371,7 +371,7 @@ const MonitoringPage = () => {
           </div>
           <div className="flex gap-3 mt-4">
             <button onClick={() => setIsApiKeyModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><Key className="w-4 h-4" /> API 密钥</button>
-            <button onClick={() => router.push(`/api-doc/${app.id}`)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><FileText className="w-4 h-4" /> 查阅 API 文档</button>
+            <button onClick={() => router.push(`/client/appdeveloperAI?view=api-doc&appId=${app.id}`)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 text-gray-900"><FileText className="w-4 h-4" /> 查阅 API 文档</button>
           </div>
         </div>
       </div>

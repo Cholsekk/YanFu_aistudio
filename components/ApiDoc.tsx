@@ -1,5 +1,6 @@
 'use client'
-import React, { useContext, createContext, useState, useEffect, useRef } from 'react'
+import React, { useContext, createContext, useState, useEffect, useRef } from 'react'//单独运行时使用
+// import React, { useState, useEffect, useRef } from 'react'//集成时使用
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react'
 import { message } from 'antd'
 import { motion, AnimatePresence } from 'framer-motion'
+// import { useI18N } from '@/context/i18n'//集成时使用
 
 const TemplateEn = '/template/template.en.mdx';
 const TemplateZh = '/template/template.zh.mdx';
@@ -33,7 +35,7 @@ const TemplateWorkflowZh = '/template/template_workflow.zh.mdx';
 const TemplateChatEn = '/template/template_chat.en.mdx';
 const TemplateChatZh = '/template/template_chat.zh.mdx';
 
-const I18nContext = createContext({ locale: 'zh-Hans' });
+const I18nContext = createContext({ locale: 'zh-Hans' });//单独运行时使用
 
 type IDocProps = {
   appDetail: any
@@ -47,6 +49,7 @@ interface TocItem {
 
 const ApiDoc = ({ appDetail }: IDocProps) => {
   const { locale } = useContext(I18nContext)
+  // const { locale } = useI18N()//集成时使用
   const [copied, setCopied] = useState(false)
   const [templateContent, setTemplateContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -148,6 +151,108 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
     }
   };
 
+  // CSS to remove white backgrounds and borders from syntax highlighter tokens only
+  const syntaxHighlighterOverride = `
+    /* Force override ALL inline backgrounds, borders and box-shadows from token spans */
+    .syntax-highlighter-no-bg code span[style],
+    .syntax-highlighter-no-bg pre span[style],
+    .syntax-highlighter-no-bg .prism-code span[style] {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Catch any span with inline background, border or box-shadow anywhere in the tree */
+    .syntax-highlighter-no-bg span[style*="background"],
+    .syntax-highlighter-no-bg span[style*="Background"],
+    .syntax-highlighter-no-bg span[style*="border"],
+    .syntax-highlighter-no-bg span[style*="Border"],
+    .syntax-highlighter-no-bg span[style*="box-shadow"],
+    .syntax-highlighter-no-bg span[style*="Box-shadow"],
+    .syntax-highlighter-no-bg span[style*="outline"],
+    .syntax-highlighter-no-bg span[style*="Outline"] {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Ensure prism-code and pre containers are transparent to show parent dark bg */
+    .syntax-highlighter-no-bg .prism-code,
+    .syntax-highlighter-no-bg .prism-code *,
+    .syntax-highlighter-no-bg pre,
+    .syntax-highlighter-no-bg code,
+    .syntax-highlighter-no-bg .token-line {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Token class overrides */
+    .syntax-highlighter-no-bg .token,
+    .syntax-highlighter-no-bg .token span,
+    .syntax-highlighter-no-bg .token-line {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Remove any border from line numbers or line containers */
+    .syntax-highlighter-no-bg .line-number,
+    .syntax-highlighter-no-bg .line-numbers,
+    .syntax-highlighter-no-bg .highlight-line {
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Target all direct children of prism-code to remove borders */
+    .syntax-highlighter-no-bg .prism-code > div,
+    .syntax-highlighter-no-bg .prism-code > div > div,
+    .syntax-highlighter-no-bg .prism-code > div > span {
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Remove borders from any element with style attribute containing border */
+    .syntax-highlighter-no-bg [style*="border"],
+    .syntax-highlighter-no-bg [style*="Border"],
+    .syntax-highlighter-no-bg [style*="outline"],
+    .syntax-highlighter-no-bg [style*="Outline"] {
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Override atomDark theme specific styles */
+    .syntax-highlighter-no-bg .token-line {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Remove any white borders from code lines */
+    .syntax-highlighter-no-bg .prism-code div {
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Universal border removal for all elements inside syntax highlighter */
+    .syntax-highlighter-no-bg * {
+      border: none !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+  `;
+
   const MarkdownComponents: any = {
     code({ node, inline, className, children, ...props }: any) {
       const match = /language-(\w+)/.exec(className || '');
@@ -164,9 +269,9 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
               <Copy className="w-4 h-4" />
             </button>
           </div>
-          <div className="rounded-xl overflow-hidden border border-zinc-200 shadow-sm">
-            <div className="bg-zinc-100 px-4 py-2 border-b border-zinc-200 flex items-center justify-between">
-              <span className="text-xs font-mono text-zinc-500 uppercase tracking-wider">{match[1]}</span>
+          <div className="rounded-xl overflow-hidden bg-zinc-950">
+            <div className="bg-zinc-900 px-4 py-2 flex items-center justify-between">
+              <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">{match[1]}</span>
               <div className="flex gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
                 <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
@@ -177,7 +282,19 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
               style={atomDark}
               language={match[1]}
               PreTag="div"
-              className="!m-0 !bg-zinc-950 !p-6"
+              className="!m-0 !p-6 syntax-highlighter-no-bg"
+              customStyle={{
+                background: 'transparent',
+                margin: 0,
+                padding: '1.5rem',
+                border: 'none',
+              }}
+              codeTagProps={{
+                style: {
+                  background: 'transparent',
+                  border: 'none',
+                }
+              }}
               {...props}
             >
               {codeString}
@@ -265,6 +382,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      <style dangerouslySetInnerHTML={{ __html: syntaxHighlighterOverride }} />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-zinc-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">

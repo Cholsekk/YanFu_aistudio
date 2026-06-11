@@ -18,8 +18,8 @@ import ApiDocPage from './components/ApiDocPage';
 import UserGuideModal from './components/UserGuideModal';
 import { APP_TYPES } from './constants';
 import { AppItem, AppMode, Tag, MenuItem, ModelTypeEnum } from './types';
-import { apiService } from './services/apiService';
 import { monitoringService } from './services/monitoringService';
+import { apiService } from './services/apiService';
 import { setContextTenantId } from './utils/auth';
 // import { useAppContext } from '@/context/app-context';//集成时使用，独立运行时 AppContext 未提供
 import { 
@@ -74,6 +74,10 @@ const App: React.FC = () => {
     const tab = searchParams.get('tab');
     if (tab) {
       setActiveNavTab(tab);
+      // Clear selectedApp when navigating to non-app-dev tabs
+      if (tab !== 'app-dev') {
+        setSelectedApp(null);
+      }
       // Clear the query param after setting the tab
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.delete('tab');
@@ -111,6 +115,42 @@ const App: React.FC = () => {
   const [selectedApp, setSelectedApp] = useState<AppItem | null>(null);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [guideSubTab, setGuideSubTab] = useState<string | undefined>();
+
+  // Handle appId from query param (restore selectedApp when navigating back from API doc page)
+  useEffect(() => {
+    const view = searchParams.get('view');
+    // 排除 API 文档查看场景，避免与 view=api-doc&appId=xxx 路由冲突
+    if (view === 'api-doc') return;
+
+    const appId = searchParams.get('appId');
+    const appTab = searchParams.get('appTab');
+    if (appId) {
+      // Restore activeTab if provided
+      if (appTab) {
+        sessionStorage.setItem(`appDetailTab_${appId}`, appTab);
+      }
+      // Restore scroll position if saved
+      const savedScroll = sessionStorage.getItem(`appDetailScroll_${appId}`);
+      // Find app from loaded list
+      const app = apps.find(a => a.id === appId);
+      if (app) {
+        setSelectedApp(app);
+        if (savedScroll) {
+          setTimeout(() => {
+            window.scrollTo(0, parseInt(savedScroll, 10));
+            sessionStorage.removeItem(`appDetailScroll_${appId}`);
+          }, 100);
+        }
+      }
+      // Clear the query params after restoring
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.delete('appId');
+      newSearchParams.delete('appTab');
+      const newSearch = newSearchParams.toString();
+      const newUrl = pathname + (newSearch ? `?${newSearch}` : '');
+      router.replace(newUrl);
+    }
+  }, [searchParams, pathname, router, apps]);
 
   // Listen for open-guide events
   useEffect(() => {
@@ -561,8 +601,8 @@ const App: React.FC = () => {
           default_password: appData.password,
           is_menu: appData.customMenu,
           menus: appData.customMenu ? JSON.stringify({ menus: appData.menuItems }) : null,
-          created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // Mock or from user context
-          // created_by: userProfile?.id || 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // 集成时使用userProfile.id
+          // created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // Mock or from user context
+          created_by: userProfile?.id || 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // 集成时使用userProfile.id
         };
 
         if (appData.id) {
@@ -615,7 +655,7 @@ const App: React.FC = () => {
           // @ts-ignore - apiService updateApp signature might need update or we cast
           config: config
         });
-        
+
         try {
           const site = {
             ...(res?.site || {}),
@@ -917,6 +957,23 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
+    // 优先通过 query 参数判断是否显示 API 文档（兼容 standalone 部署模式下 rewrite 不生效的问题）
+    const viewParam = searchParams.get('view');
+    const appIdParam = searchParams.get('appId');
+    if (viewParam === 'api-doc' && appIdParam) {
+      return <ApiDocPage appId={appIdParam} />;
+    }
+
+    // 兼容旧版基于 rewrite 的路由（本地开发等场景）
+    if (pathname?.startsWith('/api-doc/')) {
+      const appId = pathname.split('/').filter(Boolean).pop();
+      return <ApiDocPage appId={appId} />;
+    }
+
+    if (pathname === '/mcp-auth-callback') {
+      return <McpAuthCallback />;
+    }
+
     if (selectedApp) {
       return (
         <AppDetail 
@@ -935,9 +992,9 @@ const App: React.FC = () => {
     }
 
     //集成时使用👇
-    // if (activeNavTab === 'model') {
-    //   return <ModelProviderPage />;
-    // }
+    if (activeNavTab === 'model') {
+      return <ModelProviderPage />;
+    }
 
     if (activeNavTab !== 'app-dev') {
       return (
@@ -1147,15 +1204,6 @@ const App: React.FC = () => {
       </>
     );
   };
-
-  if (pathname === '/mcp-auth-callback') {
-    return <McpAuthCallback />;
-  }
-  
-  if (pathname?.startsWith('/api-doc/')) {
-    const appId = pathname.split('/').filter(Boolean).pop();
-    return <ApiDocPage appId={appId} />;
-  }
 
   const [primaryColor, setPrimaryColor] = React.useState('#15803d');
 
