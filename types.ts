@@ -91,6 +91,7 @@ export interface AppItem {
   menuItems?: MenuItem[];
   mode?: AppMode;
   builtIn?: boolean;
+  metadata_values?: any[];
   config?: any;
 }
 

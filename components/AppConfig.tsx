@@ -79,7 +79,7 @@ import PromptGeneratorModal from './PromptGeneratorModal';
 import KnowledgeBaseModal from './KnowledgeBaseModal';
 import ModelSelect from './ModelSelect';
 import VariableEditModal, { Variable } from './VariableEditModal';
-import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, WeightedScoreEnum, LogicalOperator, ComparisonOperator, IOnDataMoreInfo } from '../types';
+import { ModelTypeEnum, ModelParameterRule, ModelModeType, DataSet, MetadataFilteringModeEnum, Member, Role, ModelConfig, PromptMode, RETRIEVE_TYPE, RerankingModeEnum, WeightedScoreEnum, LogicalOperator, ComparisonOperator, IOnDataMoreInfo, Resolution, TransferMethod, SupportUploadFileTypes } from '../types';
 import { apiService } from '../services/apiService';
 import { useAppDevHub } from '../context/AppContext';
 // import { useAppContext } from '@/context/app-context';//集成时使用
@@ -455,17 +455,17 @@ const AppConfig: React.FC = () => {
       },
       file_upload: {
         image: {
-          detail: 'high',
+          detail: Resolution.high,
           enabled: !!enabledFeatures.attachment,
           number_limits: 3,
           transfer_methods: [
-            'remote_url',
-            'local_file'
+            TransferMethod.remote_url,
+            TransferMethod.local_file
           ]
         },
         enabled: !!enabledFeatures.attachment,
         allowed_file_types: [
-          'image'
+          SupportUploadFileTypes.image
         ],
         allowed_file_extensions: [
           '.JPG',
@@ -476,8 +476,8 @@ const AppConfig: React.FC = () => {
           '.SVG'
         ],
         allowed_file_upload_methods: [
-          'remote_url',
-          'local_file'
+          TransferMethod.remote_url,
+          TransferMethod.local_file
         ],
         number_limits: 3
       },
@@ -1620,17 +1620,17 @@ const AppConfig: React.FC = () => {
           },
           file_upload: {
             image: {
-              detail: 'high',
+              detail: Resolution.high,
               enabled: !!enabledFeatures.attachment,
               number_limits: 3,
               transfer_methods: [
-                'remote_url',
-                'local_file'
+                TransferMethod.remote_url,
+                TransferMethod.local_file
               ]
             },
             enabled: !!enabledFeatures.attachment,
             allowed_file_types: [
-              'image'
+              SupportUploadFileTypes.image
             ],
             allowed_file_extensions: [
               '.JPG',
@@ -1641,8 +1641,8 @@ const AppConfig: React.FC = () => {
               '.SVG'
             ],
             allowed_file_upload_methods: [
-              'remote_url',
-              'local_file'
+              TransferMethod.remote_url,
+              TransferMethod.local_file
             ],
             number_limits: 3,
             fileUploadConfig: {

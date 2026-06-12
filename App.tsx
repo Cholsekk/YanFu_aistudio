@@ -602,7 +602,7 @@ const App: React.FC = () => {
           is_menu: appData.customMenu,
           menus: appData.customMenu ? JSON.stringify({ menus: appData.menuItems }) : null,
           // created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // Mock or from user context
-          created_by: userProfile?.id || 'c90c0746-f226-4ddf-b7cd-e04318fc018d' // 集成时使用userProfile.id
+          created_by: 'c90c0746-f226-4ddf-b7cd-e04318fc018d'
         };
 
         if (appData.id) {
@@ -651,6 +651,7 @@ const App: React.FC = () => {
           description: appData.description,
           use_icon_as_answer_icon: false, // Default
           built_in: appData.builtIn || false,
+          metadata_values: appData.metadata_values,
           // Pass config with custom fields
           // @ts-ignore - apiService updateApp signature might need update or we cast
           config: config
@@ -680,6 +681,7 @@ const App: React.FC = () => {
           mode: mapTypeToAppMode(appData.typeLabel || appData.type, appData.mode),
           description: appData.description,
           built_in: appData.builtIn || false,
+          metadata_values: appData.metadata_values,
           config: config
         });
         
@@ -993,7 +995,7 @@ const App: React.FC = () => {
 
     //集成时使用👇
     if (activeNavTab === 'model') {
-      return <ModelProviderPage />;
+      return <div>Model Provider Page</div>; // return <ModelProviderPage />;
     }
 
     if (activeNavTab !== 'app-dev') {

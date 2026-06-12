@@ -6,7 +6,8 @@ import ModelSelect from './ModelSelect';
 import { MessageSquare, FileText, Bot, GitBranch, Sparkles } from 'lucide-react';
 import { AppItem, ModelTypeEnum } from '../types';
 import { getIcon } from '../constants';
-import { message, ConfigProvider } from 'antd';
+import { message, ConfigProvider, DatePicker, TimePicker, Input, Select, InputNumber } from 'antd';
+import dayjs from 'dayjs';
 import { apiService } from '../services/apiService';
 
 interface NewAppModalProps {
@@ -32,22 +33,45 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
     modelName: '',
     instruction: ''
   });
+  const [metadataDefs, setMetadataDefs] = useState<any[]>([]);
+  const [metadataValues, setMetadataValues] = useState<Record<string, any>>({});
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (isOpen) {
+      apiService.fetchMetadataDefinitions('APP_DEV').then(res => {
+        if (res && res.data) {
+          setMetadataDefs(res.data);
+          const initVals: Record<string, any> = {};
+          res.data.forEach((def: any) => {
+            initVals[def.value] = def.default_value !== undefined ? def.default_value : '';
+          });
+          if (initialData?.metadata_values && Array.isArray(initialData.metadata_values)) {
+            initialData.metadata_values.forEach((mv: any) => {
+              if (mv.metadata_id) initVals[mv.metadata_id] = mv.metadata_value;
+            });
+          }
+          setMetadataValues(initVals);
+        }
+      }).catch(console.error);
+    }
+  }, [isOpen, initialData]);
+
+  useEffect(() => {
     if (initialData) {
-      setFormData({
-        name: initialData.name,
-        description: initialData.description,
+      setFormData(prev => ({
+        ...prev,
+        name: initialData.name || '',
+        description: initialData.description || '',
         type: initialData.typeLabel || '对话助手',
         subType: '对话助手',
-        icon: initialData.icon,
-        iconType: initialData.iconType,
+        icon: initialData.icon || '156',
+        iconType: initialData.iconType || 'sys-icon',
         iconBgColor: initialData.iconBgColor || 'bg-primary-600',
         iconUrl: initialData.icon_url || '',
         builtIn: initialData.builtIn || false
-      });
+      }));
     } else {
       setFormData({ 
         name: '', 
@@ -55,11 +79,11 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         type: '对话助手', 
         subType: '对话助手',
         icon: '156',
-        iconType: 'sys-icon',
+        iconType: 'sys-icon' as const,
         iconBgColor: 'bg-primary-600',
         iconUrl: '',
         builtIn: false,
-        workflowCreateMethod: 'manual',
+        workflowCreateMethod: 'manual' as const,
         modelProvider: '',
         modelName: '',
         instruction: ''
@@ -101,6 +125,14 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       }
     }
 
+    // Validate metadata if required
+    for (const def of metadataDefs) {
+      if (def.required && !metadataValues[def.value]) {
+        message.warning(`请填写必填项: ${def.label}`);
+        return;
+      }
+    }
+
     if (formData.type === '工作流应用' && formData.workflowCreateMethod === 'ai') {
       if (!formData.instruction.trim()) {
         message.warning('请输入生成工作流的提示词指令');
@@ -125,7 +157,11 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         workflowCreateMethod: formData.type === '工作流应用' ? formData.workflowCreateMethod : undefined,
         modelProvider: formData.modelProvider,
         modelName: formData.modelName,
-        instruction: formData.instruction
+        instruction: formData.instruction,
+        metadata_values: Object.keys(metadataValues).map(key => ({
+          metadata_id: key,
+          metadata_value: metadataValues[key]
+        }))
       });
       onClose();
     } catch (e) {
@@ -328,6 +364,60 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                 </div>
               )}
             </>
+          )}
+
+          {metadataDefs && metadataDefs.length > 0 && (
+            <div className="space-y-4">
+              <div className="text-sm font-medium text-gray-900 border-b pb-2 mb-4">元数据配置</div>
+              {metadataDefs.map((def: any) => (
+                <div key={def.value}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {def.label} {def.required && <span className="text-red-500">*</span>}
+                  </label>
+                  {def.metadata_type === 'STRING' && (
+                    <Input
+                      placeholder={`请输入${def.label}`}
+                      value={metadataValues[def.value]}
+                      onChange={e => setMetadataValues({ ...metadataValues, [def.value]: e.target.value })}
+                      className="w-full h-10 rounded-xl"
+                    />
+                  )}
+                  {def.metadata_type === 'NUMBER' && (
+                    <InputNumber
+                      placeholder={`请输入${def.label}`}
+                      value={metadataValues[def.value]}
+                      onChange={val => setMetadataValues({ ...metadataValues, [def.value]: val })}
+                      className="w-full h-10 rounded-xl flex items-center"
+                    />
+                  )}
+                  {def.metadata_type === 'SELECT' && (
+                    <Select
+                      placeholder={`请选择${def.label}`}
+                      value={metadataValues[def.value]}
+                      onChange={val => setMetadataValues({ ...metadataValues, [def.value]: val })}
+                      className="w-full h-10"
+                      options={(def.candidates || []).map((c: string) => ({ label: c, value: c }))}
+                    />
+                  )}
+                  {def.metadata_type === 'DATE' && (
+                    <DatePicker
+                      placeholder={`请选择${def.label}`}
+                      value={metadataValues[def.value] ? dayjs(metadataValues[def.value]) : null}
+                      onChange={(date, dateString) => setMetadataValues({ ...metadataValues, [def.value]: dateString })}
+                      className="w-full h-10 rounded-xl"
+                    />
+                  )}
+                  {def.metadata_type === 'TIME' && (
+                    <TimePicker
+                      placeholder={`请选择${def.label}`}
+                      value={metadataValues[def.value] ? dayjs(metadataValues[def.value], 'HH:mm:ss') : null}
+                      onChange={(time, timeString) => setMetadataValues({ ...metadataValues, [def.value]: timeString })}
+                      className="w-full h-10 rounded-xl"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           )}
 
           <div>

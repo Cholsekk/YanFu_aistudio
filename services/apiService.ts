@@ -880,12 +880,14 @@ class ApiService {
   }
 
   async createApp(data: { 
+    name?: string;
     icon_type?: 'icon' | 'image' | 'sys-icon'; 
     icon?: string; 
     icon_background?: string; 
     mode: string; 
     description?: string; 
     built_in?: boolean;
+    metadata_values?: any[];
     config?: any 
   }): Promise<any> {
     return this.post('/apps', data);
@@ -897,6 +899,10 @@ class ApiService {
       throw new Error('鉴权失败：请检查您的 Token 和 tenant_id 配置');
     }
     return this.post('/explore/apps', { ...data, tenant_id: tenantId } as any);
+  }
+
+  async fetchMetadataDefinitions(resourceType: string = 'APP_DEV'): Promise<any> {
+    return this.get(`/apps/rg/metadata-definitions/choices?resource_type=${resourceType}`);
   }
 
   async getAppCategories(): Promise<any> {
@@ -939,6 +945,7 @@ class ApiService {
     description: string; 
     use_icon_as_answer_icon?: boolean; 
     built_in?: boolean;
+    metadata_values?: any[];
     config?: any;
     category?: string;
   }): Promise<any> {
