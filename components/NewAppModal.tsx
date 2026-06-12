@@ -367,8 +367,9 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
           )}
 
           {metadataDefs && metadataDefs.length > 0 && (
-            <div className="space-y-4">
+            <div>
               <div className="text-sm font-medium text-gray-900 border-b pb-2 mb-4">元数据配置</div>
+              <div className="grid grid-cols-2 gap-4">
               {metadataDefs.map((def: any) => (
                 <div key={def.value}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -417,6 +418,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                   )}
                 </div>
               ))}
+              </div>
             </div>
           )}
 

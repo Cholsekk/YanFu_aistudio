@@ -463,7 +463,6 @@ const AppConfig: React.FC = () => {
             TransferMethod.local_file
           ]
         },
-        enabled: !!enabledFeatures.attachment,
         allowed_file_types: [
           SupportUploadFileTypes.image
         ],
@@ -479,7 +478,8 @@ const AppConfig: React.FC = () => {
           TransferMethod.remote_url,
           TransferMethod.local_file
         ],
-        number_limits: 3
+        number_limits: 3,
+        max_length: 15
       },
       agent_mode: {
         enabled: tools.length > 0,
@@ -1628,7 +1628,6 @@ const AppConfig: React.FC = () => {
                 TransferMethod.local_file
               ]
             },
-            enabled: !!enabledFeatures.attachment,
             allowed_file_types: [
               SupportUploadFileTypes.image
             ],
@@ -1645,6 +1644,7 @@ const AppConfig: React.FC = () => {
               TransferMethod.local_file
             ],
             number_limits: 3,
+            max_length: 15,
             fileUploadConfig: {
               file_size_limit: 25,
               batch_count_limit: 5,
