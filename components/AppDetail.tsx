@@ -242,7 +242,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
             {renderAppIcon()}
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
-                <Tooltip title={app.name}>
+                <Tooltip title={app.name} placement="right" arrow={false}>
                   <h1 className="text-sm font-bold text-gray-900 cursor-help">
                     {app.name.length > 6 ? `${app.name.substring(0, 6)}...` : app.name}
                   </h1>
