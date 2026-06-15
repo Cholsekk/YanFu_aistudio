@@ -1207,7 +1207,7 @@ const App: React.FC = () => {
     );
   };
 
-  const [primaryColor, setPrimaryColor] = React.useState('#15803d');
+  const [primaryColor, setPrimaryColor] = React.useState('#2563eb');
 
   React.useEffect(() => {
     // Try to read CSS variable if it exists
