@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Tooltip } from 'antd';
 import { ToolItem, ToolDetail, CredentialSchemaItem, CredentialData, Collection, ToolExtension, ToolCredential, WorkflowToolProviderRequest, WorkflowToolProviderResponse, McpProvider } from '../types';
 import ToolAuthDrawer from './ToolAuthDrawer';
 import ToolAuthSettingsDrawer from './ToolAuthSettingsDrawer';
@@ -1208,14 +1209,15 @@ const ToolExtensions: React.FC = () => {
             </>
           )}
 
-          <button 
-            id="tour-guide-button"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-guide', { detail: { subTab: activeTab }, bubbles: true, composed: true }))}
-            className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-600 border border-primary-100 rounded-lg text-sm font-medium hover:bg-primary-100 transition-all shadow-sm h-[34px] ml-auto md:ml-0"
-          >
-            <BookOpen className="w-4 h-4" />
-            新手指引
-          </button>
+          <Tooltip title="新手指引" placement="bottom" arrow={false}>
+            <button 
+              id="tour-guide-button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-guide', { detail: { subTab: activeTab }, bubbles: true, composed: true }))}
+              className="flex items-center justify-center w-[34px] h-[34px] bg-primary-50 text-primary-600 border border-primary-100 rounded-lg hover:bg-primary-100 transition-all shadow-sm ml-auto md:ml-0"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

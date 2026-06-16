@@ -41,7 +41,7 @@ import {
   Settings
 } from 'lucide-react';
 
-import { message, ConfigProvider } from 'antd';
+import { message, ConfigProvider, Tooltip } from 'antd';
 import { ConfirmDialog } from './components/ConfirmDialog';
 // import ModelProviderPage from '@/app/components/header/account-setting/model-provider-page';//集成时使用，独立运行时可删除或替换为其他组件
 
@@ -162,6 +162,31 @@ const App: React.FC = () => {
     window.addEventListener('open-guide', handleOpenGuide);
     return () => window.removeEventListener('open-guide', handleOpenGuide);
   }, []);
+
+  // Auto popup guide on first load 
+  useEffect(() => {
+    if (selectedApp) return;
+
+    if (activeNavTab === 'app-dev') {
+      const shown = localStorage.getItem('guide_shown_app_dev');
+      if (!shown) {
+        localStorage.setItem('guide_shown_app_dev', 'true');
+        setTimeout(() => window.dispatchEvent(new Event('open-guide')), 500);
+      }
+    } else if (activeNavTab === 'tools') {
+      const shown = localStorage.getItem('guide_shown_tools');
+      if (!shown) {
+        localStorage.setItem('guide_shown_tools', 'true');
+        setTimeout(() => window.dispatchEvent(new CustomEvent('open-guide', { detail: { subTab: 'builtin' }, bubbles: true, composed: true })), 500);
+      }
+    } else if (activeNavTab === 'tasks') {
+      const shown = localStorage.getItem('guide_shown_tasks');
+      if (!shown) {
+        localStorage.setItem('guide_shown_tasks', 'true');
+        setTimeout(() => window.dispatchEvent(new CustomEvent('open-guide', { bubbles: true, composed: true })), 500);
+      }
+    }
+  }, [activeNavTab, selectedApp]);
 
   // Listen for tenant changes from other windows/iframes
   useEffect(() => {
@@ -1144,14 +1169,15 @@ const App: React.FC = () => {
               </button>
             </div>
             
-            <button 
-              id="tour-guide-button"
-              onClick={() => window.dispatchEvent(new Event('open-guide'))}
-              className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 text-primary-600 border border-primary-100 rounded-lg text-sm font-medium hover:bg-primary-100 transition-all shadow-sm h-[34px]"
-            >
-              <BookOpen className="w-4 h-4" />
-              新手指引
-            </button>
+            <Tooltip title="新手指引" placement="bottom" arrow={false}>
+              <button 
+                id="tour-guide-button"
+                onClick={() => window.dispatchEvent(new Event('open-guide'))}
+                className="flex items-center justify-center w-[34px] h-[34px] bg-primary-50 text-primary-600 border border-primary-100 rounded-lg hover:bg-primary-100 transition-all shadow-sm"
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 

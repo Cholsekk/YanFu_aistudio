@@ -49,13 +49,15 @@ const ApiDocPage = ({ appId: appIdFromProps }: { appId?: string }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center gap-4">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+      {/* ApiDocPage header - sticky 固定在顶部 */}
+      <div className="sticky top-0 z-50 flex-shrink-0 bg-white border-b border-gray-200 px-8 py-4 flex items-center gap-4">
         <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-full">
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
         <h1 className="text-lg font-semibold text-gray-900">API 文档</h1>
       </div>
+      {/* ApiDoc fills remaining space */}
       <ApiDoc appDetail={appDetail} />
     </div>
   )

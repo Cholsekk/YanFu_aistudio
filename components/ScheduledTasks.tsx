@@ -8,7 +8,7 @@ import ConfirmDeleteModal from './ConfirmDeleteModal';
 import TaskLogModal from './TaskLogModal';
 import ConfirmStatusModal from './ConfirmStatusModal';
 import { apiService } from '../services/apiService';
-import { message } from 'antd';
+import { message, Tooltip } from 'antd';
 
 const ScheduledTasks: React.FC = () => {
   // View State
@@ -209,14 +209,15 @@ const ScheduledTasks: React.FC = () => {
             <Plus className="w-4 h-4" />
             新建任务
           </button>
-          <button 
-            id="tour-guide-button"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-guide', { bubbles: true, composed: true }))}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 border border-primary-100 rounded-lg text-sm font-medium hover:bg-primary-100 transition-all shadow-sm"
-          >
-            <BookOpen className="w-4 h-4" />
-            新手指引
-          </button>
+          <Tooltip title="新手指引" placement="bottom" arrow={false}>
+            <button 
+              id="tour-guide-button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-guide', { bubbles: true, composed: true }))}
+              className="flex items-center justify-center w-[34px] h-[34px] bg-primary-50 text-primary-600 border border-primary-100 rounded-lg hover:bg-primary-100 transition-all shadow-sm"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

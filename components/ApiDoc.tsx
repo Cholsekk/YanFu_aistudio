@@ -146,7 +146,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       if (window.innerWidth < 1024) setIsSidebarOpen(false);
     }
   };
@@ -340,7 +340,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+      <div className="flex items-center justify-center h-full">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -355,7 +355,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+      <div className="flex items-center justify-center h-full p-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -381,10 +381,10 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="flex-1 flex flex-col bg-white overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: syntaxHighlighterOverride }} />
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-zinc-200 px-6 py-4 flex items-center justify-between">
+      {/* Header - shrinks to fit content, does not scroll */}
+      <header className="flex-shrink-0 z-40 bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -432,6 +432,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
         </div>
       </header>
 
+      {/* Body: sidebar + content, fills remaining space */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <AnimatePresence>
@@ -440,7 +441,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
               initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
-              className={`fixed lg:sticky top-[73px] left-0 bottom-0 z-30 w-[280px] bg-zinc-50 border-r border-zinc-200 overflow-y-auto lg:block ${isSidebarOpen ? 'block' : 'hidden'}`}
+              className={`absolute inset-y-0 left-0 z-30 w-[280px] bg-zinc-50 border-r border-zinc-200 overflow-y-auto lg:relative lg:inset-auto lg:border-r lg:border-zinc-200 ${isSidebarOpen ? 'block' : 'hidden lg:block'}`}
             >
               <div className="p-8">
                 <div className="flex items-center gap-2 text-zinc-400 mb-8 px-2">
@@ -481,7 +482,7 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
           )}
         </AnimatePresence>
 
-        {/* Content Area */}
+        {/* Content Area - scrollable */}
         <main className="flex-1 overflow-y-auto bg-white">
           <div className="max-w-4xl mx-auto px-6 py-12 lg:px-16 lg:py-20" ref={contentRef}>
             {/* Quick Status Cards */}
@@ -556,4 +557,3 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
 }
 
 export default ApiDoc
-
