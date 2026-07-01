@@ -7,9 +7,10 @@ interface UserGuideModalProps {
   onClose: () => void;
   activeTab: string;
   subTab?: string;
+  primaryColor?: string;
 }
 
-const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, activeTab, subTab }) => {
+const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, activeTab, subTab, primaryColor }) => {
   const getSteps = (): TourProps['steps'] => {
     switch (activeTab) {
       case 'app-dev':
@@ -198,6 +199,11 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
   return (
     <ConfigProvider 
       locale={zhCN}
+      theme={{
+        token: {
+          colorPrimary: primaryColor,
+        },
+      }}
     >
       <Tour 
         key={isOpen ? 'open' : 'closed'}

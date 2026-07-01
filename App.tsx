@@ -1169,15 +1169,7 @@ const App: React.FC = () => {
               </button>
             </div>
             
-            <Tooltip title="新手指引" placement="bottom" arrow={false}>
-              <button 
-                id="tour-guide-button"
-                onClick={() => window.dispatchEvent(new Event('open-guide'))}
-                className="flex items-center justify-center w-[34px] h-[34px] bg-primary-50 text-primary-600 border border-primary-100 rounded-lg hover:bg-primary-100 transition-all shadow-sm"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
-            </Tooltip>
+
           </div>
         </div>
 
@@ -1352,6 +1344,7 @@ const App: React.FC = () => {
           onClose={() => { setIsGuideModalOpen(false); setGuideSubTab(undefined); }}
           activeTab={activeNavTab}
           subTab={guideSubTab}
+          primaryColor={primaryColor}
         />
         <ConvertToWorkflowModal
           isOpen={isConvertToWorkflowModalOpen}
