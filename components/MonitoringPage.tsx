@@ -247,20 +247,10 @@ const MonitoringPage = () => {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 pt-0 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">监测</h1>
-        <button 
-          onClick={() => setIsTracingModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors shadow-sm"
-        >
-          <div className="w-5 h-5 rounded-md bg-primary-600 flex items-center justify-center">
-            <Activity className="w-3.5 h-3.5 text-white" />
-          </div>
-          追踪应用性能
-          <LayoutGrid className="w-4 h-4 ml-1" />
-        </button>
       </div>
 
       {/* Service Info Cards */}

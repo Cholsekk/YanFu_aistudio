@@ -135,8 +135,13 @@ const AppCard: React.FC<AppCardProps> = ({
     const defaultIcon = '/sys_icons/Component 156.svg';
 
     const isEmoji = (str: string) => {
-      const emojiRegex = /\p{Emoji}/u;
-      return emojiRegex.test(str);
+      // Check if it's a single emoji or mostly emojis, not a URL
+      if (!str || str.startsWith('http') || str.startsWith('/')) return false;
+      const emojiRegex = /^\p{Emoji}+$/u;
+      // Some emojis might have modifiers, so a simple test for presence might be better,
+      // but to avoid digits we can use \p{Emoji_Presentation}
+      const presentationRegex = /\p{Emoji_Presentation}/u;
+      return presentationRegex.test(str);
     };
 
     // Case 1: iconType is 'image'
@@ -277,7 +282,7 @@ const AppCard: React.FC<AppCardProps> = ({
   if (viewMode === 'list') {
     return (
       <div 
-        className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all duration-200 group flex items-center gap-4 cursor-pointer relative tour-app-card ${isMenuOpen ? 'z-50' : 'z-10'}`}
+        className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all duration-200 group flex items-center gap-4 cursor-pointer relative tour-app-card ${isMenuOpen ? 'z-50' : 'z-10 hover:z-50'}`}
         onClick={onClick}
       >
         <div className="flex-shrink-0">
@@ -286,14 +291,14 @@ const AppCard: React.FC<AppCardProps> = ({
         
         <div className="flex-grow flex items-center gap-6">
           <div className="w-1/4 min-w-0">
-            <Tooltip title={app.name} arrow={false}>
+            <Tooltip title={app.name} arrow={false} getPopupContainer={() => document.body}>
               <h3 className="font-semibold text-gray-900 text-sm group-hover:text-primary-600 transition-colors truncate">
                 {truncateName(app.name)}
               </h3>
             </Tooltip>
             <span className="text-[10px] text-gray-400 font-medium">{app.typeLabel}</span>
           </div>
-          <Tooltip title={app.description} arrow={false}>
+          <Tooltip title={app.description} arrow={false} getPopupContainer={() => document.body}>
             <p className="text-xs text-gray-500 flex-grow line-clamp-1 cursor-default">
               {app.description.length > 30 ? app.description.slice(0, 30) + '...' : app.description}
             </p>
@@ -325,14 +330,14 @@ const AppCard: React.FC<AppCardProps> = ({
 
   return (
     <div 
-      className={`bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative flex flex-col h-full cursor-pointer tour-app-card ${isMenuOpen || isAddingTag ? 'z-50' : 'z-10'}`}
+      className={`bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-all duration-200 group relative flex flex-col h-full cursor-pointer tour-app-card ${isMenuOpen || isAddingTag ? 'z-50' : 'z-10 hover:z-50'}`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-4 relative">
         <div className="flex items-start gap-4 min-w-0">
           {renderAppIcon(false)}
           <div className="min-w-0">
-            <Tooltip title={app.name} arrow={false}>
+            <Tooltip title={app.name} arrow={false} getPopupContainer={() => document.body}>
               <h3 className="font-semibold text-gray-900 text-lg group-hover:text-primary-600 transition-colors truncate">
                 {truncateName(app.name)}
               </h3>
@@ -356,7 +361,7 @@ const AppCard: React.FC<AppCardProps> = ({
         </div>
       </div>
 
-      <Tooltip title={app.description} arrow={false}>
+      <Tooltip title={app.description} arrow={false} getPopupContainer={() => document.body}>
         <p className="text-sm text-gray-600 mb-6 flex-grow line-clamp-3 leading-relaxed max-h-[92px] overflow-hidden cursor-default">
           {app.description}
         </p>

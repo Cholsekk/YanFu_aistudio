@@ -424,10 +424,6 @@ const ApiDoc = ({ appDetail }: IDocProps) => {
               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
               {isEn ? 'SYSTEM LIVE' : '服务运行中'}
             </div>
-            <button className="bg-zinc-900 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-zinc-800 transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2">
-              <Key className="w-4 h-4" /> 
-              {isEn ? 'API KEYS' : '管理密钥'}
-            </button>
           </div>
         </div>
       </header>

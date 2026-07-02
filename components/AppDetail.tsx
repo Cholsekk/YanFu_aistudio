@@ -96,8 +96,10 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
     const defaultIcon = '/sys_icons/Component 156.svg';
 
     const isEmoji = (str: string) => {
-      const emojiRegex = /\p{Emoji}/u;
-      return emojiRegex.test(str);
+      if (!str || str.startsWith('http') || str.startsWith('/')) return false;
+      const emojiRegex = /^\p{Emoji}+$/u;
+      const presentationRegex = /\p{Emoji_Presentation}/u;
+      return presentationRegex.test(str);
     };
 
     // Case 1: iconType is 'image'
@@ -289,7 +291,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
       </div>
 
       {/* Content Section */}
-      <div className={`flex-grow bg-white overflow-auto relative ${['orchestrate', 'config'].includes(activeTab) ? 'p-0' : 'p-4'}`}>
+      <div className={`flex-grow bg-white overflow-auto relative ${['orchestrate', 'config', 'monitor'].includes(activeTab) ? 'p-0' : 'p-4'}`}>
         <AppDevHubContext.Provider value={app}>
           {renderContent()}
         </AppDevHubContext.Provider>
