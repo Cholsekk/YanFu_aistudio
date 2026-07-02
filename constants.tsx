@@ -44,7 +44,6 @@ export const NAV_TABS: NavTab[] = [
   { id: 'app-dev', label: '应用开发' },
   { id: 'tools', label: '工具拓展' },
   { id: 'model', label: '模型服务' },
-  { id: 'tasks', label: '定时任务' },
 ];
 
 export const APP_TYPES: string[] = ['全部', '对话应用', '智能体应用', '工作流应用', '文本生成应用', '定制应用', '内置应用'];

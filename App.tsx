@@ -8,7 +8,6 @@ import ImportAppModal from './components/ImportAppModal';
 import ManageTagsModal from './components/ManageTagsModal';
 import DraftPreviewModal from './components/DraftPreviewModal';
 import AIGeneratingModal from './components/AIGeneratingModal';
-import ScheduledTasks from './components/ScheduledTasks';
 import ToolExtensions from './components/ToolExtensions';
 import AppDetail from './components/AppDetail';
 import TokenConfigModal from './components/TokenConfigModal';
@@ -49,7 +48,6 @@ const NAV_TABS = [
   { id: 'app-dev', label: '应用开发' },
   { id: 'tools', label: '工具拓展' },
   { id: 'model', label: '模型服务' },
-  { id: 'tasks', label: '定时任务' },
 ];
 
 const App: React.FC = () => {
@@ -178,12 +176,6 @@ const App: React.FC = () => {
       if (!shown) {
         localStorage.setItem('guide_shown_tools', 'true');
         setTimeout(() => window.dispatchEvent(new CustomEvent('open-guide', { detail: { subTab: 'builtin' }, bubbles: true, composed: true })), 500);
-      }
-    } else if (activeNavTab === 'tasks') {
-      const shown = localStorage.getItem('guide_shown_tasks');
-      if (!shown) {
-        localStorage.setItem('guide_shown_tasks', 'true');
-        setTimeout(() => window.dispatchEvent(new CustomEvent('open-guide', { bubbles: true, composed: true })), 500);
       }
     }
   }, [activeNavTab, selectedApp]);
@@ -1008,10 +1000,6 @@ const App: React.FC = () => {
           onBack={() => setSelectedApp(null)} 
         />
       );
-    }
-
-    if (activeNavTab === 'tasks') {
-      return <ScheduledTasks />;
     }
 
     if (activeNavTab === 'tools') {

@@ -137,35 +137,6 @@ export interface NavTab {
   label: string;
 }
 
-export interface ScheduledTask {
-  id: string;
-  name: string;
-  description: string;
-  app_id: string | null;
-  app_name: string;
-  tenant_id?: string;
-  api_endpoint: string;
-  method: string;
-  request_body: any;
-  status: 'active' | 'inactive';
-  schedule_type: 'date' | 'interval' | 'cron';
-  schedule_expression: string;
-  created_at: string;
-  updated_at: string;
-  last_executed_at: string | null;
-  appType?: 'internal' | 'external'; // Optional as it's not in the official doc but used in UI logic
-}
-
-export interface TaskLog {
-  id: string;
-  task_id: string;
-  start_time: string;
-  end_time: string;
-  status: 'success' | 'failed' | 'running';
-  result?: string;
-  error_message?: string;
-}
-
 export type Label = {
   name: string
   icon: string

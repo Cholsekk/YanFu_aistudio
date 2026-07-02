@@ -171,24 +171,6 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
             target: () => document.querySelector('.group.cursor-pointer') as HTMLElement || document.body,
           }
         ];
-      case 'tasks':
-        return [
-          {
-            title: '新建定时任务',
-            description: '设置自动化计划，例如每天早上9点触发某个AI工作流执行数据汇总，从而实现自动化的流转与报表生成。',
-            target: () => document.getElementById('tour-create-task') as HTMLElement || document.body,
-          },
-          {
-            title: '任务搜索与过滤',
-            description: '在这里搜索您的所有定时任务。',
-            target: () => document.getElementById('tour-search-task') as HTMLElement || document.body,
-          },
-          {
-            title: '任务管理与日志',
-            description: '对于每一个任务，您可以查看它的执行日志、编辑规则、以及开启或暂停执行任务。',
-            target: () => document.querySelector('.bg-white.rounded-xl.shadow-sm.border') as HTMLElement || document.body,
-          }
-        ];
       default:
         return [];
     }
