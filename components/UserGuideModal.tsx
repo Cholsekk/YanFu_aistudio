@@ -21,8 +21,8 @@ const UserGuideModal: React.FC<UserGuideModalProps> = ({ isOpen, onClose, active
             target: () => document.querySelector('#tour-filter-search .flex-wrap') as HTMLElement || document.body,
           },
           {
-            title: '精准搜索与高级视图控制',
-            description: '如果分类过滤还不够，在此区域您可以输入关键词进行应用名搜索、通过高级筛选根据更新时间或名称进行列表排序，甚至自由切换网格与列表两种展现视图，让查找变得极为高效。',
+            title: '精准搜索与排序视图控制',
+            description: '如果分类过滤还不够，在此区域您可以输入关键词进行应用名搜索、通过高级排序根据更新时间或名称进行列表排序，甚至自由切换网格与列表两种展现视图，让查找变得极为高效。',
             target: () => document.querySelector('#tour-filter-search .flex.items-center.gap-3:last-child') as HTMLElement || document.body,
           },
           {

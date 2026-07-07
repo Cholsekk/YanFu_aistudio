@@ -1,4 +1,4 @@
-import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, ScheduledTask, TaskLog, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType, ModelConfig, UpdateAppModelConfigResponse, TracingProvider, TracingStatus, TracingConfig } from '../types';
+import { DataSet, Role, Department, Member, DataSetListResponse, Fetcher, WorkflowToolProviderRequest, WorkflowToolProviderResponse, CustomParamSchema, CustomCollectionBackend, ToolItem, ToolDetail, Collection, ToolExtension, ToolCredential, CredentialData, Label, Tag, McpProvider, McpProviderRequest, McpProviderUpdateRequest, McpTool, ToolProvider, CreateApiKeyResponse, ApiKeysListResponse, ModelProvider, Model, DefaultModelResponse, ModelLoadBalancingConfig, ModelTypeEnum, CommonResponse, ModelParameterRule, AutomaticRes, CodeGenRes, IOnData, IOnCompleted, IOnFile, IOnThought, IOnMessageEnd, IOnMessageReplace, IOnError, ChatPromptConfig, CompletionPromptConfig, ModelModeType, ModelConfig, UpdateAppModelConfigResponse, TracingProvider, TracingStatus, TracingConfig } from '../types';
 import { getTenantId, getToken } from '../utils/auth';
 // import { request, ssePost } from '@/service/base';
 
@@ -319,7 +319,7 @@ class ApiService {
           id: 'app-3',
           name: '客户服务助手',
           description: '自动回复客户咨询',
-          mode: 'chat',
+          mode: 'advanced-chat',
           enable_site: true,
           enable_api: true,
           api_rpm: 30,

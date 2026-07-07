@@ -73,8 +73,18 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
 
   const tabs = getTabs();
   const [activeTab, setActiveTab] = useState(() => {
-    return sessionStorage.getItem(`appDetailTab_${app.id}`) || tabs[0]?.id || 'config';
+    const cached = sessionStorage.getItem(`appDetailTab_${app.id}`);
+    if (cached && tabs.some(t => t.id === cached)) {
+      return cached;
+    }
+    return tabs[0]?.id || 'config';
   });
+
+  React.useEffect(() => {
+    if (tabs.length > 0 && !tabs.some(t => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
 
   React.useEffect(() => {
     sessionStorage.setItem(`appDetailTab_${app.id}`, activeTab);

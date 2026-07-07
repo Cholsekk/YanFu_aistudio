@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import IconPickerModal from './IconPickerModal';
 import ModelSelect from './ModelSelect';
-import { MessageSquare, FileText, Bot, GitBranch, Sparkles } from 'lucide-react';
+import { MessageSquare, FileText, Bot, GitBranch, Sparkles, Box } from 'lucide-react';
 import { AppItem, ModelTypeEnum } from '../types';
 import { getIcon } from '../constants';
 import { message, ConfigProvider, DatePicker, TimePicker, Input, Select, InputNumber } from 'antd';
@@ -21,8 +21,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    type: '对话助手',
-    subType: '对话助手',
+    type: '对话应用',
     icon: '156',
     iconType: 'sys-icon' as 'icon' | 'image' | 'sys-icon',
     iconBgColor: 'bg-primary-600',
@@ -64,8 +63,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         ...prev,
         name: initialData.name || '',
         description: initialData.description || '',
-        type: initialData.typeLabel || '对话助手',
-        subType: '对话助手',
+        type: initialData.typeLabel || '对话应用',
         icon: initialData.icon || '156',
         iconType: initialData.iconType || 'sys-icon',
         iconBgColor: initialData.iconBgColor || 'bg-primary-600',
@@ -76,8 +74,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       setFormData({ 
         name: '', 
         description: '', 
-        type: '对话助手', 
-        subType: '对话助手',
+        type: '对话应用', 
         icon: '156',
         iconType: 'sys-icon' as const,
         iconBgColor: 'bg-primary-600',
@@ -103,13 +100,10 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
   }, [formData.type, formData.workflowCreateMethod, formData.modelName]);
 
   const types = [
-    { id: '对话助手', title: '对话助手', desc: '使用大型语言模型构建基于聊天的助手', icon: <MessageSquare className="w-5 h-5" /> },
-    { id: '文本生成应用', title: '文本生成应用', desc: '根据提示生成高质量文本的应用程序，例如生成文章、摘要、翻译等。', icon: <FileText className="w-5 h-5" /> },
-    { id: '智能体应用', title: '智能体应用', desc: '构建一个智能Agent，可以自主选择工具来完成任务', icon: <Bot className="w-5 h-5" /> },
+    { id: '对话应用', title: '对话应用', desc: '使用大型语言模型构建基于聊天的助手', icon: <MessageSquare className="w-5 h-5" /> },
     { id: '工作流应用', title: '工作流', desc: '提供更多的自定义能力，适合有经验的用户。', icon: <GitBranch className="w-5 h-5" /> },
+    { id: '定制应用', title: '定制应用', desc: '完全自定义开发的应用。', icon: <Box className="w-5 h-5" /> },
   ];
-
-  const subTypes = ['对话助手', '对话助手工作流'];
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -147,8 +141,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         name: formData.name,
         description: formData.description,
         typeLabel: formData.type,
-        type: formData.type.includes('助手') ? '对话应用' : formData.type,
-        mode: formData.type === '对话助手' ? (formData.subType === '对话助手工作流' ? 'advanced-chat' : 'chat') : undefined,
+        type: formData.type,
+        mode: formData.type === '对话应用' ? 'advanced-chat' : (formData.type === '工作流应用' ? 'workflow' : (formData.type === '定制应用' ? 'custom' : undefined)),
         icon: finalIcon,
         iconType: formData.iconType,
         iconBgColor: formData.iconBgColor,
@@ -267,28 +261,6 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                   ))}
                 </div>
               </div>
-
-              {formData.type === '对话助手' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">对话助手开发与调试</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    {subTypes.map(st => (
-                      <div 
-                        key={st}
-                        onClick={() => setFormData({...formData, subType: st})}
-                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-3 ${
-                          formData.subType === st ? 'border-primary-500 bg-primary-50/50' : 'border-gray-100 bg-white hover:border-gray-200'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.subType === st ? 'border-primary-500' : 'border-gray-300'}`}>
-                          {formData.subType === st && <div className="w-2 h-2 rounded-full bg-primary-500" />}
-                        </div>
-                        <span className="font-medium text-gray-900 text-sm">{st}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {formData.type === '工作流应用' && (
                 <div className="space-y-6">

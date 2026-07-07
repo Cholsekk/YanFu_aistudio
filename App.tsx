@@ -24,7 +24,7 @@ import { setContextTenantId } from './utils/auth';
 import { 
   Plus, 
   Search as SearchIcon, 
-  Filter, 
+  ListFilter, 
   Grid, 
   List, 
   Upload, 
@@ -242,24 +242,22 @@ const App: React.FC = () => {
   const mapAppModeToType = (mode: AppMode): string => {
     switch (mode) {
       case 'chat': return '对话应用';
-      case 'agent-chat': return '智能体应用';
+      case 'advanced-chat': return '对话应用';
+      case 'agent-chat': return '智能体应用'; // keeping these just in case old apps have them
       case 'workflow': return '工作流应用';
-      case 'completion': return '文本生成应用';
+      case 'completion': return '文本生成应用'; // keeping just in case
       case 'custom': return '定制应用';
       default: return '对话应用';
     }
   };
 
   const mapTypeToAppMode = (type: string, mode?: string): AppMode => {
-    if (type.includes('对话')) {
-      if (mode === 'advanced-chat') return 'advanced-chat';
-      return 'chat';
-    }
+    if (type.includes('对话')) return 'advanced-chat';
     if (type.includes('智能体')) return 'agent-chat';
     if (type.includes('工作流')) return 'workflow';
     if (type.includes('文本')) return 'completion';
     if (type.includes('定制')) return 'custom';
-    return 'chat';
+    return 'advanced-chat';
   };
 
   const fetchTags = async () => {
@@ -1064,8 +1062,8 @@ const App: React.FC = () => {
                     ? 'border-primary-500 text-primary-600 bg-primary-50/30' 
                     : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}
               >
-                <Filter className={`w-4 h-4 ${isFiltered ? 'fill-primary-600/10' : ''}`} />
-                筛选
+                <ListFilter className={`w-4 h-4 ${isFiltered ? 'fill-primary-600/10' : ''}`} />
+                排序
                 <ChevronDown className={`w-3 h-3 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
               </button>
               

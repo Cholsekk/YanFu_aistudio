@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AppItem, NavTab, ScheduledTask } from './types';
+import { AppItem, NavTab } from './types';
 import * as LucideIcons from 'lucide-react';
 import { 
   MessageSquare, 
@@ -46,7 +46,7 @@ export const NAV_TABS: NavTab[] = [
   { id: 'model', label: '模型服务' },
 ];
 
-export const APP_TYPES: string[] = ['全部', '对话应用', '智能体应用', '工作流应用', '文本生成应用', '定制应用', '内置应用'];
+export const APP_TYPES: string[] = ['全部', '对话应用', '工作流应用', '定制应用'];
 
 export const SYSTEM_ICONS = [
   { name: 'MessageSquare', bgColor: 'bg-primary-600' },
@@ -137,127 +137,7 @@ export const MOCK_APPS: AppItem[] = [
   },
 ];
 
-export const MOCK_TASKS: ScheduledTask[] = [
-  {
-    id: '1',
-    name: '测试1',
-    description: '测试',
-    app_id: '74e59d11-690d-41f7-9c85-b5998105ef76',
-    app_name: '测试',
-    appType: 'internal',
-    api_endpoint: '/console/api/app_expand/74e59d11-690',
-    request_body: { query: "" },
-    method: 'POST',
-    status: 'active',
-    schedule_type: 'date',
-    schedule_expression: '2026-02-05 14:10:17',
-    created_at: '2026-02-05 14:10:29',
-    updated_at: '2026-02-05 14:10:29',
-    last_executed_at: '2026-02-05 14:10:29',
-  },
-  {
-    id: '2',
-    name: '测试定时任务',
-    description: '讲一个小故事',
-    app_id: 'story-teller-id',
-    app_name: '对话助手（普通）',
-    appType: 'internal',
-    api_endpoint: '/console/api/app_expand/story-teller',
-    request_body: { topic: "adventure" },
-    method: 'POST',
-    status: 'inactive',
-    schedule_type: 'date',
-    schedule_expression: '2026-02-02 14:14:00',
-    created_at: '2026-02-02 14:07:50',
-    updated_at: '2026-02-02 14:07:50',
-    last_executed_at: null,
-  },
-  {
-    id: '3',
-    name: '任务名称：',
-    description: '任务名称：',
-    app_id: 'agent-test-id',
-    app_name: '智能体测试',
-    appType: 'internal',
-    api_endpoint: '/console/api/agent/test',
-    request_body: {},
-    method: 'POST',
-    status: 'active',
-    schedule_type: 'interval',
-    schedule_expression: '{"weeks":0,"days":1,"hours":0,"minutes":0,"seconds":0}',
-    created_at: '2026-02-02 10:44:58',
-    updated_at: '2026-02-02 10:44:58',
-    last_executed_at: '2026-02-02 10:44:58',
-  },
-  {
-    id: '4',
-    name: '任务名',
-    description: '任务名',
-    app_id: 'agent-test-id',
-    app_name: '智能体测试',
-    appType: 'external',
-    api_endpoint: 'https://api.example.com/webhook',
-    request_body: { event: "ping" },
-    method: 'POST',
-    status: 'inactive',
-    schedule_type: 'interval',
-    schedule_expression: '{"weeks":0,"days":0,"hours":2,"minutes":0,"seconds":0}',
-    created_at: '2026-02-02 10:41:09',
-    updated_at: '2026-02-02 10:41:09',
-    last_executed_at: null,
-  },
-  {
-    id: '5',
-    name: '676767',
-    description: '新建任务',
-    app_id: 'agent-test-id',
-    app_name: '智能体测试',
-    appType: 'internal',
-    api_endpoint: '/console/api/agent/676767',
-    request_body: {},
-    method: 'POST',
-    status: 'active',
-    schedule_type: 'interval',
-    schedule_expression: '{"days":1}',
-    created_at: '2026-02-02 10:36:13',
-    updated_at: '2026-02-02 10:36:13',
-    last_executed_at: '2026-02-02 10:36:13',
-  },
-  {
-    id: '6',
-    name: '测试面板',
-    description: '讲一个小故事',
-    app_id: 'story-id',
-    app_name: '对话助手（普通）',
-    appType: 'internal',
-    api_endpoint: '/console/api/app/story',
-    request_body: {},
-    method: 'POST',
-    status: 'active',
-    schedule_type: 'interval',
-    schedule_expression: '{"weeks":null,"days":null,"hours":null,"minutes":1,"seconds":null}',
-    created_at: '2026-02-02 10:33:03',
-    updated_at: '2026-02-02 10:33:03',
-    last_executed_at: '2026-02-02 10:33:03',
-  },
-  {
-    id: '7',
-    name: '可视面板',
-    description: '111111111111',
-    app_id: 'visual-panel-id',
-    app_name: '智能体测试',
-    appType: 'internal',
-    api_endpoint: '/console/api/visual/panel',
-    request_body: { id: "111" },
-    method: 'POST',
-    status: 'active',
-    schedule_type: 'interval',
-    schedule_expression: '{"weeks":null,"days":null,"hours":1,"minutes":null,"seconds":2}',
-    created_at: '2026-02-02 09:42:55',
-    updated_at: '2026-02-02 09:42:55',
-    last_executed_at: '2026-02-02 09:42:55',
-  },
-];
+
 
 export const MOCK_DEPARTMENTS = [
   { value: 'dept-1', label: '研发部' },

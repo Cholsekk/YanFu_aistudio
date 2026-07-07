@@ -36,8 +36,8 @@ const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ isOpen, onClose }) 
       const originalBaseUrl = localStorage.getItem('console_api_base_url');
       localStorage.setItem('console_api_base_url', baseUrl);
       
-      // Try to fetch tasks (page 1, 1 item)
-      await apiService.getTasks(1, 1);
+      // Try to fetch apps to test connection
+      await apiService.getApps({ page: 1, limit: 1 });
       
       setTestStatus('success');
       setTestMessage('连接成功！API 响应正常。');
