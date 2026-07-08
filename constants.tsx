@@ -46,7 +46,7 @@ export const NAV_TABS: NavTab[] = [
   { id: 'model', label: '模型服务' },
 ];
 
-export const APP_TYPES: string[] = ['全部', '对话应用', '工作流应用', '定制应用'];
+export const APP_TYPES: string[] = ['对话工作流', '任务工作流', '定制化应用'];
 
 export const SYSTEM_ICONS = [
   { name: 'MessageSquare', bgColor: 'bg-primary-600' },

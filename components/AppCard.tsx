@@ -56,7 +56,7 @@ const AppCard: React.FC<AppCardProps> = ({
 
   const handleEnterApp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (app.type === '定制应用' || app.mode === 'custom') {
+    if (app.type === '定制化应用' || app.mode === 'custom') {
       // 在跳转前将应用信息存入 localStorage，供目标页面使用
       const customAppInfo = {
         id: app.itemId || app.id,
@@ -253,7 +253,7 @@ const AppCard: React.FC<AppCardProps> = ({
       <button onClick={(e) => handleAction(e, () => onEdit(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
         编辑信息
       </button>
-      {app.type !== '定制应用' && app.mode !== 'custom' && (
+      {app.type !== '定制化应用' && app.mode !== 'custom' && (
         <>
           <div className="h-px bg-gray-50 mx-2 my-1" />
           <button onClick={(e) => handleAction(e, () => onCopy(app))} className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors">
@@ -304,7 +304,7 @@ const AppCard: React.FC<AppCardProps> = ({
             </p>
           </Tooltip>
           <div className="flex gap-2 min-w-[200px] justify-end overflow-hidden">
-            {!(app.type === '定制应用' || app.mode === 'custom') && app.tags.map(tag => (
+            {!(app.type === '定制化应用' || app.mode === 'custom') && app.tags.map(tag => (
               <span key={tag.id} className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-500 font-medium whitespace-nowrap">
                 {tag.name}
               </span>
@@ -371,7 +371,7 @@ const AppCard: React.FC<AppCardProps> = ({
 
       <div className="flex items-center justify-between tour-app-tags pt-1">
         <div className="flex flex-wrap gap-1.5 max-w-[70%]">
-          {(app.type === '定制应用' || app.mode === 'custom') ? null : (
+          {(app.type === '定制化应用' || app.mode === 'custom') ? null : (
             <>
               {app.tags.map(tag => (
                 <span key={tag.id} className="flex items-center gap-1 px-2 py-1 bg-primary-50 border border-primary-100 rounded text-[10px] text-primary-600 font-medium group/tag hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors">

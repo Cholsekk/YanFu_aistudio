@@ -54,7 +54,7 @@ export interface Member {
   status: string;
 }
 
-export type AppType = '全部' | '对话应用' | '智能体应用' | '工作流应用' | '定制应用' | '内置应用';
+export type AppType = '对话工作流' | '任务工作流' | '定制化应用' | '内置应用' | '智能体应用';
 
 export interface MenuItem {
   name: string;

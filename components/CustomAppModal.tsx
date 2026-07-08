@@ -200,7 +200,7 @@ const CustomAppModal: React.FC<CustomAppModalProps> = ({ isOpen, onClose, onCrea
     }
 
     try {
-      const isCustomApp = initialData?.type === '定制应用' || initialData?.mode === 'custom';
+      const isCustomApp = initialData?.type === '定制化应用' || initialData?.mode === 'custom';
       const updateId = isCustomApp ? initialData?.itemId : initialData?.id;
       
       // 确保 app_id 和 app.id 不为空，避免列表渲染时 key 重复导致无限请求

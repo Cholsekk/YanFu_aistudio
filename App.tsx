@@ -85,7 +85,7 @@ const App: React.FC = () => {
     }
   }, [searchParams, pathname, router]);
 
-  const [activeFilterTab, setActiveFilterTab] = useState(() => sessionStorage.getItem('activeFilterTab') || '全部');
+  const [activeFilterTab, setActiveFilterTab] = useState(() => sessionStorage.getItem('activeFilterTab') || '对话工作流');
   const [searchQuery, setSearchQuery] = useState(() => sessionStorage.getItem('searchQuery') || '');
   const [apps, setApps] = useState<AppItem[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -106,6 +106,7 @@ const App: React.FC = () => {
   const [isAIGeneratingModalOpen, setIsAIGeneratingModalOpen] = useState(false);
   const [draftPreviewData, setDraftPreviewData] = useState<any>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isCreateDropdownOpen, setIsCreateDropdownOpen] = useState(false);
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [isConvertToWorkflowModalOpen, setIsConvertToWorkflowModalOpen] = useState(false);
   const [appToConvert, setAppToConvert] = useState<AppItem | null>(null);
@@ -241,23 +242,26 @@ const App: React.FC = () => {
 
   const mapAppModeToType = (mode: AppMode): string => {
     switch (mode) {
-      case 'chat': return '对话应用';
-      case 'advanced-chat': return '对话应用';
+      case 'chat': return '对话工作流';
+      case 'advanced-chat': return '对话工作流';
       case 'agent-chat': return '智能体应用'; // keeping these just in case old apps have them
-      case 'workflow': return '工作流应用';
+      case 'workflow': return '任务工作流';
       case 'completion': return '文本生成应用'; // keeping just in case
-      case 'custom': return '定制应用';
-      default: return '对话应用';
+      case 'custom': return '定制化应用';
+      default: return '对话工作流';
     }
   };
 
   const mapTypeToAppMode = (type: string, mode?: string): AppMode => {
-    if (type.includes('对话')) return 'advanced-chat';
+    if (type.includes('对话')) {
+      if (mode) return mode as AppMode;
+      return 'chat';
+    }
     if (type.includes('智能体')) return 'agent-chat';
     if (type.includes('工作流')) return 'workflow';
     if (type.includes('文本')) return 'completion';
     if (type.includes('定制')) return 'custom';
-    return 'advanced-chat';
+    return 'chat';
   };
 
   const fetchTags = async () => {
@@ -297,9 +301,7 @@ const App: React.FC = () => {
       };
 
       // Pass filter params to API, but we will also filter client-side
-      if (activeFilterTab === '全部') {
-        params.built_in = false;
-      } else if (activeFilterTab === '内置应用') {
+      if (activeFilterTab === '内置应用') {
         params.built_in = true;
       } else {
         const mode = mapTypeToAppMode(activeFilterTab);
@@ -501,11 +503,11 @@ const App: React.FC = () => {
 
   // Check if any filter or non-default sort is active
   const isFiltered = useMemo(() => {
-    return activeFilterTab !== '全部' || sortBy !== 'default' || searchQuery !== '';
+    return activeFilterTab !== '对话工作流' || sortBy !== 'default' || searchQuery !== '';
   }, [activeFilterTab, sortBy, searchQuery]);
 
   const handleResetFilters = () => {
-    setActiveFilterTab('全部');
+    setActiveFilterTab('对话工作流');
     setSortBy('default');
     setSearchQuery('');
     setIsFilterOpen(false);
@@ -588,7 +590,7 @@ const App: React.FC = () => {
   const handleCreateOrUpdateApp = async (appData: any) => {
     try {
       // Handle Custom Apps separately
-      if (appData.type === '定制应用' || appData.mode === 'custom') {
+      if (appData.type === '定制化应用' || appData.mode === 'custom') {
         const customAppPayload = {
           id: appData.itemId, // Outer ID for update
           app: {
@@ -702,7 +704,7 @@ const App: React.FC = () => {
         
         const appId = createRes?.id;
         
-        if (appData.typeLabel === '工作流应用' && appData.workflowCreateMethod === 'ai' && appId) {
+        if (appData.typeLabel === '任务工作流' && appData.workflowCreateMethod === 'ai' && appId) {
            setIsNewAppModalOpen(false);
            setIsAIGeneratingModalOpen(true);
            try {
@@ -772,7 +774,7 @@ const App: React.FC = () => {
       type: 'danger',
       onConfirm: async () => {
         try {
-          if (app.type === '定制应用' || app.mode === 'custom') {
+          if (app.type === '定制化应用' || app.mode === 'custom') {
             // Use outer ID (itemId) for custom app deletion if available, otherwise fallback to id
             await apiService.deleteCustomApp(app.itemId || id);
           } else {
@@ -878,100 +880,13 @@ const App: React.FC = () => {
 
   const openEditModal = (app: AppItem) => {
     setEditingApp(app);
-    if (app.type === '定制应用') {
+    if (app.type === '定制化应用') {
       setIsCustomAppModalOpen(true);
     } else {
       setIsNewAppModalOpen(true);
     }
   };
 
-  const CreateAppContent = () => {
-    if (viewMode === 'grid') {
-      return (
-        <div id="tour-create-app" className="bg-white rounded-xl border border-dashed border-gray-300 p-5 shadow-sm flex flex-col gap-4 h-full">
-          <div>
-            <h3 className="font-semibold text-gray-900 text-base mb-0.5">创建应用</h3>
-            <p className="text-[11px] text-gray-500">从头开始或导入现有配置</p>
-          </div>
-          <div className="space-y-4 mt-auto">
-            <button 
-              onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
-              className="w-full flex items-center gap-3 group text-left"
-            >
-              <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 group-hover:bg-primary-100 transition-colors">
-                <Plus className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-primary-600 leading-tight">新建应用</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">创建全新的对话或工作流应用</p>
-              </div>
-            </button>
-            <button 
-              onClick={() => { setEditingApp(null); setIsCustomAppModalOpen(true); }}
-              className="w-full flex items-center gap-3 group text-left"
-            >
-              <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 group-hover:bg-primary-100 transition-colors">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-primary-600 leading-tight">创建定制化应用</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">基于模板快速构建</p>
-              </div>
-            </button>
-            <button 
-              onClick={() => setIsImportAppModalOpen(true)}
-              className="w-full flex items-center gap-3 group text-left"
-            >
-              <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 group-hover:bg-primary-100 transition-colors">
-                <BookOpen className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-primary-600 leading-tight">导入应用</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">从外部文件或链接导入</p>
-              </div>
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div id="tour-create-app" className="bg-white rounded-xl border border-dashed border-gray-200 p-4 shadow-sm flex items-center gap-6 mb-2">
-        <div className="flex-shrink-0 flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-50 text-primary-600 rounded-lg flex items-center justify-center">
-            <LayoutGrid className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 text-sm">创建应用</h3>
-            <p className="text-[10px] text-gray-400">快速开始新项目</p>
-          </div>
-        </div>
-        <div className="flex-grow flex gap-3">
-          <button 
-            onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-primary-500 hover:bg-primary-50 transition-all text-sm text-gray-800 hover:text-primary-600 font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            新建应用
-          </button>
-          <button 
-            onClick={() => { setEditingApp(null); setIsCustomAppModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-purple-500 hover:bg-purple-50 transition-all text-sm text-gray-800 hover:text-purple-600 font-medium"
-          >
-            <Sparkles className="w-4 h-4" />
-            创建定制化
-          </button>
-          <button 
-            onClick={() => setIsImportAppModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 hover:border-green-500 hover:bg-green-50 transition-all text-sm text-gray-800 hover:text-green-600 font-medium"
-          >
-            <Upload className="w-4 h-4" />
-            导入
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   const renderContent = () => {
     // 优先通过 query 参数判断是否显示 API 文档（兼容 standalone 部署模式下 rewrite 不生效的问题）
@@ -1022,6 +937,48 @@ const App: React.FC = () => {
       <>
         <div id="tour-filter-search" className="mb-6 transition-all flex flex-col md:flex-row gap-6 md:items-center justify-between">
           <div className="flex flex-wrap items-center gap-2 w-fit">
+            <div id="tour-create-app" className="relative mr-4 border-r pr-4 border-gray-200">
+              <button 
+                onClick={() => setIsCreateDropdownOpen(!isCreateDropdownOpen)}
+                className="px-4 py-1.5 rounded-full text-sm transition-all border bg-primary-600 text-white border-primary-600 hover:bg-primary-700 font-medium flex items-center gap-2 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                添加工作流应用
+                <ChevronDown className={`w-3 h-3 transition-transform ${isCreateDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isCreateDropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setIsCreateDropdownOpen(false)}
+                  />
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden">
+                    <button 
+                      onClick={() => { setEditingApp(null); setIsNewAppModalOpen(true); setIsCreateDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600"
+                    >
+                      <Plus className="w-4 h-4 opacity-70" />
+                      <span>创建工作流应用</span>
+                    </button>
+                    <button 
+                      onClick={() => { setEditingApp(null); setIsCustomAppModalOpen(true); setIsCreateDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 border-t border-gray-50"
+                    >
+                      <Sparkles className="w-4 h-4 opacity-70" />
+                      <span>添加定制化应用</span>
+                    </button>
+                    <button 
+                      onClick={() => { setIsImportAppModalOpen(true); setIsCreateDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2 text-gray-700 hover:bg-green-50 hover:text-green-600 border-t border-gray-50"
+                    >
+                      <BookOpen className="w-4 h-4 opacity-70" />
+                      <span>导入工作流</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
             {APP_TYPES.map(type => (
               <button
                 key={type}
@@ -1031,7 +988,7 @@ const App: React.FC = () => {
                   setHasMore(false);
                   setActiveFilterTab(type);
                 }}
-                className={`px-4 py-1.5 rounded-lg text-sm transition-all border ${
+                className={`px-4 py-1.5 rounded-full text-sm transition-all border ${
                   activeFilterTab === type 
                     ? 'bg-primary-600 text-white border-primary-600 font-medium' 
                     : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
@@ -1160,7 +1117,6 @@ const App: React.FC = () => {
         </div>
 
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'flex flex-col gap-3'}>
-          <CreateAppContent />
           {filteredApps.map(app => (
             <AppCard 
               key={app.id} 
@@ -1177,7 +1133,7 @@ const App: React.FC = () => {
               onConvertToWorkflow={handleConvertToWorkflow}
               onManageTags={() => setIsManageTagsModalOpen(true)}
               onClick={() => {
-                if (app.type !== '定制应用' && app.mode !== 'custom') {
+                if (app.type !== '定制化应用' && app.mode !== 'custom') {
                   setSelectedApp(app);
                 }
               }}

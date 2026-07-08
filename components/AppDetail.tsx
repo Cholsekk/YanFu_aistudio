@@ -43,7 +43,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
     const configLabel = isWorkflowOrAdvancedChat ? '工作流编排' : '开发配置';
     const configId = isWorkflowOrAdvancedChat ? 'orchestrate' : 'config';
 
-    if (type === '对话应用') {
+    if (type === '对话工作流') {
       return [
         { id: configId, label: configLabel, icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志与标注', icon: <FileText className="w-4 h-4" /> },
@@ -61,7 +61,7 @@ const AppDetail: React.FC<AppDetailProps> = ({ app, onBack }) => {
         { id: 'logs', label: '日志与标注', icon: <FileText className="w-4 h-4" /> },
         { id: 'monitor', label: '监测', icon: <Activity className="w-4 h-4" /> },
       ];
-    } else if (type === '工作流应用') {
+    } else if (type === '任务工作流') {
       return [
         { id: 'orchestrate', label: configLabel, icon: <Settings className="w-4 h-4" /> },
         { id: 'logs', label: '日志', icon: <FileText className="w-4 h-4" /> },

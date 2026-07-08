@@ -21,7 +21,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    type: '对话应用',
+    type: '任务工作流',
     icon: '156',
     iconType: 'sys-icon' as 'icon' | 'image' | 'sys-icon',
     iconBgColor: 'bg-primary-600',
@@ -63,7 +63,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         ...prev,
         name: initialData.name || '',
         description: initialData.description || '',
-        type: initialData.typeLabel || '对话应用',
+        type: initialData.typeLabel || '任务工作流',
         icon: initialData.icon || '156',
         iconType: initialData.iconType || 'sys-icon',
         iconBgColor: initialData.iconBgColor || 'bg-primary-600',
@@ -74,7 +74,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       setFormData({ 
         name: '', 
         description: '', 
-        type: '对话应用', 
+        type: '任务工作流', 
         icon: '156',
         iconType: 'sys-icon' as const,
         iconBgColor: 'bg-primary-600',
@@ -89,7 +89,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
   }, [initialData, isOpen]);
 
   useEffect(() => {
-    if (formData.type === '工作流应用' && formData.workflowCreateMethod === 'ai' && !formData.modelName) {
+    if (formData.type === '任务工作流' && formData.workflowCreateMethod === 'ai' && !formData.modelName) {
       apiService.fetchDefaultModal(ModelTypeEnum.textGeneration).then(res => {
         if (res && res.model && res.provider) {
           const providerId = typeof res.provider === 'string' ? res.provider : res.provider.provider;
@@ -100,9 +100,8 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
   }, [formData.type, formData.workflowCreateMethod, formData.modelName]);
 
   const types = [
-    { id: '对话应用', title: '对话应用', desc: '使用大型语言模型构建基于聊天的助手', icon: <MessageSquare className="w-5 h-5" /> },
-    { id: '工作流应用', title: '工作流', desc: '提供更多的自定义能力，适合有经验的用户。', icon: <GitBranch className="w-5 h-5" /> },
-    { id: '定制应用', title: '定制应用', desc: '完全自定义开发的应用。', icon: <Box className="w-5 h-5" /> },
+    { id: '任务工作流', title: '任务工作流', desc: '提供更多的自定义能力，适合有经验的用户。', icon: <GitBranch className="w-5 h-5 text-orange-500" /> },
+    { id: '对话工作流', title: '对话工作流', desc: '使用大型语言模型构建基于聊天的助手', icon: <MessageSquare className="w-5 h-5 text-blue-500" /> },
   ];
 
   const handleSubmit = async () => {
@@ -127,7 +126,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
       }
     }
 
-    if (formData.type === '工作流应用' && formData.workflowCreateMethod === 'ai') {
+    if (formData.type === '任务工作流' && formData.workflowCreateMethod === 'ai') {
       if (!formData.instruction.trim()) {
         message.warning('请输入生成工作流的提示词指令');
         return;
@@ -142,13 +141,13 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
         description: formData.description,
         typeLabel: formData.type,
         type: formData.type,
-        mode: formData.type === '对话应用' ? 'advanced-chat' : (formData.type === '工作流应用' ? 'workflow' : (formData.type === '定制应用' ? 'custom' : undefined)),
+        mode: formData.type === '对话工作流' ? 'advanced-chat' : (formData.type === '任务工作流' ? 'workflow' : (formData.type === '定制化应用' ? 'custom' : undefined)),
         icon: finalIcon,
         iconType: formData.iconType,
         iconBgColor: formData.iconBgColor,
         tags: initialData?.tags || [],
         builtIn: formData.builtIn,
-        workflowCreateMethod: formData.type === '工作流应用' ? formData.workflowCreateMethod : undefined,
+        workflowCreateMethod: formData.type === '任务工作流' ? formData.workflowCreateMethod : undefined,
         modelProvider: formData.modelProvider,
         modelName: formData.modelName,
         instruction: formData.instruction,
@@ -254,7 +253,10 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${formData.type === t.id ? 'border-primary-500' : 'border-gray-300'}`}>
                           {formData.type === t.id && <div className="w-2 h-2 rounded-full bg-primary-500" />}
                         </div>
-                        <span className="font-semibold text-gray-900 text-sm">{t.title}</span>
+                        <div className="flex items-center gap-1.5 text-gray-700">
+                          {t.icon}
+                          <span className="font-semibold text-gray-900 text-sm">{t.title}</span>
+                        </div>
                       </div>
                       <p className="text-xs text-gray-500 leading-relaxed pl-7">{t.desc}</p>
                     </div>
@@ -262,7 +264,7 @@ const NewAppModal: React.FC<NewAppModalProps> = ({ isOpen, onClose, onCreate, in
                 </div>
               </div>
 
-              {formData.type === '工作流应用' && (
+              {formData.type === '任务工作流' && (
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">创建方式</label>
